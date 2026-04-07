@@ -6,6 +6,7 @@ namespace DATA_Task1_parseBook;
 public class Database
 {
     private readonly string _connectionString;
+
     public Database(string connectionString)
     {
         _connectionString = connectionString;
@@ -15,7 +16,7 @@ public class Database
     {
         using var connection = new NpgsqlConnection(_connectionString);
         connection.Open();
-    
+
         using var command = new NpgsqlCommand(@"
         CREATE TABLE IF NOT EXISTS books (
             id NUMERIC PRIMARY KEY,
@@ -39,7 +40,7 @@ public class Database
             using var command = new NpgsqlCommand(@"
             INSERT INTO books (id, title, author, genre, publisher, year, price)
             VALUES (@id, @title, @author, @genre, @publisher, @year, @price)", connection);
-            
+
             command.Parameters.AddWithValue("@id", book.Id);
             command.Parameters.AddWithValue("@title", book.Title);
             command.Parameters.AddWithValue("@author", book.Author);
@@ -47,16 +48,16 @@ public class Database
             command.Parameters.AddWithValue("@publisher", book.Publisher);
             command.Parameters.AddWithValue("@year", book.Year);
             command.Parameters.AddWithValue("@price", book.Price);
-            
+
             command.ExecuteNonQuery();
         }
     }
-    
+
     public void CreateSummary()
     {
         using var connection = new NpgsqlConnection(_connectionString);
         connection.Open();
-        
+
         using var command = new NpgsqlCommand(@"
         CREATE TABLE IF NOT EXISTS summary AS
             SELECT
