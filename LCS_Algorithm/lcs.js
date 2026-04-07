@@ -1,2 +1,1 @@
-﻿function f(a){if(!a.length)return"";let m=a[0];for(const w of a)w.length<m.length&&(m=w);let r="";for(let i=0;i<m.length;i++)for(let j=i+1;j<=m.length;j++){let s=m.substring(i,j),o=1;for(const w of a)if(!w.includes(s)){o=0;break}o&&s.length>r.length&&(r=s)}return r}
-console.log(f(process.argv.slice(2)))
+﻿a=process.argv.slice(2);m=a[0]||"";r="";a.forEach(w=>w.length<m.length&&(m=w));for(i=0;i<m.length;i++)for(j=i+1;j<=m.length;j++){s=m.slice(i,j);a.every(w=>w.includes(s))&&s.length>r.length&&(r=s)}console.log(r)
