@@ -1,3 +1,5 @@
+using System.Numerics;
+
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
@@ -8,20 +10,14 @@ app.MapGet("/{*path}", (HttpContext ctx) =>
     if (!query.TryGetValue("x", out var xStr) || !query.TryGetValue("y", out var yStr))
         return Results.Text("NaN");
 
-    if (!ulong.TryParse(xStr, out var x) || !ulong.TryParse(yStr, out var y))
+    if (!BigInteger.TryParse(xStr, out var x) || !BigInteger.TryParse(yStr, out var y))
         return Results.Text("NaN");
 
-    if (x == 0 || y == 0)
+    if (x <= 0 || y <= 0)
         return Results.Text("NaN");
 
-    var lcm = x / Gcd(x, y) * y;
+    var lcm = x / BigInteger.GreatestCommonDivisor(x, y) * y;
     return Results.Text(lcm.ToString());
 });
 
 app.Run();
-
-static ulong Gcd(ulong a, ulong b)
-{
-    while (b != 0) { var t = b; b = a % b; a = t; }
-    return a;
-}
