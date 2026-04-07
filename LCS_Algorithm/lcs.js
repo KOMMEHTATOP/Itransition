@@ -1,1 +1,1 @@
-﻿a=process.argv.slice(2);m=a[0]||"";r="";a.forEach(w=>w.length<m.length&&(m=w));for(i=0;i<m.length;i++)for(j=i+1;j<=m.length;j++){s=m.slice(i,j);a.every(w=>w.includes(s))&&s.length>r.length&&(r=s)}console.log(r)
+﻿a=process.argv.slice(2),r="";for(i=l=(m=a[0]||"").length;i--;)for(j=0;!r&j+i<l;j++)a.every(w=>w.match(s=m.substr(j,i+1)))&&(r=s);console.log(r)
