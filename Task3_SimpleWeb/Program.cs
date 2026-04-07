@@ -12,7 +12,7 @@ app.MapGet("/{*path}", (HttpContext ctx) =>
         return Results.Text("NaN");
 
     if (x == 0 || y == 0)
-        return Results.Text("0");
+        return Results.Text("NaN");
 
     var lcm = x / Gcd(x, y) * y;
     return Results.Text(lcm.ToString());
