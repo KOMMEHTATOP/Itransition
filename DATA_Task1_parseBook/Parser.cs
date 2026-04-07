@@ -9,15 +9,15 @@ public class Parser
     public List<Book> ParseBook(string filePath)
     {
         string content = File.ReadAllText(filePath);
-    
+
         content = Regex.Replace(content, @":(\w+)=>", "\"$1\":");
         content = Regex.Replace(content, @",\s*]", "]");
-    
+
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
-    
-        return JsonSerializer.Deserialize<List<Book>>(content, options);
+
+        return JsonSerializer.Deserialize<List<Book>>(content, options) ?? [];
     }
 }
