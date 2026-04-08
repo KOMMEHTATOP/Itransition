@@ -1,0 +1,13 @@
+﻿bin/
+obj/
+publish/
+
+.idea/
+*.sln.dotSettings.user
+
+appsettings.Development.json
+UserSecrets/
+
+*.log
+.DS_Store
+Thumbs.db
