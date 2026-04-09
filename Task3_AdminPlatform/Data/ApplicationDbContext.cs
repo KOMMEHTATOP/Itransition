@@ -16,6 +16,16 @@ public class ApplicationDbContext:DbContext
         modelBuilder.Entity<User>()
             .HasIndex(x => x.Email)
             .IsUnique();
+        
+        modelBuilder.Entity<User>()
+            .Property(x => x.RegistrationTime)
+            .HasColumnType("timestamp with time zone");
+
+        modelBuilder.Entity<User>()
+            .Property(x => x.LastLoginTime)
+            .HasColumnType("timestamp with time zone");
+        
+        
     }
     
     
