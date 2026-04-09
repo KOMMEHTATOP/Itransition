@@ -1,0 +1,36 @@
+﻿@model Task3_AdminPlatform.Models.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Registration";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Create Account</h2>
+                    
+                    <form asp-controller="Account" asp-action="Register" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input asp-for="FullName" class="form-control" placeholder="Enter your name" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email address</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="name@example.com" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input asp-for="Password" type="password" class="form-control" required />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
