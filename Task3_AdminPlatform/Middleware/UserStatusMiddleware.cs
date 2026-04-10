@@ -26,7 +26,7 @@ public class UserStatusMiddleware
                     .AsNoTracking()
                     .FirstOrDefaultAsync(u => u.Id == userId);
 
-                if (user == null || user.Status == "Blocked" || user.Status == "Unverified")
+                if (user == null || user.Status == "Blocked")
                 {
                     await context.SignOutAsync("Cookies");
                     
