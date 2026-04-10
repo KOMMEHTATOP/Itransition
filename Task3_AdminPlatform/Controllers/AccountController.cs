@@ -102,12 +102,6 @@ namespace Task3_AdminPlatform.Controllers
                 return View(model);
             }
     
-            if (user.Status == "Unverified") 
-            {
-                ModelState.AddModelError("", "Please confirm your email address before logging in.");
-                return View(model);
-            }
-    
             user.LastLoginTime = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();
 
