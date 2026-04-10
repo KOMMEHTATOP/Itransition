@@ -71,7 +71,7 @@ namespace Task3_AdminPlatform.Controllers
                 await scopedEmailService.SendConfirmationEmailAsync(newUser.Email, confirmationLink);
             });
             
-            TempData["SuccessMessage"] = "Registration successful! Please check your email to confirm your account.";
+            TempData["SuccessMessage"] = "Registration successful! You can log in now. Confirmation link has been sent to your email.";
             
             
             
