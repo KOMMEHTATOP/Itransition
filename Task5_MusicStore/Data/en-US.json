@@ -1,0 +1,53 @@
+﻿{
+  "locale": "en-US",
+  "artistFirstNames": [
+    "James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph",
+    "Thomas", "Charles", "Mary", "Patricia", "Jennifer", "Linda", "Barbara",
+    "Elizabeth", "Susan", "Jessica", "Sarah", "Karen", "Emma", "Olivia", "Ava"
+  ],
+  "artistLastNames": [
+    "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
+    "Wilson", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin"
+  ],
+  "bandPrefixes": [
+    "The", "Dark", "Neon", "Velvet", "Iron", "Silver", "Golden", "Crystal",
+    "Broken", "Electric", "Hollow", "Silent", "Burning", "Frozen", "Wild"
+  ],
+  "bandSuffixes": [
+    "Echo", "Wave", "Storm", "Light", "Shadow", "Dream", "Fire", "Stone",
+    "Road", "Sky", "Moon", "Sun", "Star", "River", "Wind", "Mountain"
+  ],
+  "titleAdjectives": [
+    "Neon", "Broken", "Silent", "Electric", "Hollow", "Burning", "Frozen",
+    "Dark", "Golden", "Silver", "Wild", "Lost", "Fading", "Rising", "Falling"
+  ],
+  "titleNouns": [
+    "Carousel", "Highway", "Mirror", "Ocean", "Desert", "Canyon", "City",
+    "Dream", "Shadow", "Fire", "Rain", "Storm", "Light", "Night", "Dawn"
+  ],
+  "titleVerbs": [
+    "Running", "Falling", "Rising", "Burning", "Fading", "Chasing", "Breaking",
+    "Waiting", "Dancing", "Dreaming", "Flying", "Crying", "Leaving", "Staying"
+  ],
+  "albumWords": [
+    "Midnight", "Neon", "Electric", "Crystal", "Hollow", "Spiral", "Eclipse",
+    "Horizon", "Spectrum", "Odyssey", "Chronicle", "Illusion", "Revelation"
+  ],
+  "genres": [
+    "Indie Rock", "Alternative", "Synthwave", "Dream Pop", "Post-Rock",
+    "Folk", "Blues", "Jazz", "R&B", "Hip-Hop", "Electronic", "Ambient",
+    "Metal", "Punk", "Soul", "Funk", "Country", "Reggae", "Classical"
+  ],
+  "reviewPhrases": [
+    "A haunting journey through layered soundscapes",
+    "Captivating melodies that linger long after the last note",
+    "A bold exploration of rhythm and harmony",
+    "Deeply emotional with stunning vocal performances",
+    "An infectious blend of energy and raw talent",
+    "Masterfully crafted with intricate arrangements",
+    "A refreshing take on modern sound design",
+    "Powerful lyrics backed by unforgettable instrumentation",
+    "A sonic adventure that defies genre boundaries",
+    "Intimate and vulnerable with moments of pure brilliance"
+  ]
+}

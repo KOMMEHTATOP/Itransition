@@ -1,0 +1,53 @@
+﻿{
+  "locale": "de-DE",
+  "artistFirstNames": [
+    "Hans", "Klaus", "Werner", "Dieter", "Helmut", "Wolfgang", "Gerhard", "Thomas",
+    "Andreas", "Stefan", "Ursula", "Ingrid", "Monika", "Petra", "Sabine",
+    "Christina", "Claudia", "Brigitte", "Heike", "Karin", "Anna", "Laura", "Julia"
+  ],
+  "artistLastNames": [
+    "Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner",
+    "Becker", "Schulz", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein"
+  ],
+  "bandPrefixes": [
+    "Die", "Schwarze", "Rote", "Wilde", "Dunkle", "Eiserne", "Goldene", "Silberne",
+    "Kalte", "Brennende", "Stille", "Elektrische", "Verlorene", "Ewige", "Freie"
+  ],
+  "bandSuffixes": [
+    "Welle", "Sturm", "Schatten", "Traum", "Feuer", "Stein", "Mond", "Sonne",
+    "Stern", "Fluss", "Wind", "Berg", "Nacht", "Licht", "Echo", "Geist"
+  ],
+  "titleAdjectives": [
+    "Schwarze", "Stille", "Brennende", "Eiserne", "Goldene", "Wilde", "Dunkle",
+    "Kalte", "Verlorene", "Ewige", "Rote", "Freie", "Tiefe", "Leere", "Alte"
+  ],
+  "titleNouns": [
+    "Nacht", "Traum", "Feuer", "Sturm", "Schatten", "Welle", "Reise", "Stadt",
+    "Herz", "Seele", "Zeit", "Welt", "Weg", "Licht", "Stille", "Nebel"
+  ],
+  "titleVerbs": [
+    "Fallend", "Brennend", "Fließend", "Tanzend", "Träumend", "Fliegend",
+    "Wartend", "Suchend", "Laufend", "Schwebend", "Vergessend", "Steigend"
+  ],
+  "albumWords": [
+    "Mitternacht", "Schatten", "Ewigkeit", "Horizont", "Spektrum", "Illusion",
+    "Offenbarung", "Dunkelheit", "Stille", "Träume", "Nebel", "Kristall"
+  ],
+  "genres": [
+    "Indie Rock", "Alternative", "Synthwave", "Dream Pop", "Post-Rock",
+    "Volksmusik", "Blues", "Jazz", "Elektronik", "Ambient", "Metal",
+    "Punk", "Soul", "Funk", "Klassik", "Schlager", "Neue Deutsche Welle"
+  ],
+  "reviewPhrases": [
+    "Eine eindringliche Reise durch vielschichtige Klanglandschaften",
+    "Fesselnde Melodien die lange nach der letzten Note nachhallen",
+    "Eine mutige Erkundung von Rhythmus und Harmonie",
+    "Zutiefst emotional mit atemberaubenden Gesangsdarbietungen",
+    "Eine ansteckende Mischung aus Energie und rohem Talent",
+    "Meisterhaft komponiert mit komplexen Arrangements",
+    "Ein erfrischender Ansatz im modernen Sounddesign",
+    "Kraftvolle Texte unterstützt von unvergesslicher Instrumentierung",
+    "Ein klangliches Abenteuer das Genregrenzen sprengt",
+    "Intim und verletzlich mit Momenten purer Brillanz"
+  ]
+}

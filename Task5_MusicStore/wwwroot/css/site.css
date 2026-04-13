@@ -1,0 +1,44 @@
+body {
+  background-color: #f8f9fa;
+}
+
+.toolbar {
+  background: white;
+  border-bottom: 1px solid #dee2e6;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.table tbody tr:hover {
+  background-color: #f0f4ff;
+  cursor: pointer;
+}
+
+.detail-row td {
+  background-color: #f8f9fa !important;
+}
+
+.card {
+  transition: transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.card-img-top {
+  height: 180px;
+  object-fit: cover;
+}
+
+#tableView, #galleryView {
+  padding: 16px;
+}
+
+.btn-group .btn.active {
+  opacity: 1;
+}

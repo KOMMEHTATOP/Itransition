@@ -1,0 +1,29 @@
+﻿# Build outputs
+bin/
+obj/
+
+# NuGet packages
+/packages/
+*.nupkg
+
+# Rider / JetBrains
+.idea/
+/_ReSharper.Caches/
+riderModule.iml
+*.user
+
+# Visual Studio
+.vs/
+*.suo
+
+# ASP.NET
+wwwroot/lib/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Publish
+**/publish/
+
+*.cshtml.css
