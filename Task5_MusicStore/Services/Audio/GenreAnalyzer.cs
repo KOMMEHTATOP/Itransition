@@ -30,18 +30,19 @@ public static class GenreAnalyzer
 
     public static (int min, int max) GetBpmRange(string genre)
     {
-        if (string.IsNullOrEmpty(genre)) return (90, 110);
+        if (string.IsNullOrEmpty(genre)) return (110, 130);
 
         var g = genre.ToLower();
-        if (g.Contains("metal") || g.Contains("punk")) return (140, 180);
-        if (g.Contains("electronic") || g.Contains("elektronik")) return (120, 150);
-        if (g.Contains("synthwave")) return (110, 140);
-        if (g.Contains("rock") || g.Contains("alternative")) return (100, 140);
-        if (g.Contains("pop") || g.Contains("funk") || g.Contains("soul")) return (90, 120);
-        if (g.Contains("jazz") || g.Contains("blues")) return (70, 100);
-        if (g.Contains("classical") || g.Contains("klassik")) return (60, 90);
-        if (g.Contains("ambient") || g.Contains("dream")) return (60, 80);
-        if (g.Contains("folk") || g.Contains("country") || g.Contains("reggae")) return (80, 110);
-        return (85, 120);
+        if (g.Contains("metal") || g.Contains("punk")) return (160, 200);
+        if (g.Contains("electronic") || g.Contains("elektronik")) return (128, 160);
+        if (g.Contains("synthwave")) return (120, 140);
+        if (g.Contains("hip")) return (90, 110);
+        if (g.Contains("rock") || g.Contains("alternative")) return (120, 160);
+        if (g.Contains("pop") || g.Contains("funk") || g.Contains("soul")) return (110, 130);
+        if (g.Contains("jazz") || g.Contains("blues")) return (90, 120);
+        if (g.Contains("classical") || g.Contains("klassik")) return (80, 110);
+        if (g.Contains("ambient") || g.Contains("dream")) return (75, 95);
+        if (g.Contains("folk") || g.Contains("country") || g.Contains("reggae")) return (95, 120);
+        return (110, 135);
     }
 }
