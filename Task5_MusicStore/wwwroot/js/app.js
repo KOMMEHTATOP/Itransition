@@ -69,7 +69,16 @@ function toggleExpand(row, song) {
                     <h5>${song.title}</h5>
                     <p class="text-muted mb-1">${song.artist} — ${song.album}</p>
                     <p class="text-muted mb-2"><em>${song.genre}</em></p>
-                    <button class="btn btn-sm btn-success mb-2" onclick="playAudio(${song.index}, this)">▶ Play</button>
+                    <button class="btn btn-sm btn-success mb-2" onclick="playAudio(${song.index}, '${song.genre}', this)">▶ Play</button>
+                    <div class="audio-progress mt-1 d-none" id="progress-${song.index}">
+                        <div class="d-flex align-items-center gap-2">
+                            <span id="timer-${song.index}" class="text-muted small">0:00</span>
+                            <div class="progress flex-grow-1" style="height:4px; cursor:pointer">
+                                <div class="progress-bar bg-success" id="bar-${song.index}" style="width:0%"></div>
+                            </div>
+                            <span id="duration-${song.index}" class="text-muted small">0:00</span>
+                        </div>
+                    </div>
                     <p>${song.review}</p>
                 </div>
             </div>
@@ -155,7 +164,7 @@ observer.observe(document.getElementById('galleryLoader'));
 
 // ── AUDIO ──
 
-async function playAudio(index, btn) {
+async function playAudio(index, genre, btn) {
     // Если уже играет — останавливаем
     if (activeSynth) {
         clearTimeout(activeTimeout);
@@ -173,69 +182,125 @@ async function playAudio(index, btn) {
     btn.dataset.playing = 'true';
 
     const p = getParams();
-    const res = await fetch(`/api/audio?seed=${p.seed}&locale=${p.locale}&index=${index}`);
+    const res = await fetch(`/api/audio?seed=${p.seed}&locale=${p.locale}&index=${index}&genre=${encodeURIComponent(genre)}`);
     const audioData = await res.json();
     await playNotes(audioData, btn);
 }
 
 async function playNotes(audioData, btn) {
     await Tone.start();
+    btn.textContent = '⏳ Loading...';
 
-    const reverb = new Tone.Reverb({ decay: 2.5, wet: 0.3 }).toDestination();
-    const delay = new Tone.FeedbackDelay("8n", 0.2).toDestination();
+    const reverb = new Tone.Reverb({ decay: 2.0, wet: 0.25 }).toDestination();
 
-    const melody = new Tone.Synth({
-        oscillator: { type: 'fmsine' },
-        envelope: { attack: 0.04, decay: 0.2, sustain: 0.6, release: 1.2 }
-    }).connect(reverb).connect(delay);
-    melody.volume.value = -4;
-
-    const chords = new Tone.Synth({
-        oscillator: { type: 'amtriangle' },
-        envelope: { attack: 0.08, decay: 0.3, sustain: 0.4, release: 2.0 }
-    }).connect(reverb);
-    chords.volume.value = -12;
-
-    const bass = new Tone.Synth({
-        oscillator: { type: 'sawtooth' },
-        envelope: { attack: 0.02, decay: 0.4, sustain: 0.5, release: 0.8 }
-    }).toDestination();
-    bass.volume.value = -8;
-
-    const disposeAll = () => {
-        try { melody.dispose(); } catch(e) {}
-        try { chords.dispose(); } catch(e) {}
-        try { bass.dispose(); } catch(e) {}
-        try { reverb.dispose(); } catch(e) {}
-        try { delay.dispose(); } catch(e) {}
+    const pianoUrls = {
+        "C2": "C2.mp3", "D#2": "Ds2.mp3", "F#2": "Fs2.mp3", "A2": "A2.mp3",
+        "C3": "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3", "A3": "A3.mp3",
+        "C4": "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3",
+        "C5": "C5.mp3", "D#5": "Ds5.mp3", "F#5": "Fs5.mp3", "A5": "A5.mp3",
     };
 
-    activeSynth = { dispose: disposeAll };
+    const guitarUrls = {
+        "E2": "E2.mp3", "A2": "A2.mp3", "D3": "D3.mp3", "G3": "G3.mp3",
+        "B3": "B3.mp3", "E4": "E4.mp3", "A4": "A4.mp3", "B4": "B4.mp3",
+        "E5": "E5.mp3"
+    };
 
-    const now = Tone.now() + 0.1;
+    const isPiano = audioData.samplerType !== 'guitar';
+    const urls = isPiano ? pianoUrls : guitarUrls;
+    const baseUrl = isPiano
+        ? "https://tonejs.github.io/audio/salamander/"
+        : "https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/acoustic_guitar_nylon-mp3/";
 
-    audioData.notes.forEach(n => {
-        try {
-            if (n.instrument === 'melody') {
-                melody.triggerAttackRelease(n.note, n.duration, now + n.time);
-            } else if (n.instrument === 'chord') {
-                chords.triggerAttackRelease(n.note, n.duration, now + n.time);
-            } else if (n.instrument === 'bass') {
-                bass.triggerAttackRelease(n.note, n.duration, now + n.time);
+    await new Promise((resolve) => {
+        const sampler = new Tone.Sampler({
+            urls,
+            baseUrl,
+            onload: () => resolve(sampler)
+        }).connect(reverb);
+
+        activeSynth = {
+            dispose: () => {
+                sampler.dispose();
+                reverb.dispose();
             }
-        } catch (e) {}
-    });
+        };
+    }).then((sampler) => {
+        btn.textContent = '⏹ Stop';
 
-    const totalDuration = Math.max(...audioData.notes.map(n => n.time + n.duration));
-    activeTimeout = setTimeout(() => {
-        if (activeSynth) {
-            const synth = activeSynth;
-            activeSynth = null;
-            try { synth.dispose(); } catch(e) {}
+        const now = Tone.now() + 0.1;
+        const totalDuration = Math.max(...audioData.notes.map(n => n.time + n.duration));
+
+        // ── DRUMS ──
+        if (audioData.hasDrums) {
+            const kick = new Tone.MembraneSynth({
+                pitchDecay: 0.05,
+                octaves: 6,
+                envelope: { attack: 0.001, decay: 0.3, sustain: 0, release: 0.1 }
+            }).toDestination();
+            kick.volume.value = -6;
+
+            const snare = new Tone.NoiseSynth({
+                noise: { type: 'white' },
+                envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.05 }
+            }).toDestination();
+            snare.volume.value = -12;
+
+            const prevDispose = activeSynth.dispose;
+            activeSynth.dispose = () => {
+                prevDispose();
+                try { kick.dispose(); } catch(e) {}
+                try { snare.dispose(); } catch(e) {}
+            };
+
+            const beatDur = 60 / audioData.bpm;
+            const totalBeats = Math.floor(totalDuration / beatDur);
+
+            for (let i = 0; i < totalBeats; i++) {
+                const t = now + i * beatDur;
+                if (i % 4 === 0 || i % 4 === 2) {
+                    kick.triggerAttackRelease('C1', '8n', t);
+                }
+                if (i % 4 === 1 || i % 4 === 3) {
+                    snare.triggerAttackRelease('8n', t + 0.001);
+                }
+            }
         }
-        btn.textContent = '▶ Play';
-        btn.dataset.playing = '';
-    }, (totalDuration + 1) * 1000);
+
+        audioData.notes.forEach(n => {
+            try {
+                sampler.triggerAttackRelease(n.note, n.duration, now + n.time);
+            } catch(e) {}
+        });
+
+        const progressEl = document.getElementById(`progress-${audioData.index}`);
+        const barEl = document.getElementById(`bar-${audioData.index}`);
+        const timerEl = document.getElementById(`timer-${audioData.index}`);
+        const durationEl = document.getElementById(`duration-${audioData.index}`);
+
+        if (progressEl) {
+            progressEl.classList.remove('d-none');
+            const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+            durationEl.textContent = fmt(totalDuration);
+            const interval = setInterval(() => {
+                if (!activeSynth) { clearInterval(interval); return; }
+                const elapsed = Tone.now() - now;
+                const pct = Math.min(100, (elapsed / totalDuration) * 100);
+                barEl.style.width = pct + '%';
+                timerEl.textContent = fmt(Math.min(elapsed, totalDuration));
+            }, 200);
+        }
+
+        activeTimeout = setTimeout(() => {
+            if (activeSynth) {
+                const synth = activeSynth;
+                activeSynth = null;
+                try { synth.dispose(); } catch(e) {}
+            }
+            btn.textContent = '▶ Play';
+            btn.dataset.playing = '';
+        }, (totalDuration + 1) * 1000);
+    });
 }
 
 // ── CONTROLS ──

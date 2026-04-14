@@ -12,124 +12,215 @@ public class AudioTrack
 {
     public int Bpm { get; set; }
     public string Key { get; set; } = "";
+    public string SamplerType { get; set; } = "piano";
+    public int Index { get; set; }
+    public bool HasDrums { get; set; }
     public List<AudioNote> Notes { get; set; } = new();
 }
 
 public class AudioService
 {
-    private static readonly string[] Keys = { "C", "D", "E", "F", "G", "A", "B" };
-    private static readonly string[] Modes = { "major", "minor" };
-
-    // Intervals for major and minor scales (semitones from root)
-    private static readonly int[] MajorScale = { 0, 2, 4, 5, 7, 9, 11 };
-    private static readonly int[] MinorScale = { 0, 2, 3, 5, 7, 8, 10 };
-
-    // Common chord progressions (indices into scale)
-    private static readonly int[][] Progressions = {
-        new[] { 0, 3, 4, 0 },   // I-IV-V-I
-        new[] { 0, 5, 3, 4 },   // I-vi-IV-V
-        new[] { 0, 3, 0, 4 },   // I-IV-I-V
-        new[] { 5, 3, 0, 4 },   // vi-IV-I-V
-    };
-
-    // Note names by semitone
+    private static readonly string[] Keys = { "C", "D", "E", "F", "G", "A" };
     private static readonly string[] NoteNames = {
         "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
     };
 
-    public AudioTrack Generate(long seed, int index)
+    private static readonly int[] MajorScale = { 0, 2, 4, 5, 7, 9, 11 };
+    private static readonly int[] MinorScale = { 0, 2, 3, 5, 7, 8, 10 };
+
+    private static readonly int[][] VerseProgressions = {
+        new[] { 0, 5, 3, 4 },
+        new[] { 0, 3, 5, 3 },
+        new[] { 0, 0, 3, 4 },
+    };
+
+    private static readonly int[][] ChorusProgressions = {
+        new[] { 0, 3, 4, 0 },
+        new[] { 5, 3, 0, 4 },
+        new[] { 0, 4, 5, 3 },
+    };
+
+    private static readonly HashSet<string> GuitarGenres = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Rock", "Indie Rock", "Alternative", "Punk", "Metal",
+        "Post-Rock", "Folk", "Country", "Blues", "Reggae",
+        "Neue Deutsche Welle", "Volksmusik"
+    };
+
+    private static readonly HashSet<string> PianoGenres = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Jazz", "Classical", "Soul", "R&B", "Ambient",
+        "Dream Pop", "Synthwave", "Electronic", "Funk",
+        "Schlager", "Elektronik", "Klassik"
+    };
+
+    public AudioTrack Generate(long seed, int index, string genre = "")
     {
         long trackSeed = seed ^ (long)index * 1234567891;
         var rng = new Random((int)(trackSeed & 0x7FFFFFFF));
 
-        int bpm = rng.Next(75, 135);
+        var (bpmMin, bpmMax) = GetBpmRange(genre);
+        int bpm = rng.Next(bpmMin, bpmMax);
         string key = Keys[rng.Next(Keys.Length)];
-        string mode = Modes[rng.Next(Modes.Length)];
-        int[] scale = mode == "major" ? MajorScale : MinorScale;
-        int[] progression = Progressions[rng.Next(Progressions.Length)];
+        bool isMajor = rng.Next(3) != 0;
+        int[] scale = isMajor ? MajorScale : MinorScale;
+        string mode = isMajor ? "major" : "minor";
+        string samplerType = GetSamplerType(genre);
 
         int rootSemitone = Array.IndexOf(NoteNames, key);
         double beatDuration = 60.0 / bpm;
-        int totalBars = 8;
-        int beatsPerBar = 4;
+
+        var verseProgression = VerseProgressions[rng.Next(VerseProgressions.Length)];
+        var chorusProgression = ChorusProgressions[rng.Next(ChorusProgressions.Length)];
 
         var notes = new List<AudioNote>();
         double time = 0;
 
-        for (int bar = 0; bar < totalBars; bar++)
+        var structure = new[] {
+            (verseProgression, 4, false),
+            (chorusProgression, 4, true),
+            (verseProgression, 4, false),
+            (chorusProgression, 4, true),
+        };
+
+        int prevMelodySemitone = rootSemitone;
+
+        foreach (var (progression, bars, isChorus) in structure)
         {
-            int chordRoot = scale[progression[bar % progression.Length]];
-            int[] chordTones = GetChordTones(chordRoot, scale, rootSemitone);
-
-            // Bass note on beat 1
-            notes.Add(new AudioNote
+            for (int bar = 0; bar < bars; bar++)
             {
-                Note = GetNoteName(chordTones[0], 2),
-                Time = Math.Round(time, 3),
-                Duration = Math.Round(beatDuration * 2, 3),
-                Instrument = "bass"
-            });
+                int chordDegree = progression[bar % progression.Length];
+                int chordRootSemitone = (rootSemitone + scale[chordDegree]) % 12;
+                int[] chordTones = GetChordTones(chordRootSemitone, scale, rootSemitone);
 
-            // Melody notes
-            for (int beat = 0; beat < beatsPerBar; beat++)
-            {
-                double noteTime = time + beat * beatDuration;
-                bool isLong = rng.Next(3) == 0;
-                double dur = isLong ? beatDuration * 1.5 : beatDuration * 0.75;
-
-                // Pick melody note from chord tones + passing tones
-                int semitone = rng.Next(2) == 0
-                    ? chordTones[rng.Next(chordTones.Length)]
-                    : (rootSemitone + scale[rng.Next(scale.Length)]) % 12;
-
-                int octave = rng.Next(2) == 0 ? 4 : 5;
-
+                // Bass
                 notes.Add(new AudioNote
                 {
-                    Note = GetNoteName(semitone, octave),
-                    Time = Math.Round(noteTime, 3),
-                    Duration = Math.Round(dur, 3),
-                    Instrument = "melody"
+                    Note = GetNoteName(chordRootSemitone, 2),
+                    Time = Math.Round(time, 3),
+                    Duration = Math.Round(beatDuration * 0.9, 3),
+                    Instrument = "bass"
+                });
+                notes.Add(new AudioNote
+                {
+                    Note = GetNoteName(chordTones[2], 2),
+                    Time = Math.Round(time + beatDuration * 2, 3),
+                    Duration = Math.Round(beatDuration * 0.9, 3),
+                    Instrument = "bass"
                 });
 
-                // Chord stab on beat 1 and 3
-                if (beat == 0 || beat == 2)
-                {
-                    foreach (var tone in chordTones.Take(3))
-                    {
-                        notes.Add(new AudioNote
-                        {
-                            Note = GetNoteName(tone, 4),
-                            Time = Math.Round(noteTime, 3),
-                            Duration = Math.Round(beatDuration * 0.5, 3),
-                            Instrument = "chord"
-                        });
-                    }
-                }
-            }
+                // Chord stabs
+                int chordOctave = isChorus ? 4 : 3;
+                double[] chordBeats = isChorus
+                    ? new[] { 0.0, 1.0, 2.0, 3.0 }
+                    : new[] { 0.0, 2.0 };
 
-            time += beatsPerBar * beatDuration;
+                foreach (var beat in chordBeats)
+                {
+                    notes.Add(new AudioNote
+                    {
+                        Note = GetNoteName(chordTones[0], chordOctave),
+                        Time = Math.Round(time + beat * beatDuration, 3),
+                        Duration = Math.Round(beatDuration * 0.4, 3),
+                        Instrument = "chord"
+                    });
+                }
+
+                // Melody
+                int beatsPerBar = 4;
+                for (int beat = 0; beat < beatsPerBar; beat++)
+                {
+                    if (beat == 3 && rng.Next(3) == 0) continue;
+
+                    int melodyOctave = isChorus ? 5 : 4;
+                    int nextSemitone = GetSmoothMelodyNote(rng, prevMelodySemitone, chordTones, scale, rootSemitone);
+                    prevMelodySemitone = nextSemitone;
+
+                    double dur = beat == 0 ? beatDuration * 1.5 : beatDuration * 0.5;
+
+                    notes.Add(new AudioNote
+                    {
+                        Note = GetNoteName(nextSemitone, melodyOctave),
+                        Time = Math.Round(time + beat * beatDuration, 3),
+                        Duration = Math.Round(dur, 3),
+                        Instrument = "melody"
+                    });
+                }
+
+                time += beatsPerBar * beatDuration;
+            }
         }
 
         return new AudioTrack
         {
             Bpm = bpm,
             Key = $"{key} {mode}",
+            SamplerType = samplerType,
+            Index = index,
+            HasDrums = GetHasDrums(genre),
             Notes = notes.OrderBy(n => n.Time).ToList()
         };
     }
 
-    private int[] GetChordTones(int rootInterval, int[] scale, int rootSemitone)
+    private string GetSamplerType(string genre)
     {
-        // Triad: root, third, fifth from scale
-        int root = (rootSemitone + rootInterval) % 12;
-        int third = (rootSemitone + scale[Math.Min(2, scale.Length - 1)]) % 12;
-        int fifth = (rootSemitone + scale[Math.Min(4, scale.Length - 1)]) % 12;
+        if (string.IsNullOrEmpty(genre)) return "piano";
+        if (GuitarGenres.Contains(genre)) return "guitar";
+        if (PianoGenres.Contains(genre)) return "piano";
+        return "piano";
+    }
+    
+    private bool GetHasDrums(string genre)
+    {
+        if (string.IsNullOrEmpty(genre)) return false;
+        var g = genre.ToLower();
+        return g.Contains("rock") || g.Contains("metal") || g.Contains("punk") ||
+               g.Contains("electronic") || g.Contains("elektronik") ||
+               g.Contains("synthwave") || g.Contains("hip") ||
+               g.Contains("funk") || g.Contains("soul") || g.Contains("r&b");
+    }
+    
+    private (int min, int max) GetBpmRange(string genre)
+    {
+        if (string.IsNullOrEmpty(genre)) return (90, 110);
+
+        return genre.ToLower() switch
+        {
+            var g when g.Contains("metal") || g.Contains("punk") => (140, 180),
+            var g when g.Contains("electronic") || g.Contains("elektronik") => (120, 150),
+            var g when g.Contains("synthwave") => (110, 140),
+            var g when g.Contains("rock") || g.Contains("alternative") => (100, 140),
+            var g when g.Contains("pop") || g.Contains("funk") || g.Contains("soul") => (90, 120),
+            var g when g.Contains("jazz") || g.Contains("blues") => (70, 100),
+            var g when g.Contains("classical") || g.Contains("klassik") => (60, 90),
+            var g when g.Contains("ambient") || g.Contains("dream") => (60, 80),
+            var g when g.Contains("folk") || g.Contains("country") || g.Contains("reggae") => (80, 110),
+            _ => (85, 120)
+        };
+    }
+
+    private int GetSmoothMelodyNote(Random rng, int prev, int[] chordTones, int[] scale, int root)
+    {
+        var scaleNotes = scale.Select(s => (root + s) % 12).ToList();
+        int prevIdx = scaleNotes.IndexOf(prev % 12);
+        if (prevIdx < 0) prevIdx = 0;
+        int step = rng.Next(-2, 3);
+        int nextIdx = Math.Clamp(prevIdx + step, 0, scaleNotes.Count - 1);
+        if (rng.Next(10) < 6)
+            return chordTones[rng.Next(chordTones.Length)];
+        return scaleNotes[nextIdx];
+    }
+
+    private int[] GetChordTones(int chordRoot, int[] scale, int rootSemitone)
+    {
+        int root = chordRoot % 12;
+        int third = (chordRoot + (scale.Length > 2 ? scale[2] - scale[0] : 4)) % 12;
+        int fifth = (chordRoot + (scale.Length > 4 ? scale[4] - scale[0] : 7)) % 12;
         return new[] { root, third, fifth };
     }
 
     private string GetNoteName(int semitone, int octave)
     {
-        return $"{NoteNames[semitone % 12]}{octave}";
+        return $"{NoteNames[((semitone % 12) + 12) % 12]}{octave}";
     }
 }

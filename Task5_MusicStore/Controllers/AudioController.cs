@@ -18,9 +18,10 @@ public class AudioController : ControllerBase
     public IActionResult Get(
         [FromQuery] long seed = 12345,
         [FromQuery] string locale = "en-US",
-        [FromQuery] int index = 1)
+        [FromQuery] int index = 1,
+        [FromQuery] string genre = "")
     {
-        var track = _audio.Generate(seed, index);
+        var track = _audio.Generate(seed, index, genre);
         return Ok(track);
     }
 }
