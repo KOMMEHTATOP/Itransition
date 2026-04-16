@@ -60,19 +60,52 @@ function toggleExpand(row, song) {
                     <div class="audio-progress d-none" id="progress-${song.index}">
                         <div class="d-flex align-items-center gap-2">
                             <span id="timer-${song.index}" class="text-muted small">0:00</span>
-                            <div class="progress flex-grow-1" style="height:6px; cursor:pointer" id="bar-container-${song.index}">
+                            <div class="progress flex-grow-1" style="height:6px; cursor:pointer; transition: height 0.15s ease;" id="bar-container-${song.index}">
                                 <div class="progress-bar bg-success" id="bar-${song.index}" style="width:0%"></div>
                             </div>
                             <span id="duration-${song.index}" class="text-muted small">0:00</span>
                         </div>
                     </div>
-                    <p class="mt-2">${song.review}</p>
+                    <ul class="nav nav-tabs mt-3" id="tabs-${song.index}">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#" data-tab="review" data-index="${song.index}">Review</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" data-tab="lyrics" data-index="${song.index}">Lyrics</a>
+                        </li>
+                    </ul>
+                    <div id="tab-review-${song.index}" class="tab-content-panel mt-2">
+                        <p>${song.review}</p>
+                    </div>
+                    <div id="tab-lyrics-${song.index}" class="tab-content-panel mt-2 d-none">
+                        <div id="lyrics-container-${song.index}" class="lyrics-container" style="max-height:300px; overflow-y:auto;">
+                            <p class="text-muted">Press Play to load lyrics...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </td>
     `;
     row.after(detail);
+    // Tab switching
+    detail.querySelectorAll('[data-tab]').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            e.preventDefault();
+            const idx = tab.dataset.index;
+            const tabName = tab.dataset.tab;
 
+            detail.querySelectorAll('[data-tab]').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            detail.querySelectorAll('.tab-content-panel').forEach(p => p.classList.add('d-none'));
+            document.getElementById(`tab-${tabName}-${idx}`).classList.remove('d-none');
+
+            // Загружаем lyrics если ещё не загружены
+            if (tabName === 'lyrics') {
+                loadLyrics(song, detail);
+            }
+        });
+    });
     document.getElementById(`play-btn-${song.index}`)
         .addEventListener('click', (e) => playAudio(song.index, song.genre, e.target));
 
@@ -102,4 +135,19 @@ function renderPagination() {
     for (let i = start; i <= end; i++) addBtn(i, i, false, i === currentPage);
     addBtn('›', currentPage + 1, currentPage === totalPages);
     addBtn('»', totalPages, currentPage === totalPages);
+}
+
+async function loadLyrics(song, detail) {
+    const container = document.getElementById(`lyrics-container-${song.index}`);
+    if (!container || container.dataset.loaded) return;
+
+    const p = getParams();
+    const res = await fetch(`/api/lyrics?seed=${p.seed}&index=${song.index}&locale=${p.locale}&duration=30`);
+    const lines = await res.json();
+
+    container.dataset.loaded = 'true';
+    container.dataset.songIndex = song.index;
+    container.innerHTML = lines.map((line, i) =>
+        `<p class="lyrics-line mb-1" id="lyric-${song.index}-${i}" data-start="${line.startTime}" data-end="${line.endTime}">${line.text}</p>`
+    ).join('');
 }

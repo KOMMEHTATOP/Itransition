@@ -49,5 +49,20 @@
     "Powerful lyrics backed by unforgettable instrumentation",
     "A sonic adventure that defies genre boundaries",
     "Intimate and vulnerable with moments of pure brilliance"
+  ],
+  "lyricsVerbs": ["run", "fall", "rise", "burn", "fade", "chase", "break", "wait", "dance", "dream", "fly", "cry", "leave", "stay", "fight", "shine", "hide", "find", "lose", "reach"],
+  "lyricsNouns": ["heart", "soul", "night", "fire", "rain", "light", "shadow", "dream", "road", "sky", "mind", "time", "world", "tears", "voice", "silence", "storm", "hope", "pain", "love"],
+  "lyricsAdjectives": ["broken", "golden", "silent", "burning", "fading", "lost", "wild", "hollow", "electric", "frozen", "dark", "bright", "endless", "empty", "restless", "fearless"],
+  "lyricsTemplates": [
+    "I {verb} through the {noun}",
+    "We {verb} in the {adjective} {noun}",
+    "Your {noun} is {adjective}",
+    "The {adjective} {noun} {verb}s",
+    "I can't {verb} this {noun}",
+    "Just {verb} away from the {noun}",
+    "Every {noun} {verb}s like fire",
+    "Hold on to your {noun}",
+    "Don't let the {noun} {verb}",
+    "We are the {adjective} ones"
   ]
 }

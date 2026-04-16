@@ -49,5 +49,20 @@
     "Kraftvolle Texte unterstützt von unvergesslicher Instrumentierung",
     "Ein klangliches Abenteuer das Genregrenzen sprengt",
     "Intim und verletzlich mit Momenten purer Brillanz"
+  ],
+  "lyricsVerbs": ["laufen", "fallen", "steigen", "brennen", "verblassen", "jagen", "brechen", "warten", "tanzen", "träumen", "fliegen", "weinen", "gehen", "bleiben", "kämpfen", "scheinen", "verstecken", "finden", "verlieren", "erreichen"],
+  "lyricsNouns": ["Herz", "Seele", "Nacht", "Feuer", "Regen", "Licht", "Schatten", "Traum", "Weg", "Himmel", "Geist", "Zeit", "Welt", "Tränen", "Stimme", "Stille", "Sturm", "Hoffnung", "Schmerz", "Liebe"],
+  "lyricsAdjectives": ["gebrochen", "golden", "still", "brennend", "verblassend", "verloren", "wild", "leer", "elektrisch", "gefroren", "dunkel", "hell", "endlos", "ruhelos", "furchtlos", "ewig"],
+  "lyricsTemplates": [
+    "Ich {verb} durch die {noun}",
+    "Wir {verb} in der {adjective} {noun}",
+    "Deine {noun} ist {adjective}",
+    "Die {adjective} {noun} {verb}t",
+    "Ich kann diese {noun} nicht {verb}",
+    "Lauf weg von der {noun}",
+    "Jede {noun} {verb}t wie Feuer",
+    "Halt fest an deiner {noun}",
+    "Lass die {noun} nicht {verb}",
+    "Wir sind die {adjective} Seelen"
   ]
 }

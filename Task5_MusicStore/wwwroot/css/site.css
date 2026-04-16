@@ -42,3 +42,27 @@ body {
 .btn-group .btn.active {
   opacity: 1;
 }
+
+.lyrics-line {
+  transition: all 0.3s ease;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.active-lyric {
+  background-color: #e8f0fe;
+}
+
+.lyrics-container {
+  overscroll-behavior: contain;
+}
+
+.progress:hover {
+  height: 10px !important;
+  transition: height 0.15s ease;
+}
+
+.progress:hover .progress-bar {
+  background-color: #198754 !important;
+}

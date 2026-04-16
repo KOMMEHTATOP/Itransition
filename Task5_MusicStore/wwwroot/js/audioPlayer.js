@@ -2,30 +2,37 @@
 import { audioEngine } from './AudioEngine.js';
 
 let currentIndex = null;
+let isLoaded = false;
 
 export async function playAudio(index, genre, btn) {
     const playBtn = document.getElementById(`play-btn-${index}`);
 
     // Нажали на тот же трек
     if (currentIndex === index) {
-        if (audioEngine.isStarted) {
+        if (!isLoaded) {
+            // После stop — сбрасываем и загружаем заново
+            currentIndex = null;
+        } else if (audioEngine.isStarted) {
             audioEngine.pause();
             if (playBtn) playBtn.textContent = '▶ Play';
+            return;
         } else if (audioEngine.isPaused) {
             audioEngine.resume();
             if (playBtn) playBtn.textContent = '⏸ Pause';
+            return;
         }
-        return;
     }
 
     // Останавливаем предыдущий трек
     if (currentIndex !== null) {
+        audioEngine.onStop = null;
         audioEngine.stop();
         _resetButtons(currentIndex);
         hideProgressBar(currentIndex);
     }
 
     currentIndex = index;
+    isLoaded = false;
     if (playBtn) playBtn.textContent = '⏳ Loading...';
 
     const audioData = await fetchAudio(index, genre);
@@ -34,6 +41,7 @@ export async function playAudio(index, genre, btn) {
 
     audioEngine.onStop = () => {
         if (currentIndex === index) {
+            isLoaded = false;
             _resetButtons(index);
             hideProgressBar(index);
             currentIndex = null;
@@ -42,9 +50,11 @@ export async function playAudio(index, genre, btn) {
 
     audioEngine.onTick = (current, total) => {
         updateProgressBar(index, current, total);
+        updateLyrics(index, current);
     };
 
     audioEngine.play();
+    isLoaded = true;
 
     if (playBtn) playBtn.textContent = '⏸ Pause';
 
@@ -55,7 +65,9 @@ export async function playAudio(index, genre, btn) {
 }
 
 export function stopAudio(index) {
+    audioEngine.onStop = null;
     audioEngine.stop();
+    isLoaded = false;
     _resetButtons(index);
     hideProgressBar(index);
     currentIndex = null;
@@ -104,6 +116,44 @@ function updateProgressBar(index, current, total) {
     const timerEl = document.getElementById(`timer-${index}`);
     if (barEl) barEl.style.width = `${Math.min(100, (current / total) * 100)}%`;
     if (timerEl) timerEl.textContent = fmt(current);
+}
+
+const activeLyricMap = {};
+
+function updateLyrics(songIndex, currentTime) {
+    const container = document.getElementById(`lyrics-container-${songIndex}`);
+    if (!container || !container.dataset.loaded) return;
+
+    const lines = container.querySelectorAll('.lyrics-line');
+    let newActiveId = null;
+
+    lines.forEach(line => {
+        const start = parseFloat(line.dataset.start);
+        const end = parseFloat(line.dataset.end);
+        const isActive = currentTime >= start && currentTime < end;
+
+        line.classList.toggle('active-lyric', isActive);
+        line.style.fontWeight = isActive ? 'bold' : '';
+        line.style.color = isActive ? '#0d6efd' : '';
+
+        if (isActive) newActiveId = line.id;
+    });
+
+    if (newActiveId && activeLyricMap[songIndex] !== newActiveId) {
+        activeLyricMap[songIndex] = newActiveId;
+        const activeLine = document.getElementById(newActiveId);
+        if (activeLine) {
+            const containerRect = container.getBoundingClientRect();
+            const lineRect = activeLine.getBoundingClientRect();
+            const lineRelativeTop = lineRect.top - containerRect.top + container.scrollTop;
+            const lineRelativeBottom = lineRelativeTop + activeLine.offsetHeight;
+            const containerHeight = container.offsetHeight;
+
+            if (lineRelativeTop < container.scrollTop || lineRelativeBottom > container.scrollTop + containerHeight) {
+                container.scrollTop = lineRelativeTop - containerHeight / 2;
+            }
+        }
+    }
 }
 
 const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
