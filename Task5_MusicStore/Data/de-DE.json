@@ -1,42 +1,37 @@
 ﻿{
   "locale": "de-DE",
-  "artistFirstNames": [
-    "Hans", "Klaus", "Werner", "Dieter", "Helmut", "Wolfgang", "Gerhard", "Thomas",
-    "Andreas", "Stefan", "Ursula", "Ingrid", "Monika", "Petra", "Sabine",
-    "Christina", "Claudia", "Brigitte", "Heike", "Karin", "Anna", "Laura", "Julia"
-  ],
-  "artistLastNames": [
-    "Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner",
-    "Becker", "Schulz", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein"
+  "musicWords": [
+    "Mitternacht", "Neon", "Elektrisch", "Kristall", "Hohl", "Spirale",
+    "Horizont", "Schatten", "Sturm", "Feuer", "Regen", "Licht", "Nacht",
+    "Stille", "Donner", "Samt", "Geist", "Traum", "Verblassend", "Steigend",
+    "Gebrochen", "Golden", "Silber", "Wild", "Verloren", "Brennend", "Gefroren",
+    "Dunkel", "Endlos", "Kosmisch", "Heilig", "Fallend", "Laufend", "Weinend",
+    "Wartend", "Jagend", "Tanzend", "Fliegend", "Schreiend", "Flüsternd",
+    "Euphorie", "Nostalgie", "Ewigkeit", "Vergessen", "Paradies", "Inferno",
+    "Genesis", "Exodus", "Requiem", "Hymne", "Vermächtnis", "Schicksal",
+    "Chaos", "Harmonie", "Einsamkeit", "Freiheit", "Rebellion", "Erlösung",
+    "Abgrund", "Metamorphose", "Auferstehung", "Aufstieg", "Leere", "Glut",
+    "Asche", "Blüte", "Verfall", "Hall", "Puls", "Drift", "Woge"
   ],
   "bandPrefixes": [
-    "Die", "Schwarze", "Rote", "Wilde", "Dunkle", "Eiserne", "Goldene", "Silberne",
-    "Kalte", "Brennende", "Stille", "Elektrische", "Verlorene", "Ewige", "Freie"
+    "Die", "Schwarze", "Rote", "Wilde", "Dunkle", "Eiserne", "Goldene",
+    "Silberne", "Kalte", "Brennende", "Stille", "Elektrische", "Verlorene",
+    "Ewige", "Freie", "Kosmische", "Heilige", "Hungrige", "Laute", "Tiefe",
+    "Leere", "Alte", "Neue", "Große", "Kleine", "Starke", "Schnelle", "Wilde"
   ],
   "bandSuffixes": [
     "Welle", "Sturm", "Schatten", "Traum", "Feuer", "Stein", "Mond", "Sonne",
-    "Stern", "Fluss", "Wind", "Berg", "Nacht", "Licht", "Echo", "Geist"
-  ],
-  "titleAdjectives": [
-    "Schwarze", "Stille", "Brennende", "Eiserne", "Goldene", "Wilde", "Dunkle",
-    "Kalte", "Verlorene", "Ewige", "Rote", "Freie", "Tiefe", "Leere", "Alte"
-  ],
-  "titleNouns": [
-    "Nacht", "Traum", "Feuer", "Sturm", "Schatten", "Welle", "Reise", "Stadt",
-    "Herz", "Seele", "Zeit", "Welt", "Weg", "Licht", "Stille", "Nebel"
-  ],
-  "titleVerbs": [
-    "Fallend", "Brennend", "Fließend", "Tanzend", "Träumend", "Fliegend",
-    "Wartend", "Suchend", "Laufend", "Schwebend", "Vergessend", "Steigend"
-  ],
-  "albumWords": [
-    "Mitternacht", "Schatten", "Ewigkeit", "Horizont", "Spektrum", "Illusion",
-    "Offenbarung", "Dunkelheit", "Stille", "Träume", "Nebel", "Kristall"
+    "Stern", "Fluss", "Wind", "Berg", "Nacht", "Licht", "Echo", "Geist",
+    "Heiligen", "Könige", "Königinnen", "Wölfe", "Löwen", "Tiger", "Bären",
+    "Propheten", "Engel", "Dämonen", "Gespenster", "Seelen", "Herzen",
+    "Brüder", "Schwestern", "Kinder", "Reiter", "Kämpfer", "Liebhaber"
   ],
   "genres": [
     "Indie Rock", "Alternative", "Synthwave", "Dream Pop", "Post-Rock",
     "Volksmusik", "Blues", "Jazz", "Elektronik", "Ambient", "Metal",
-    "Punk", "Soul", "Funk", "Klassik", "Schlager", "Neue Deutsche Welle"
+    "Punk", "Soul", "Funk", "Klassik", "Schlager", "Neue Deutsche Welle",
+    "Grunge", "Shoegaze", "Lo-Fi", "House", "Techno", "Disco", "Gospel",
+    "Ska", "Emo", "Hardcore", "Krautrock", "Deutschrock", "NDH"
   ],
   "reviewPhrases": [
     "Eine eindringliche Reise durch vielschichtige Klanglandschaften",
@@ -48,21 +43,16 @@
     "Ein erfrischender Ansatz im modernen Sounddesign",
     "Kraftvolle Texte unterstützt von unvergesslicher Instrumentierung",
     "Ein klangliches Abenteuer das Genregrenzen sprengt",
-    "Intim und verletzlich mit Momenten purer Brillanz"
-  ],
-  "lyricsVerbs": ["laufen", "fallen", "steigen", "brennen", "verblassen", "jagen", "brechen", "warten", "tanzen", "träumen", "fliegen", "weinen", "gehen", "bleiben", "kämpfen", "scheinen", "verstecken", "finden", "verlieren", "erreichen"],
-  "lyricsNouns": ["Herz", "Seele", "Nacht", "Feuer", "Regen", "Licht", "Schatten", "Traum", "Weg", "Himmel", "Geist", "Zeit", "Welt", "Tränen", "Stimme", "Stille", "Sturm", "Hoffnung", "Schmerz", "Liebe"],
-  "lyricsAdjectives": ["gebrochen", "golden", "still", "brennend", "verblassend", "verloren", "wild", "leer", "elektrisch", "gefroren", "dunkel", "hell", "endlos", "ruhelos", "furchtlos", "ewig"],
-  "lyricsTemplates": [
-    "Ich {verb} durch die {noun}",
-    "Wir {verb} in der {adjective} {noun}",
-    "Deine {noun} ist {adjective}",
-    "Die {adjective} {noun} {verb}t",
-    "Ich kann diese {noun} nicht {verb}",
-    "Lauf weg von der {noun}",
-    "Jede {noun} {verb}t wie Feuer",
-    "Halt fest an deiner {noun}",
-    "Lass die {noun} nicht {verb}",
-    "Wir sind die {adjective} Seelen"
+    "Intim und verletzlich mit Momenten purer Brillanz",
+    "Hypnotische Grooves in atmosphärische Texturen gehüllt",
+    "Eine atemberaubende Kollision von Tradition und Innovation",
+    "Üppige Produktion die wiederholtes Hören belohnt",
+    "Karg und doch verheerend in seiner emotionalen Wirkung",
+    "Genresprengend und von Anfang bis Ende fesselnd",
+    "Strahlt Wärme und Authentizität in jedem Takt aus",
+    "Ein reifes und selbstbewusstes Statement eines aufstrebenden Talents",
+    "Sprüht vor kreativer Energie und unerwarteten Wendungen",
+    "Zarte Arrangements die sich zu euphorischen Höhen aufbauen",
+    "Roh und ungefiltert mit einer unwiderstehlichen Dringlichkeit"
   ]
 }

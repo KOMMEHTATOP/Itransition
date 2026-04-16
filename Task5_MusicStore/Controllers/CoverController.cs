@@ -17,7 +17,7 @@ public class CoverController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult Get(
+    public async Task<IActionResult> Get(
         [FromQuery] long seed = 12345,
         [FromQuery] string locale = "en-US",
         [FromQuery] int index = 1)
@@ -26,7 +26,7 @@ public class CoverController : ControllerBase
         var song = songs.LastOrDefault();
         if (song == null) return NotFound();
 
-        var png = _cover.GenerateCover(seed, index, song.Title, song.Artist);
+        var png = await _cover.GenerateCoverAsync(seed, index, locale, song.Title, song.Artist);
         return File(png, "image/png");
     }
 }

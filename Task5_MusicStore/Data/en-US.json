@@ -1,42 +1,38 @@
 ﻿{
   "locale": "en-US",
-  "artistFirstNames": [
-    "James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph",
-    "Thomas", "Charles", "Mary", "Patricia", "Jennifer", "Linda", "Barbara",
-    "Elizabeth", "Susan", "Jessica", "Sarah", "Karen", "Emma", "Olivia", "Ava"
-  ],
-  "artistLastNames": [
-    "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
-    "Wilson", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin"
+  "musicWords": [
+    "Midnight", "Neon", "Electric", "Crystal", "Hollow", "Spiral", "Eclipse",
+    "Horizon", "Shadow", "Storm", "Fire", "Rain", "Light", "Night", "Dawn",
+    "Silence", "Thunder", "Velvet", "Ghost", "Dream", "Fading", "Rising",
+    "Broken", "Golden", "Silver", "Wild", "Lost", "Burning", "Frozen", "Dark",
+    "Endless", "Cosmic", "Sacred", "Falling", "Running", "Crying", "Waiting",
+    "Chasing", "Dancing", "Flying", "Screaming", "Whispering", "Bleeding",
+    "Euphoria", "Nostalgia", "Eternity", "Oblivion", "Paradise", "Inferno",
+    "Genesis", "Exodus", "Requiem", "Anthem", "Legacy", "Destiny", "Chaos",
+    "Harmony", "Solitude", "Freedom", "Rebellion", "Salvation", "Abyss",
+    "Transcendence", "Resurrection", "Ascension", "Descent", "Void", "Flux",
+    "Ember", "Ash", "Bloom", "Fade", "Echo", "Pulse", "Drift", "Surge"
   ],
   "bandPrefixes": [
     "The", "Dark", "Neon", "Velvet", "Iron", "Silver", "Golden", "Crystal",
-    "Broken", "Electric", "Hollow", "Silent", "Burning", "Frozen", "Wild"
+    "Broken", "Electric", "Hollow", "Silent", "Burning", "Frozen", "Wild",
+    "Cosmic", "Acid", "Black", "Blue", "Dead", "Deep", "Dirty", "Divine",
+    "Endless", "Fallen", "Ghost", "Holy", "Liquid", "Lost", "Loud", "Lucky",
+    "Mad", "Midnight", "Mystic", "Naked", "Nuclear", "Sacred", "Savage"
   ],
   "bandSuffixes": [
     "Echo", "Wave", "Storm", "Light", "Shadow", "Dream", "Fire", "Stone",
-    "Road", "Sky", "Moon", "Sun", "Star", "River", "Wind", "Mountain"
-  ],
-  "titleAdjectives": [
-    "Neon", "Broken", "Silent", "Electric", "Hollow", "Burning", "Frozen",
-    "Dark", "Golden", "Silver", "Wild", "Lost", "Fading", "Rising", "Falling"
-  ],
-  "titleNouns": [
-    "Carousel", "Highway", "Mirror", "Ocean", "Desert", "Canyon", "City",
-    "Dream", "Shadow", "Fire", "Rain", "Storm", "Light", "Night", "Dawn"
-  ],
-  "titleVerbs": [
-    "Running", "Falling", "Rising", "Burning", "Fading", "Chasing", "Breaking",
-    "Waiting", "Dancing", "Dreaming", "Flying", "Crying", "Leaving", "Staying"
-  ],
-  "albumWords": [
-    "Midnight", "Neon", "Electric", "Crystal", "Hollow", "Spiral", "Eclipse",
-    "Horizon", "Spectrum", "Odyssey", "Chronicle", "Illusion", "Revelation"
+    "Road", "Sky", "Moon", "Sun", "Star", "River", "Wind", "Mountain",
+    "Saints", "Kings", "Queens", "Wolves", "Lions", "Tigers", "Bears",
+    "Prophets", "Angels", "Demons", "Ghosts", "Souls", "Hearts", "Minds",
+    "Brothers", "Sisters", "Children", "Riders", "Fighters", "Lovers"
   ],
   "genres": [
     "Indie Rock", "Alternative", "Synthwave", "Dream Pop", "Post-Rock",
     "Folk", "Blues", "Jazz", "R&B", "Hip-Hop", "Electronic", "Ambient",
-    "Metal", "Punk", "Soul", "Funk", "Country", "Reggae", "Classical"
+    "Metal", "Punk", "Soul", "Funk", "Country", "Reggae", "Classical",
+    "Grunge", "Shoegaze", "Lo-Fi", "Trap", "Drill", "House", "Techno",
+    "Disco", "Gospel", "Bluegrass", "Ska", "Emo", "Math Rock"
   ],
   "reviewPhrases": [
     "A haunting journey through layered soundscapes",
@@ -48,21 +44,16 @@
     "A refreshing take on modern sound design",
     "Powerful lyrics backed by unforgettable instrumentation",
     "A sonic adventure that defies genre boundaries",
-    "Intimate and vulnerable with moments of pure brilliance"
-  ],
-  "lyricsVerbs": ["run", "fall", "rise", "burn", "fade", "chase", "break", "wait", "dance", "dream", "fly", "cry", "leave", "stay", "fight", "shine", "hide", "find", "lose", "reach"],
-  "lyricsNouns": ["heart", "soul", "night", "fire", "rain", "light", "shadow", "dream", "road", "sky", "mind", "time", "world", "tears", "voice", "silence", "storm", "hope", "pain", "love"],
-  "lyricsAdjectives": ["broken", "golden", "silent", "burning", "fading", "lost", "wild", "hollow", "electric", "frozen", "dark", "bright", "endless", "empty", "restless", "fearless"],
-  "lyricsTemplates": [
-    "I {verb} through the {noun}",
-    "We {verb} in the {adjective} {noun}",
-    "Your {noun} is {adjective}",
-    "The {adjective} {noun} {verb}s",
-    "I can't {verb} this {noun}",
-    "Just {verb} away from the {noun}",
-    "Every {noun} {verb}s like fire",
-    "Hold on to your {noun}",
-    "Don't let the {noun} {verb}",
-    "We are the {adjective} ones"
+    "Intimate and vulnerable with moments of pure brilliance",
+    "Hypnotic grooves wrapped in atmospheric textures",
+    "A breathtaking collision of tradition and innovation",
+    "Lush production that rewards repeated listening",
+    "Sparse yet devastating in its emotional impact",
+    "Genre-defying and utterly compelling from start to finish",
+    "Radiates warmth and authenticity in every bar",
+    "A mature and confident statement from a rising talent",
+    "Bristling with creative energy and unexpected turns",
+    "Delicate arrangements that build to euphoric heights",
+    "Raw and unfiltered with an irresistible urgency"
   ]
 }

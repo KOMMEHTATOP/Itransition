@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using Bogus;
+using System.Text.Json;
 using Task5_MusicStore.Models;
 
 namespace Task5_MusicStore.Services;
@@ -6,6 +7,11 @@ namespace Task5_MusicStore.Services;
 public class SongGeneratorService
 {
     private readonly Dictionary<string, LocaleData> _locales = new();
+    private readonly Dictionary<string, string> _bogusLocaleMap = new()
+    {
+        { "en-US", "en" },
+        { "de-DE", "de" }
+    };
 
     public SongGeneratorService(IWebHostEnvironment env)
     {
@@ -27,6 +33,10 @@ public class SongGeneratorService
         if (!_locales.TryGetValue(locale, out var data))
             data = _locales.Values.First();
 
+        var bogusLocale = _bogusLocaleMap.TryGetValue(locale, out var bl) ? bl : "en";
+        var namePool = BuildNamePool(bogusLocale, seed);
+        var bandPool = BuildBandPool(data, seed);
+
         long effectiveSeed = seed * 6364136223846793 + page;
         var songs = new List<Song>();
 
@@ -41,46 +51,66 @@ public class SongGeneratorService
             {
                 Index = globalIndex,
                 Title = GenerateTitle(rng, data),
-                Artist = GenerateArtist(rng, data),
+                Artist = rng.Next(2) == 0
+                    ? namePool[rng.Next(namePool.Count)]
+                    : bandPool[rng.Next(bandPool.Count)],
                 Album = GenerateAlbum(rng, data),
                 Genre = Pick(rng, data.Genres),
                 Likes = GenerateLikes(likesRng, likes),
-                Review = GenerateReview(rng, data)
+                Review = GenerateReview(rng, data, bogusLocale)
             });
         }
 
         return songs;
     }
 
-    private string GenerateTitle(Random rng, LocaleData data)
+    private List<string> BuildNamePool(string bogusLocale, long seed)
     {
-        return rng.Next(3) switch
-        {
-            0 => $"{Pick(rng, data.TitleAdjectives)} {Pick(rng, data.TitleNouns)}",
-            1 => $"{Pick(rng, data.TitleVerbs)} {Pick(rng, data.TitleNouns)}",
-            _ => $"{Pick(rng, data.TitleAdjectives)} {Pick(rng, data.TitleVerbs)}"
-        };
+        var faker = new Faker(bogusLocale) { Random = new Randomizer((int)(seed & 0x7FFFFFFF)) };
+        var pool = new List<string>();
+        for (int i = 0; i < 300; i++)
+            pool.Add($"{faker.Name.FirstName()} {faker.Name.LastName()}");
+        return pool;
     }
 
-    private string GenerateArtist(Random rng, LocaleData data)
+    private List<string> BuildBandPool(LocaleData data, long seed)
     {
-        if (rng.Next(2) == 0)
-            return $"{Pick(rng, data.ArtistFirstNames)} {Pick(rng, data.ArtistLastNames)}";
-        return $"{Pick(rng, data.BandPrefixes)} {Pick(rng, data.BandSuffixes)}";
+        var rng = new Random((int)((seed ^ 987654321) & 0x7FFFFFFF));
+        var pool = new List<string>();
+        for (int i = 0; i < 150; i++)
+            pool.Add($"{Pick(rng, data.BandPrefixes)} {Pick(rng, data.BandSuffixes)}");
+        return pool;
+    }
+
+    private string GenerateTitle(Random rng, LocaleData data)
+    {
+        return rng.Next(4) switch
+        {
+            0 => $"{Pick(rng, data.MusicWords)} {Pick(rng, data.MusicWords)}",
+            1 => Pick(rng, data.MusicWords),
+            2 => $"{Pick(rng, data.MusicWords)} of {Pick(rng, data.MusicWords)}",
+            _ => $"{Pick(rng, data.MusicWords)} & {Pick(rng, data.MusicWords)}"
+        };
     }
 
     private string GenerateAlbum(Random rng, LocaleData data)
     {
-        if (rng.Next(4) == 0)
-            return "Single";
-        return $"{Pick(rng, data.AlbumWords)} {Pick(rng, data.AlbumWords)}";
+        return rng.Next(4) switch
+        {
+            0 => "Single",
+            1 => Pick(rng, data.MusicWords),
+            2 => $"{Pick(rng, data.MusicWords)} {Pick(rng, data.MusicWords)}",
+            _ => $"The {Pick(rng, data.MusicWords)}"
+        };
     }
 
-    private string GenerateReview(Random rng, LocaleData data)
+    private string GenerateReview(Random rng, LocaleData data, string bogusLocale)
     {
-        var phrase1 = Pick(rng, data.ReviewPhrases);
-        var phrase2 = Pick(rng, data.ReviewPhrases);
-        return $"{phrase1}. {phrase2}.";
+        var faker = new Faker(bogusLocale) { Random = new Randomizer(rng.Next()) };
+        var opening = Pick(rng, data.ReviewPhrases);
+        var closing = Pick(rng, data.ReviewPhrases);
+        var middle = faker.Lorem.Sentence();
+        return $"{opening}. {middle} {closing}.";
     }
 
     private int GenerateLikes(Random rng, double likes)
@@ -89,6 +119,12 @@ public class SongGeneratorService
         double fraction = likes - baseLikes;
         int bonus = rng.NextDouble() < fraction ? 1 : 0;
         return baseLikes + bonus;
+    }
+
+    private string CapitalizeFirst(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+        return char.ToUpper(input[0]) + input[1..];
     }
 
     private T Pick<T>(Random rng, List<T> list) => list[rng.Next(list.Count)];

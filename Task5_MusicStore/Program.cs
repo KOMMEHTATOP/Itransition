@@ -11,7 +11,7 @@ builder.Services.AddSingleton<AudioService>();
 builder.Services.AddSingleton<LyricsGenerator>();
 builder.Services.AddSingleton<Mp3GeneratorService>();
 builder.Services.AddMemoryCache();
-
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
