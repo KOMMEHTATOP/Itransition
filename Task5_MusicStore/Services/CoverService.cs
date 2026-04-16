@@ -72,7 +72,7 @@ public class CoverService
         };
         canvas.DrawLine(24, Size - 115, Size - 24, Size - 115, linePaint);
 
-        // Название
+        // Название 
         float titleSize = title.Length > 16 ? 28 : title.Length > 10 ? 34 : 40;
         using var titlePaint = new SKPaint
         {
