@@ -83,7 +83,6 @@ function toggleExpand(row, song) {
     `;
     row.after(detail);
 
-    // Tab switching
     detail.querySelectorAll('[data-tab]').forEach(tab => {
         tab.addEventListener('click', (e) => {
             e.preventDefault();
@@ -102,7 +101,6 @@ function toggleExpand(row, song) {
         });
     });
 
-    // Sync lyrics with audio
     const audio = document.getElementById(`audio-${song.index}`);
     audio.addEventListener('timeupdate', () => {
         updateLyrics(song.index, audio.currentTime);

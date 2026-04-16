@@ -58,7 +58,6 @@ public class StreamController : ControllerBase
     {
         var totalLength = data.Length;
 
-        // Парсим Range: bytes=start-end
         var range = rangeHeader.Replace("bytes=", "").Split('-');
         long start = long.Parse(range[0]);
         long end = range[1].Length > 0 ? long.Parse(range[1]) : totalLength - 1;

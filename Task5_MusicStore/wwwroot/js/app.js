@@ -54,6 +54,5 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('theme', isLight ? 'light' : 'dark');
 });
 
-// ── INIT ──
 initInfiniteScroll();
 loadTable(1);

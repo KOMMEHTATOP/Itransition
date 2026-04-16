@@ -10,6 +10,8 @@ builder.Services.AddSingleton<CoverService>();
 builder.Services.AddSingleton<AudioService>();
 builder.Services.AddSingleton<LyricsGenerator>();
 builder.Services.AddSingleton<Mp3GeneratorService>();
+builder.Services.AddMemoryCache();
+
 
 var app = builder.Build();
 
