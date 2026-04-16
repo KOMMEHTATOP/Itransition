@@ -8,8 +8,6 @@ function resetAll() {
     }
 }
 
-// ── CONTROLS ──
-
 document.getElementById('locale').addEventListener('change', resetAll);
 document.getElementById('seed').addEventListener('input', resetAll);
 
@@ -30,19 +28,15 @@ document.getElementById('randomSeed').addEventListener('click', () => {
 document.getElementById('btnTable').addEventListener('click', () => {
     document.getElementById('tableView').classList.remove('d-none');
     document.getElementById('galleryView').classList.add('d-none');
-    document.getElementById('btnTable').classList.add('btn-primary');
-    document.getElementById('btnTable').classList.remove('btn-outline-primary');
-    document.getElementById('btnGallery').classList.add('btn-outline-primary');
-    document.getElementById('btnGallery').classList.remove('btn-primary');
+    document.getElementById('btnTable').classList.add('active');
+    document.getElementById('btnGallery').classList.remove('active');
 });
 
 document.getElementById('btnGallery').addEventListener('click', () => {
     document.getElementById('galleryView').classList.remove('d-none');
     document.getElementById('tableView').classList.add('d-none');
-    document.getElementById('btnGallery').classList.add('btn-primary');
-    document.getElementById('btnGallery').classList.remove('btn-outline-primary');
-    document.getElementById('btnTable').classList.add('btn-outline-primary');
-    document.getElementById('btnTable').classList.remove('btn-primary');
+    document.getElementById('btnGallery').classList.add('active');
+    document.getElementById('btnTable').classList.remove('active');
     loadGallery(true);
 });
 
