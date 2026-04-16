@@ -1,6 +1,5 @@
 ﻿import { fetchSongs, PAGE_SIZE } from './api.js';
 import { getParams } from './api.js';
-import { playAudio, stopAudio } from './audioPlayer.js';
 
 let currentPage = 1;
 let totalPages = 1;
@@ -42,6 +41,9 @@ function toggleExpand(row, song) {
     }
 
     const p = getParams();
+    const streamUrl = `/api/stream?seed=${p.seed}&locale=${p.locale}&index=${song.index}&genre=${encodeURIComponent(song.genre)}`;
+    const downloadUrl = `/api/stream/download?seed=${p.seed}&locale=${p.locale}&index=${song.index}&genre=${encodeURIComponent(song.genre)}&title=${encodeURIComponent(song.title)}&artist=${encodeURIComponent(song.artist)}&album=${encodeURIComponent(song.album)}`;
+
     const detail = document.createElement('tr');
     detail.classList.add('detail-row');
     detail.innerHTML = `
@@ -53,20 +55,13 @@ function toggleExpand(row, song) {
                     <h5>${song.title}</h5>
                     <p class="text-muted mb-1">${song.artist} — ${song.album}</p>
                     <p class="text-muted mb-2"><em>${song.genre}</em></p>
-                    <div class="d-flex gap-2 mb-2">
-                        <button class="btn btn-sm btn-success" id="play-btn-${song.index}">▶ Play</button>
-                        <button class="btn btn-sm btn-danger d-none" id="stop-btn-${song.index}">⏹ Stop</button>
-                    </div>
-                    <div class="audio-progress d-none" id="progress-${song.index}">
-                        <div class="d-flex align-items-center gap-2">
-                            <span id="timer-${song.index}" class="text-muted small">0:00</span>
-                            <div class="progress flex-grow-1" style="height:6px; cursor:pointer; transition: height 0.15s ease;" id="bar-container-${song.index}">
-                                <div class="progress-bar bg-success" id="bar-${song.index}" style="width:0%"></div>
-                            </div>
-                            <span id="duration-${song.index}" class="text-muted small">0:00</span>
-                        </div>
-                    </div>
-                    <ul class="nav nav-tabs mt-3" id="tabs-${song.index}">
+                    <audio controls class="w-100 mb-2" id="audio-${song.index}">
+                        <source src="${streamUrl}" type="audio/mpeg">
+                    </audio>
+                    <a href="${downloadUrl}" class="btn btn-sm btn-outline-secondary mb-2" download>
+                        ⬇ Download MP3
+                    </a>
+                    <ul class="nav nav-tabs mt-2" id="tabs-${song.index}">
                         <li class="nav-item">
                             <a class="nav-link active" href="#" data-tab="review" data-index="${song.index}">Review</a>
                         </li>
@@ -78,7 +73,7 @@ function toggleExpand(row, song) {
                         <p>${song.review}</p>
                     </div>
                     <div id="tab-lyrics-${song.index}" class="tab-content-panel mt-2 d-none">
-                        <div id="lyrics-container-${song.index}" class="lyrics-container" style="max-height:300px; overflow-y:auto;">
+                        <div id="lyrics-container-${song.index}" class="lyrics-container">
                             <p class="text-muted">Press Play to load lyrics...</p>
                         </div>
                     </div>
@@ -87,6 +82,7 @@ function toggleExpand(row, song) {
         </td>
     `;
     row.after(detail);
+
     // Tab switching
     detail.querySelectorAll('[data-tab]').forEach(tab => {
         tab.addEventListener('click', (e) => {
@@ -100,17 +96,69 @@ function toggleExpand(row, song) {
             detail.querySelectorAll('.tab-content-panel').forEach(p => p.classList.add('d-none'));
             document.getElementById(`tab-${tabName}-${idx}`).classList.remove('d-none');
 
-            // Загружаем lyrics если ещё не загружены
             if (tabName === 'lyrics') {
                 loadLyrics(song, detail);
             }
         });
     });
-    document.getElementById(`play-btn-${song.index}`)
-        .addEventListener('click', (e) => playAudio(song.index, song.genre, e.target));
 
-    document.getElementById(`stop-btn-${song.index}`)
-        .addEventListener('click', () => stopAudio(song.index));
+    // Sync lyrics with audio
+    const audio = document.getElementById(`audio-${song.index}`);
+    audio.addEventListener('timeupdate', () => {
+        updateLyrics(song.index, audio.currentTime);
+    });
+}
+
+async function loadLyrics(song, detail) {
+    const container = document.getElementById(`lyrics-container-${song.index}`);
+    if (!container || container.dataset.loaded) return;
+
+    const p = getParams();
+    const res = await fetch(`/api/lyrics?seed=${p.seed}&index=${song.index}&locale=${p.locale}&duration=30`);
+    const lines = await res.json();
+
+    container.dataset.loaded = 'true';
+    container.innerHTML = lines.map((line, i) =>
+        `<p class="lyrics-line mb-1" id="lyric-${song.index}-${i}" data-start="${line.startTime}" data-end="${line.endTime}">${line.text}</p>`
+    ).join('');
+}
+
+const activeLyricMap = {};
+
+function updateLyrics(songIndex, currentTime) {
+    const container = document.getElementById(`lyrics-container-${songIndex}`);
+    if (!container || !container.dataset.loaded) return;
+
+    const lines = container.querySelectorAll('.lyrics-line');
+    let newActiveId = null;
+
+    lines.forEach(line => {
+        const start = parseFloat(line.dataset.start);
+        const end = parseFloat(line.dataset.end);
+        const isActive = currentTime >= start && currentTime < end;
+
+        line.classList.toggle('active-lyric', isActive);
+        line.style.fontWeight = isActive ? 'bold' : '';
+        line.style.color = isActive ? '#0d6efd' : '';
+
+        if (isActive) newActiveId = line.id;
+    });
+
+    if (newActiveId && activeLyricMap[songIndex] !== newActiveId) {
+        activeLyricMap[songIndex] = newActiveId;
+        const activeLine = document.getElementById(newActiveId);
+        if (activeLine) {
+            const containerRect = container.getBoundingClientRect();
+            const lineRect = activeLine.getBoundingClientRect();
+            const lineRelativeTop = lineRect.top - containerRect.top + container.scrollTop;
+            const lineRelativeBottom = lineRelativeTop + activeLine.offsetHeight;
+            const containerHeight = container.offsetHeight;
+
+            if (lineRelativeTop < container.scrollTop || lineRelativeBottom > container.scrollTop + containerHeight) {
+                container.scrollTop = lineRelativeTop - containerHeight / 2;
+            }
+        }
+    }
 }
 
 function renderPagination() {
@@ -135,19 +183,4 @@ function renderPagination() {
     for (let i = start; i <= end; i++) addBtn(i, i, false, i === currentPage);
     addBtn('›', currentPage + 1, currentPage === totalPages);
     addBtn('»', totalPages, currentPage === totalPages);
-}
-
-async function loadLyrics(song, detail) {
-    const container = document.getElementById(`lyrics-container-${song.index}`);
-    if (!container || container.dataset.loaded) return;
-
-    const p = getParams();
-    const res = await fetch(`/api/lyrics?seed=${p.seed}&index=${song.index}&locale=${p.locale}&duration=30`);
-    const lines = await res.json();
-
-    container.dataset.loaded = 'true';
-    container.dataset.songIndex = song.index;
-    container.innerHTML = lines.map((line, i) =>
-        `<p class="lyrics-line mb-1" id="lyric-${song.index}-${i}" data-start="${line.startTime}" data-end="${line.endTime}">${line.text}</p>`
-    ).join('');
 }

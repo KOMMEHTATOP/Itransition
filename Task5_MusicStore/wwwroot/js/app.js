@@ -40,6 +40,20 @@ document.getElementById('btnGallery').addEventListener('click', () => {
     loadGallery(true);
 });
 
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('theme') || 'dark';
+if (savedTheme === 'light') {
+    document.body.classList.add('light');
+    themeToggle.textContent = '☀️';
+}
+
+themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('light');
+    const isLight = document.body.classList.contains('light');
+    themeToggle.textContent = isLight ? '☀️' : '🌙';
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+});
+
 // ── INIT ──
 initInfiniteScroll();
 loadTable(1);

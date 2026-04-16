@@ -1,4 +1,5 @@
 using Task5_MusicStore.Services;
+using Task5_MusicStore.Services.Audio;
 using Task5_MusicStore.Services.Lyrics;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,7 @@ builder.Services.AddSingleton<SongGeneratorService>();
 builder.Services.AddSingleton<CoverService>();
 builder.Services.AddSingleton<AudioService>();
 builder.Services.AddSingleton<LyricsGenerator>();
+builder.Services.AddSingleton<Mp3GeneratorService>();
 
 var app = builder.Build();
 

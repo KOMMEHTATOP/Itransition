@@ -9,7 +9,16 @@
 
     <ItemGroup>
         <PackageReference Include="Bogus" Version="35.6.5" />
+        <PackageReference Include="MeltySynth" Version="2.4.1" />
+        <PackageReference Include="NAudio" Version="2.3.0" />
+        <PackageReference Include="NAudio.Lame" Version="2.1.0" />
         <PackageReference Include="SkiaSharp" Version="3.119.3-preview.1.1" />
     </ItemGroup>
-
+    
+    <ItemGroup>
+        <Content Include="Data\TimGM6mb.sf2">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+    
 </Project>

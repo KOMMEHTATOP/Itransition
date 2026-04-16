@@ -3,16 +3,14 @@
 }
 
 @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
-    <script type="module" src="~/js/AudioEngine.js"></script>
     <script type="module" src="~/js/app.js"></script>
 }
 
 <!-- TOOLBAR -->
 <div class="toolbar d-flex align-items-center gap-3 p-3 mb-3">
     <select id="locale" class="form-select w-auto">
-        <option value="en-US">English (USA)</option>
-        <option value="de-DE">German (Germany)</option>
+        <option value="en-US">🇺🇸 English</option>
+        <option value="de-DE">🇩🇪 Deutsch</option>
     </select>
 
     <div class="d-flex align-items-center gap-2">
@@ -24,7 +22,7 @@
         <label for="likes" class="mb-0 text-nowrap">Likes: <span id="likesValue">5.0</span></label>
         <input id="likes" type="range" class="form-range" min="0" max="10" step="0.1" value="5" style="width:140px"/>
     </div>
-
+    <button id="themeToggle" class="theme-btn" title="Toggle theme">🌙</button>
     <div class="view-switcher ms-auto">
         <button id="btnTable" class="view-btn active">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
