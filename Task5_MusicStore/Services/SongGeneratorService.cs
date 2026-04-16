@@ -23,7 +23,7 @@ public class SongGeneratorService
             {
                 PropertyNameCaseInsensitive = true
             });
-            if (data != null)
+            if (data != null) 
                 _locales[data.Locale] = data;
         }
     }
