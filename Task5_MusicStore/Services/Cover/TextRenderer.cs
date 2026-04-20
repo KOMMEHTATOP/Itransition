@@ -4,6 +4,9 @@ namespace Task5_MusicStore.Services.Cover;
 
 public static class TextRenderer
 {
+    private static readonly SKTypeface Typeface = SKTypeface.FromFile(
+        Path.Combine(AppContext.BaseDirectory, "Assets", "Fonts", "Inter-Regular.ttf"));
+
     public static void DrawTextBlock(SKCanvas canvas, string title, string artist, int size)
     {
         DrawOverlay(canvas, size);
@@ -44,7 +47,8 @@ public static class TextRenderer
             IsAntialias = true,
             TextSize = titleSize,
             FakeBoldText = true,
-            TextAlign = SKTextAlign.Left
+            TextAlign = SKTextAlign.Left,
+            Typeface = Typeface
         };
 
         string display = TrimText(title, paint, size - 48);
@@ -58,7 +62,8 @@ public static class TextRenderer
             Color = new SKColor(200, 200, 200, 220),
             IsAntialias = true,
             TextSize = 22,
-            TextAlign = SKTextAlign.Left
+            TextAlign = SKTextAlign.Left,
+            Typeface = Typeface
         };
 
         string display = TrimText(artist, paint, size - 48);
