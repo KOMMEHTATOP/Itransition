@@ -40,6 +40,18 @@ public static class TextRenderer
 
     public static void DrawTextBlock(SKCanvas canvas, string title, string artist, int size)
     {
+        if (Typeface == null || Typeface == SKTypeface.Default)
+        {
+            using var diagPaint = new SKPaint { Color = SKColors.Red };
+            canvas.DrawRect(0, 0, 40, 40, diagPaint);
+        }
+        else
+        {
+            // синий квадрат = typeface загрузился
+            using var diagPaint = new SKPaint { Color = SKColors.Blue };
+            canvas.DrawRect(0, 0, 40, 40, diagPaint);
+        }
+
         DrawOverlay(canvas, size);
         DrawDividerLine(canvas, size);
         DrawTitle(canvas, title, size);
