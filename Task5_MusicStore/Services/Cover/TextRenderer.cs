@@ -4,30 +4,30 @@ namespace Task5_MusicStore.Services.Cover;
 
 public static class TextRenderer
 {
-    private static readonly SKTypeface Typeface = LoadTypeface();
+    public static readonly SKTypeface Typeface = LoadTypeface();
 
     private static SKTypeface LoadTypeface()
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Fonts", "Inter_18pt-Regular.ttf");
-    
+
         if (!File.Exists(fontPath))
         {
             Console.WriteLine($"[TextRenderer] WARNING: Font file not found at {fontPath}");
             Console.WriteLine($"[TextRenderer] BaseDirectory = {AppContext.BaseDirectory}");
             return SKTypeface.Default;
         }
-    
+
         try
         {
             using var stream = File.OpenRead(fontPath);
             var typeface = SKTypeface.FromStream(stream);
-        
+
             if (typeface == null)
             {
                 Console.WriteLine("[TextRenderer] FromStream returned null, using Default");
                 return SKTypeface.Default;
             }
-        
+
             Console.WriteLine($"[TextRenderer] Font loaded: {typeface.FamilyName}");
             return typeface;
         }
@@ -40,18 +40,6 @@ public static class TextRenderer
 
     public static void DrawTextBlock(SKCanvas canvas, string title, string artist, int size)
     {
-        if (Typeface == null || Typeface == SKTypeface.Default)
-        {
-            using var diagPaint = new SKPaint { Color = SKColors.Red };
-            canvas.DrawRect(0, 0, 40, 40, diagPaint);
-        }
-        else
-        {
-            // синий квадрат = typeface загрузился
-            using var diagPaint = new SKPaint { Color = SKColors.Blue };
-            canvas.DrawRect(0, 0, 40, 40, diagPaint);
-        }
-
         DrawOverlay(canvas, size);
         DrawDividerLine(canvas, size);
         DrawTitle(canvas, title, size);

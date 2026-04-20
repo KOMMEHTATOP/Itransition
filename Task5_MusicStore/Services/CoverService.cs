@@ -34,7 +34,6 @@ public class CoverService
         }
         catch
         {
-            // Fallback — генерируем градиент если Picsum недоступен
             return GenerateFallback(seed, index, title, artist, cacheKey);
         }
 
@@ -49,11 +48,9 @@ public class CoverService
         using var surface = SKSurface.Create(new SKImageInfo(Size, Size));
         var canvas = surface.Canvas;
 
-        // Рисуем фото
         using var scaledBitmap = photoBitmap.Resize(new SKImageInfo(Size, Size), SKFilterQuality.High);
         canvas.DrawBitmap(scaledBitmap, 0, 0);
 
-        // Тёмный градиент снизу
         using var overlayPaint = new SKPaint();
         using var overlayShader = SKShader.CreateLinearGradient(
             new SKPoint(0, Size - 180),
@@ -63,7 +60,6 @@ public class CoverService
         overlayPaint.Shader = overlayShader;
         canvas.DrawRect(0, Size - 180, Size, 180, overlayPaint);
 
-        // Тонкая линия
         using var linePaint = new SKPaint
         {
             Color = new SKColor(255, 255, 255, 100),
@@ -72,7 +68,6 @@ public class CoverService
         };
         canvas.DrawLine(24, Size - 115, Size - 24, Size - 115, linePaint);
 
-        // Название 
         float titleSize = title.Length > 16 ? 28 : title.Length > 10 ? 34 : 40;
         using var titlePaint = new SKPaint
         {
@@ -80,7 +75,8 @@ public class CoverService
             IsAntialias = true,
             TextSize = titleSize,
             FakeBoldText = true,
-            TextAlign = SKTextAlign.Left
+            TextAlign = SKTextAlign.Left,
+            Typeface = TextRenderer.Typeface
         };
 
         string displayTitle = title;
@@ -88,13 +84,13 @@ public class CoverService
             displayTitle = displayTitle[..^4] + "...";
         canvas.DrawText(displayTitle, 24, Size - 72, titlePaint);
 
-        // Артист
         using var artistPaint = new SKPaint
         {
             Color = new SKColor(220, 220, 220, 220),
             IsAntialias = true,
             TextSize = 22,
-            TextAlign = SKTextAlign.Left
+            TextAlign = SKTextAlign.Left,
+            Typeface = TextRenderer.Typeface
         };
 
         string displayArtist = artist;
