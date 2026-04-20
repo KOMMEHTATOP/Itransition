@@ -4,8 +4,39 @@ namespace Task5_MusicStore.Services.Cover;
 
 public static class TextRenderer
 {
-    private static readonly SKTypeface Typeface = SKTypeface.FromFile(
-        Path.Combine(AppContext.BaseDirectory, "Assets", "Fonts", "Inter_18pt-Regular.ttf"));
+    private static readonly SKTypeface Typeface = LoadTypeface();
+
+    private static SKTypeface LoadTypeface()
+    {
+        var fontPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Fonts", "Inter_18pt-Regular.ttf");
+    
+        if (!File.Exists(fontPath))
+        {
+            Console.WriteLine($"[TextRenderer] WARNING: Font file not found at {fontPath}");
+            Console.WriteLine($"[TextRenderer] BaseDirectory = {AppContext.BaseDirectory}");
+            return SKTypeface.Default;
+        }
+    
+        try
+        {
+            using var stream = File.OpenRead(fontPath);
+            var typeface = SKTypeface.FromStream(stream);
+        
+            if (typeface == null)
+            {
+                Console.WriteLine("[TextRenderer] FromStream returned null, using Default");
+                return SKTypeface.Default;
+            }
+        
+            Console.WriteLine($"[TextRenderer] Font loaded: {typeface.FamilyName}");
+            return typeface;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[TextRenderer] Exception loading font: {ex.Message}");
+            return SKTypeface.Default;
+        }
+    }
 
     public static void DrawTextBlock(SKCanvas canvas, string title, string artist, int size)
     {
