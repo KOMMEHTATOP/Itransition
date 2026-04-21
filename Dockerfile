@@ -14,6 +14,7 @@ COPY Task5_MusicStore/Assets/Fonts/*.ttf /usr/local/share/fonts/
 RUN fc-cache -f -v
 
 COPY publish/ .
+RUN ln -s /usr/lib/x86_64-linux-gnu/libmp3lame.so.0 /app/libmp3lame.64.dll
 
 ENV ASPNETCORE_URLS=http://+:5000
 ENV ASPNETCORE_ENVIRONMENT=Production
