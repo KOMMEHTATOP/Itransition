@@ -1,0 +1,9 @@
+﻿services:
+  task5-musicstore:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: task5-musicstore
+    ports:
+      - "5000:5000"
+    restart: unless-stopped

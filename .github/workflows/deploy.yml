@@ -1,0 +1,38 @@
+﻿name: Deploy Task5 MusicStore to VPS
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'Task5_MusicStore/**'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 176.123.182.172
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "Dockerfile,docker-compose.yml,Task5_MusicStore/"
+          target: /root/app
+
+      - name: Build and restart container
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 176.123.182.172
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /root/app
+            docker compose down
+            docker compose build --no-cache
+            docker compose up -d
