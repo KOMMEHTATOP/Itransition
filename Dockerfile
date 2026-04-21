@@ -16,6 +16,7 @@ WORKDIR /app
 # Install native dependencies for SkiaSharp and NAudio.Lame
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libfontconfig1 \
+        fontconfig \
     libfreetype6 \
     libmp3lame0 \
     && rm -rf /var/lib/apt/lists/*
