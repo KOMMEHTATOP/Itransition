@@ -16,16 +16,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Publish
+        run: dotnet publish Task5_MusicStore/Task5_MusicStore.csproj -c Release -o ./publish
+
       - name: Copy files to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: 176.123.182.172
           username: root
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "Dockerfile,docker-compose.yml,Task5_MusicStore/"
+          source: "publish/,Task5_MusicStore/Assets/Fonts/,Dockerfile,docker-compose.yml"
           target: /root/app
 
-      - name: Build and restart container
+      - name: Start container
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 176.123.182.172
