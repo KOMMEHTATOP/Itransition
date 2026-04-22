@@ -1,0 +1,183 @@
+﻿.container {
+    height: 100%;
+    padding: 24px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+}
+
+.headerLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #e0e0e0;
+}
+
+.headerLeft h1 {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.createBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #7c6ef0;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.createBtn:hover {
+    background: #6a5bd4;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+}
+
+.card:hover {
+    border-color: #7c6ef0;
+    transform: translateY(-2px);
+}
+
+.thumbnail {
+    height: 160px;
+    background: #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.placeholderThumb {
+    color: #333;
+}
+
+.cardInfo {
+    padding: 14px 16px;
+}
+
+.cardInfo h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cardMeta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #666;
+    font-size: 12px;
+}
+
+.userCount {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.empty {
+    text-align: center;
+    color: #555;
+    margin-top: 80px;
+    font-size: 16px;
+}
+
+/* Modal */
+.createOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.createModal {
+    background: #1e1e2e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 32px;
+    width: 400px;
+    max-width: 90vw;
+}
+
+.createModal h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.createInput {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 15px;
+    color: #e0e0e0;
+    margin-bottom: 20px;
+}
+
+.createInput:focus {
+    border-color: #7c6ef0;
+}
+
+.createActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.cancelBtn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #aaa;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.confirmBtn {
+    background: #7c6ef0;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.confirmBtn:hover {
+    background: #6a5bd4;
+}
