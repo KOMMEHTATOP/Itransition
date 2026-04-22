@@ -1,10 +1,11 @@
-﻿import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBoard } from '../../services/api';
+import { getBoard, createPage, deletePage } from '../../services/api';
 import { Canvas as FabricCanvas, PencilBrush, Rect, Circle, Triangle, Line, IText, FabricObject } from 'fabric';
-import type { BoardDetail } from '../../types';
+import type { BoardDetail, PageItem } from '../../types';
 import { useSignalRSync } from '../../hooks/useSignalRSync';
 import Toolbar from './Toolbar';
+import PagePanel from './PagePanel';
 import styles from './BoardEditor.module.css';
 
 export type Tool = 'select' | 'pencil' | 'line' | 'rect' | 'circle' | 'triangle' | 'text' | 'eraser';
@@ -16,6 +17,7 @@ export default function BoardEditor() {
     const fabricRef = useRef<FabricCanvas | null>(null);
     const [fabricReady, setFabricReady] = useState<FabricCanvas | null>(null);
     const [board, setBoard] = useState<BoardDetail | null>(null);
+    const [pages, setPages] = useState<PageItem[]>([]);
     const [activePageId, setActivePageId] = useState<string | undefined>();
     const [activeTool, setActiveTool] = useState<Tool>('pencil');
     const [strokeColor, setStrokeColor] = useState('#ffffff');
@@ -26,8 +28,31 @@ export default function BoardEditor() {
     const shapeStart = useRef({ x: 0, y: 0 });
     const activeShape = useRef<FabricObject | null>(null);
 
-    const { sendElementAdded, sendElementModified, sendElementDeleted, isSyncing } =
-        useSignalRSync({ boardId, pageId: activePageId, canvas: fabricReady });
+    const {
+        sendElementAdded, sendElementModified, sendElementDeleted,
+        sendPageAdded, sendPageDeleted: sendPageDeletedSignalR,
+        isSyncing,
+    } = useSignalRSync({
+        boardId,
+        pageId: activePageId,
+        canvas: fabricReady,
+        onPageAdded: (pageId, title, sortOrder) => {
+            setPages(prev => {
+                if (prev.some(p => p.id === pageId)) return prev;
+                return [...prev, { id: pageId, title, sortOrder }]
+                    .sort((a, b) => a.sortOrder - b.sortOrder);
+            });
+        },
+        onPageDeleted: (pageId) => {
+            setPages(prev => {
+                const updated = prev.filter(p => p.id !== pageId);
+                if (pageId === activePageId && updated.length > 0) {
+                    setActivePageId(updated[0].id);
+                }
+                return updated;
+            });
+        },
+    });
 
     // Load board data
     useEffect(() => {
@@ -37,18 +62,61 @@ export default function BoardEditor() {
 
         getBoard(boardId).then((b) => {
             setBoard(b);
-            if (b.pages.length > 0) {
-                setActivePageId(b.pages[0].id);
+            const sortedPages = [...b.pages].sort((a, b) => a.sortOrder - b.sortOrder);
+            setPages(sortedPages);
+            if (sortedPages.length > 0) {
+                setActivePageId(sortedPages[0].id);
             }
         }).catch(() => navigate('/boards'));
     }, [boardId]);
+
+    // --- Page actions ---
+
+    const handleAddPage = useCallback(async () => {
+        if (!boardId) return;
+        try {
+            const newPage = await createPage(boardId);
+            setPages(prev => [...prev, newPage].sort((a, b) => a.sortOrder - b.sortOrder));
+            setActivePageId(newPage.id);
+            // Notify other users via SignalR
+            sendPageAdded(newPage.id, newPage.title, newPage.sortOrder);
+        } catch (err) {
+            console.error('Failed to create page:', err);
+        }
+    }, [boardId, sendPageAdded]);
+
+    const handleDeletePage = useCallback(async (pageId: string) => {
+        if (!boardId) return;
+        if (pages.length <= 1) return;
+
+        try {
+            await deletePage(boardId, pageId);
+            setPages(prev => {
+                const updated = prev.filter(p => p.id !== pageId);
+                if (pageId === activePageId && updated.length > 0) {
+                    setActivePageId(updated[0].id);
+                }
+                return updated;
+            });
+            // Notify other users via SignalR
+            sendPageDeletedSignalR(pageId);
+        } catch (err) {
+            console.error('Failed to delete page:', err);
+        }
+    }, [boardId, pages.length, activePageId, sendPageDeletedSignalR]);
+
+    const handleSelectPage = useCallback((pageId: string) => {
+        if (pageId !== activePageId) {
+            setActivePageId(pageId);
+        }
+    }, [activePageId]);
 
     // Init Fabric canvas
     useEffect(() => {
         if (!canvasRef.current || fabricRef.current) return;
 
         const canvas = new FabricCanvas(canvasRef.current, {
-            width: window.innerWidth,
+            width: window.innerWidth - 200,
             height: window.innerHeight - 52 - 48,
             backgroundColor: '#1a1a2e',
             selection: true,
@@ -58,8 +126,9 @@ export default function BoardEditor() {
         setFabricReady(canvas);
 
         const handleResize = () => {
+            const panelWidth = document.querySelector('[class*="panel"]')?.clientWidth || 200;
             canvas.setDimensions({
-                width: window.innerWidth,
+                width: window.innerWidth - panelWidth,
                 height: window.innerHeight - 52 - 48,
             });
             canvas.renderAll();
@@ -230,7 +299,6 @@ export default function BoardEditor() {
             const shape = activeShape.current;
             shape.setCoords();
 
-            // Send to server
             sendElementAdded(shape);
 
             activeShape.current = null;
@@ -268,7 +336,6 @@ export default function BoardEditor() {
             canvas.setActiveObject(text);
             text.enterEditing();
 
-            // Send after user finishes editing
             text.on('editing:exited', () => {
                 if (!(text as any)._syncId) {
                     sendElementAdded(text);
@@ -370,8 +437,18 @@ export default function BoardEditor() {
                 </button>
             </header>
 
-            <div className={styles.canvasArea}>
-                <canvas ref={canvasRef} />
+            <div className={styles.workspace}>
+                <PagePanel
+                    pages={pages}
+                    activePageId={activePageId}
+                    onSelectPage={handleSelectPage}
+                    onAddPage={handleAddPage}
+                    onDeletePage={handleDeletePage}
+                />
+
+                <div className={styles.canvasArea}>
+                    <canvas ref={canvasRef} />
+                </div>
             </div>
 
             <Toolbar

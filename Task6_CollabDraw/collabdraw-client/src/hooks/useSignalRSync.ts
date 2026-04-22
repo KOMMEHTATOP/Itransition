@@ -8,11 +8,13 @@ interface UseSignalRSyncProps {
     boardId: string | undefined;
     pageId: string | undefined;
     canvas: FabricCanvas | null;
+    onPageAdded?: (pageId: string, title: string, sortOrder: number) => void;
+    onPageDeleted?: (pageId: string) => void;
 }
 
-export function useSignalRSync({ boardId, pageId, canvas }: UseSignalRSyncProps) {
+export function useSignalRSync({ boardId, pageId, canvas, onPageAdded, onPageDeleted }: UseSignalRSyncProps) {
     const connectionRef = useRef<HubConnection | null>(null);
-    const isSyncing = useRef(false); // prevent echo loops
+    const isSyncing = useRef(false);
 
     // Connect to hub and join board
     useEffect(() => {
@@ -67,7 +69,7 @@ export function useSignalRSync({ boardId, pageId, canvas }: UseSignalRSyncProps)
         loadElements();
     }, [boardId, pageId, canvas]);
 
-    // Listen for remote events
+    // Listen for remote events (elements + pages)
     useEffect(() => {
         const conn = connectionRef.current;
         if (!conn || !canvas) return;
@@ -127,18 +129,30 @@ export function useSignalRSync({ boardId, pageId, canvas }: UseSignalRSyncProps)
             }
         };
 
+        const onPageAddedRemote = (remotePageId: string, title: string, sortOrder: number) => {
+            onPageAdded?.(remotePageId, title, sortOrder);
+        };
+
+        const onPageDeletedRemote = (remotePageId: string) => {
+            onPageDeleted?.(remotePageId);
+        };
+
         conn.on('ElementAdded', onElementAdded);
         conn.on('ElementModified', onElementModified);
         conn.on('ElementDeleted', onElementDeleted);
+        conn.on('PageAdded', onPageAddedRemote);
+        conn.on('PageDeleted', onPageDeletedRemote);
 
         return () => {
             conn.off('ElementAdded', onElementAdded);
             conn.off('ElementModified', onElementModified);
             conn.off('ElementDeleted', onElementDeleted);
+            conn.off('PageAdded', onPageAddedRemote);
+            conn.off('PageDeleted', onPageDeletedRemote);
         };
-    }, [canvas, pageId]);
+    }, [canvas, pageId, onPageAdded, onPageDeleted]);
 
-    // Send local changes to server
+    // Send local element changes
     const sendElementAdded = useCallback((obj: any) => {
         const conn = connectionRef.current;
         if (!conn || !boardId || !pageId || isSyncing.current) return;
@@ -176,5 +190,29 @@ export function useSignalRSync({ boardId, pageId, canvas }: UseSignalRSyncProps)
             .catch((err: any) => console.error('SendElementDeleted failed:', err));
     }, [boardId, pageId]);
 
-    return { sendElementAdded, sendElementModified, sendElementDeleted, isSyncing };
+    // Send page notifications to other users
+    const sendPageAdded = useCallback((newPageId: string, title: string, sortOrder: number) => {
+        const conn = connectionRef.current;
+        if (!conn || !boardId) return;
+
+        conn.invoke('SendPageAdded', boardId, newPageId, title, sortOrder)
+            .catch((err: any) => console.error('SendPageAdded failed:', err));
+    }, [boardId]);
+
+    const sendPageDeleted = useCallback((deletedPageId: string) => {
+        const conn = connectionRef.current;
+        if (!conn || !boardId) return;
+
+        conn.invoke('SendPageDeleted', boardId, deletedPageId)
+            .catch((err: any) => console.error('SendPageDeleted failed:', err));
+    }, [boardId]);
+
+    return {
+        sendElementAdded,
+        sendElementModified,
+        sendElementDeleted,
+        sendPageAdded,
+        sendPageDeleted,
+        isSyncing,
+    };
 }

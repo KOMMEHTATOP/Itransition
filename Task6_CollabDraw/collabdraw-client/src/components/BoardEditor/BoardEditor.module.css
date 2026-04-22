@@ -51,6 +51,12 @@
     background: #6a5bd4;
 }
 
+.workspace {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
 .canvasArea {
     flex: 1;
     overflow: hidden;
