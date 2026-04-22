@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task3_AdminPlatform", "Task
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task5_MusicStore", "Task5_MusicStore\Task5_MusicStore.csproj", "{69A77617-6CD7-4DF2-9FBF-630C2EEE40EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollabDraw.Server", "Task6_CollabDraw\CollabDraw.Server\CollabDraw.Server.csproj", "{23114B20-B79A-4FB8-92D7-757676F70FD6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{69A77617-6CD7-4DF2-9FBF-630C2EEE40EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{69A77617-6CD7-4DF2-9FBF-630C2EEE40EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{69A77617-6CD7-4DF2-9FBF-630C2EEE40EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23114B20-B79A-4FB8-92D7-757676F70FD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23114B20-B79A-4FB8-92D7-757676F70FD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23114B20-B79A-4FB8-92D7-757676F70FD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23114B20-B79A-4FB8-92D7-757676F70FD6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
