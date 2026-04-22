@@ -78,3 +78,9 @@ export const getElements = (boardId: string, pageId: string) =>
     request<{ id: string; type: string; properties: string; zIndex: number; version: number; createdById: string }[]>(
         `/boards/${boardId}/pages/${pageId}/elements`
     );
+
+export const updateThumbnail = (boardId: string, base64: string) =>
+    request<void>(`/boards/${boardId}/thumbnail`, {
+        method: 'PUT',
+        body: JSON.stringify({ base64 }),
+    });

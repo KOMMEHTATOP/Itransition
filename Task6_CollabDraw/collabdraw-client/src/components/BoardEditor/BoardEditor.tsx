@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBoard, createPage, deletePage } from '../../services/api';
+import { getBoard, createPage, deletePage, updateThumbnail } from '../../services/api';
 import { Canvas as FabricCanvas, PencilBrush, Rect, Circle, Triangle, Line, IText, FabricObject } from 'fabric';
 import type { BoardDetail, PageItem } from '../../types';
 import { useSignalRSync } from '../../hooks/useSignalRSync';
@@ -70,6 +70,32 @@ export default function BoardEditor() {
         }).catch(() => navigate('/boards'));
     }, [boardId]);
 
+    // --- Thumbnail ---
+
+    const saveThumbnail = useCallback(async () => {
+        const canvas = fabricRef.current;
+        if (!canvas || !boardId) return;
+
+        try {
+            // Create a small thumbnail (300px wide)
+            const dataURL = canvas.toDataURL({
+                format: 'jpeg',
+                quality: 0.6,
+                multiplier: 300 / canvas.getWidth(),
+            });
+            // Strip "data:image/jpeg;base64," prefix
+            const base64 = dataURL.split(',')[1];
+            await updateThumbnail(boardId, base64);
+        } catch (err) {
+            console.error('Failed to save thumbnail:', err);
+        }
+    }, [boardId]);
+
+    const handleBack = useCallback(async () => {
+        await saveThumbnail();
+        navigate('/boards');
+    }, [saveThumbnail, navigate]);
+
     // --- Page actions ---
 
     const handleAddPage = useCallback(async () => {
@@ -78,7 +104,6 @@ export default function BoardEditor() {
             const newPage = await createPage(boardId);
             setPages(prev => [...prev, newPage].sort((a, b) => a.sortOrder - b.sortOrder));
             setActivePageId(newPage.id);
-            // Notify other users via SignalR
             sendPageAdded(newPage.id, newPage.title, newPage.sortOrder);
         } catch (err) {
             console.error('Failed to create page:', err);
@@ -98,7 +123,6 @@ export default function BoardEditor() {
                 }
                 return updated;
             });
-            // Notify other users via SignalR
             sendPageDeletedSignalR(pageId);
         } catch (err) {
             console.error('Failed to delete page:', err);
@@ -428,7 +452,7 @@ export default function BoardEditor() {
     return (
         <div className={styles.container}>
             <header className={styles.header}>
-                <button className={styles.backBtn} onClick={() => navigate('/boards')}>
+                <button className={styles.backBtn} onClick={handleBack}>
                     ← Back
                 </button>
                 <span className={styles.boardName}>{board?.name || 'Loading...'}</span>

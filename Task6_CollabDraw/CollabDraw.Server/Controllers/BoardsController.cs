@@ -133,6 +133,20 @@ public class BoardsController : ControllerBase
 
         return NoContent();
     }
+    
+    // PUT /api/boards/{id}/thumbnail
+    [HttpPut("{id:guid}/thumbnail")]
+    public async Task<IActionResult> UpdateThumbnail(Guid id, [FromBody] UpdateThumbnailRequest request)
+    {
+        var board = await _db.Boards.FindAsync(id);
+        if (board == null) return NotFound();
+
+        board.Thumbnail = Convert.FromBase64String(request.Base64);
+        board.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
 
     private async Task<User?> GetCurrentUser()
     {

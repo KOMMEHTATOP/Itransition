@@ -22,3 +22,5 @@ public record BoardDetailResponse(
 public record PageListItem(Guid Id, string Title, int SortOrder);
 
 public record BoardUserItem(Guid UserId, string DisplayName, string Role, DateTime JoinedAt);
+
+public record UpdateThumbnailRequest(string Base64);
