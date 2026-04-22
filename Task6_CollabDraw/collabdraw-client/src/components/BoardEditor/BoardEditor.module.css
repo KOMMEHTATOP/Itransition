@@ -1,0 +1,62 @@
+﻿.container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #0f0f0f;
+}
+
+.header {
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+}
+
+.backBtn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #aaa;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+.backBtn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #e0e0e0;
+}
+
+.boardName {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e0e0e0;
+}
+
+.exportBtn {
+    background: #7c6ef0;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.exportBtn:hover {
+    background: #6a5bd4;
+}
+
+.canvasArea {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.canvasArea canvas {
+    display: block;
+}
