@@ -1,9 +1,9 @@
-﻿import { useState, useEffect, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBoard, getElements } from '../../services/api';
-import { getConnection, startConnection } from '../../services/signalr';
+import { getBoard } from '../../services/api';
 import { Canvas as FabricCanvas, PencilBrush, Rect, Circle, Triangle, Line, IText, FabricObject } from 'fabric';
-import type { BoardDetail, CanvasElement } from '../../types';
+import type { BoardDetail } from '../../types';
+import { useSignalRSync } from '../../hooks/useSignalRSync';
 import Toolbar from './Toolbar';
 import styles from './BoardEditor.module.css';
 
@@ -14,7 +14,9 @@ export default function BoardEditor() {
     const navigate = useNavigate();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fabricRef = useRef<FabricCanvas | null>(null);
+    const [fabricReady, setFabricReady] = useState<FabricCanvas | null>(null);
     const [board, setBoard] = useState<BoardDetail | null>(null);
+    const [activePageId, setActivePageId] = useState<string | undefined>();
     const [activeTool, setActiveTool] = useState<Tool>('pencil');
     const [strokeColor, setStrokeColor] = useState('#ffffff');
     const [fillColor, setFillColor] = useState('transparent');
@@ -24,13 +26,21 @@ export default function BoardEditor() {
     const shapeStart = useRef({ x: 0, y: 0 });
     const activeShape = useRef<FabricObject | null>(null);
 
+    const { sendElementAdded, sendElementModified, sendElementDeleted, isSyncing } =
+        useSignalRSync({ boardId, pageId: activePageId, canvas: fabricReady });
+
     // Load board data
     useEffect(() => {
         if (!boardId) return;
         const token = localStorage.getItem('user_token');
         if (!token) { navigate('/'); return; }
 
-        getBoard(boardId).then(setBoard).catch(() => navigate('/boards'));
+        getBoard(boardId).then((b) => {
+            setBoard(b);
+            if (b.pages.length > 0) {
+                setActivePageId(b.pages[0].id);
+            }
+        }).catch(() => navigate('/boards'));
     }, [boardId]);
 
     // Init Fabric canvas
@@ -39,12 +49,13 @@ export default function BoardEditor() {
 
         const canvas = new FabricCanvas(canvasRef.current, {
             width: window.innerWidth,
-            height: window.innerHeight - 52 - 48, // header + toolbar
+            height: window.innerHeight - 52 - 48,
             backgroundColor: '#1a1a2e',
             selection: true,
         });
 
         fabricRef.current = canvas;
+        setFabricReady(canvas);
 
         const handleResize = () => {
             canvas.setDimensions({
@@ -60,8 +71,37 @@ export default function BoardEditor() {
             window.removeEventListener('resize', handleResize);
             canvas.dispose();
             fabricRef.current = null;
+            setFabricReady(null);
         };
     }, []);
+
+    // Canvas events for sync: object added, modified, removed
+    useEffect(() => {
+        const canvas = fabricRef.current;
+        if (!canvas) return;
+
+        const onPathCreated = (opt: any) => {
+            const path = opt.path;
+            if (path && !isSyncing.current) {
+                sendElementAdded(path);
+            }
+        };
+
+        const onObjectModified = (opt: any) => {
+            const target = opt.target;
+            if (target && !isSyncing.current) {
+                sendElementModified(target);
+            }
+        };
+
+        canvas.on('path:created', onPathCreated);
+        canvas.on('object:modified', onObjectModified);
+
+        return () => {
+            canvas.off('path:created', onPathCreated);
+            canvas.off('object:modified', onObjectModified);
+        };
+    }, [sendElementAdded, sendElementModified]);
 
     // Apply tool changes
     useEffect(() => {
@@ -80,8 +120,6 @@ export default function BoardEditor() {
 
         if (activeTool === 'select') {
             canvas.defaultCursor = 'default';
-        } else if (activeTool === 'eraser') {
-            canvas.defaultCursor = 'crosshair';
         } else {
             canvas.defaultCursor = 'crosshair';
         }
@@ -105,6 +143,7 @@ export default function BoardEditor() {
             if (activeTool === 'eraser') {
                 const target = opt.target;
                 if (target) {
+                    sendElementDeleted(target);
                     canvas.remove(target);
                     canvas.renderAll();
                 }
@@ -188,7 +227,12 @@ export default function BoardEditor() {
         const onMouseUp = () => {
             if (!isDrawingShape.current || !activeShape.current) return;
             isDrawingShape.current = false;
-            activeShape.current.setCoords();
+            const shape = activeShape.current;
+            shape.setCoords();
+
+            // Send to server
+            sendElementAdded(shape);
+
             activeShape.current = null;
         };
 
@@ -201,7 +245,7 @@ export default function BoardEditor() {
             canvas.off('mouse:move', onMouseMove);
             canvas.off('mouse:up', onMouseUp);
         };
-    }, [activeTool, strokeColor, fillColor, strokeWidth]);
+    }, [activeTool, strokeColor, fillColor, strokeWidth, sendElementAdded, sendElementDeleted]);
 
     // Text tool
     useEffect(() => {
@@ -223,12 +267,22 @@ export default function BoardEditor() {
             canvas.add(text);
             canvas.setActiveObject(text);
             text.enterEditing();
+
+            // Send after user finishes editing
+            text.on('editing:exited', () => {
+                if (!(text as any)._syncId) {
+                    sendElementAdded(text);
+                } else {
+                    sendElementModified(text);
+                }
+            });
+
             canvas.renderAll();
         };
 
         canvas.on('mouse:dblclick', onDoubleClick);
         return () => { canvas.off('mouse:dblclick', onDoubleClick); };
-    }, [activeTool, strokeColor]);
+    }, [activeTool, strokeColor, sendElementAdded, sendElementModified]);
 
     // Zoom
     useEffect(() => {
@@ -249,7 +303,7 @@ export default function BoardEditor() {
         return () => { canvas.off('mouse:wheel', onWheel); };
     }, []);
 
-    // Pan with middle mouse or space
+    // Pan with middle mouse
     useEffect(() => {
         const canvas = fabricRef.current;
         if (!canvas) return;
@@ -259,7 +313,7 @@ export default function BoardEditor() {
 
         const onMouseDown = (opt: any) => {
             const e = opt.e as MouseEvent;
-            if (e.button === 1) { // middle button
+            if (e.button === 1) {
                 isPanning = true;
                 lastX = e.clientX;
                 lastY = e.clientY;
