@@ -84,3 +84,9 @@ export const updateThumbnail = (boardId: string, base64: string) =>
         method: 'PUT',
         body: JSON.stringify({ base64 }),
     });
+
+export const updatePage = (boardId: string, pageId: string, title: string) =>
+    request<{ id: string; title: string; sortOrder: number }>(`/boards/${boardId}/pages/${pageId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ title }),
+    });

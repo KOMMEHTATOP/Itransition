@@ -1,6 +1,5 @@
 ﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBoard, createPage, deletePage, updateThumbnail } from '../../services/api';
 import type { BoardDetail, PageItem } from '../../types';
 import { useCanvas } from '../../hooks/useCanvas';
 import { useDrawing } from '../../hooks/useDrawing';
@@ -8,6 +7,7 @@ import { useSignalRSync } from '../../hooks/useSignalRSync';
 import Toolbar from './Toolbar';
 import PagePanel from './PagePanel';
 import styles from './BoardEditor.module.css';
+import { getBoard, createPage, deletePage, updateThumbnail, updatePage } from '../../services/api';
 
 export type Tool = 'select' | 'pencil' | 'line' | 'rect' | 'circle' | 'triangle' | 'text' | 'eraser';
 
@@ -23,6 +23,7 @@ export default function BoardEditor() {
     const [strokeColor, setStrokeColor] = useState('#ffffff');
     const [fillColor, setFillColor] = useState('transparent');
     const [strokeWidth, setStrokeWidth] = useState(2);
+    const [pageThumbnails, setPageThumbnails] = useState<Record<string, string>>({});
 
     // Canvas: init, resize, zoom, pan
     const { fabricRef, fabricReady, zoom } = useCanvas({ canvasRef: canvasElRef });
@@ -50,6 +51,11 @@ export default function BoardEditor() {
                     setActivePageId(updated[0].id);
                 }
                 return updated;
+            });
+            setPageThumbnails(prev => {
+                const next = { ...prev };
+                delete next[pageId];
+                return next;
             });
         },
     });
@@ -83,9 +89,27 @@ export default function BoardEditor() {
         }).catch(() => navigate('/boards'));
     }, [boardId]);
 
-    // --- Thumbnail ---
+    // --- Snapshot helper ---
 
-    const saveThumbnail = useCallback(async () => {
+    const capturePageSnapshot = useCallback(() => {
+        const canvas = fabricRef.current;
+        if (!canvas || !activePageId) return;
+
+        try {
+            const dataURL = canvas.toDataURL({
+                format: 'jpeg',
+                quality: 0.5,
+                multiplier: 150 / canvas.getWidth(),
+            });
+            setPageThumbnails(prev => ({ ...prev, [activePageId]: dataURL }));
+        } catch {
+            // ignore snapshot errors
+        }
+    }, [activePageId]);
+
+    // --- Thumbnail for board list ---
+
+    const saveBoardThumbnail = useCallback(async () => {
         const canvas = fabricRef.current;
         if (!canvas || !boardId) return;
 
@@ -103,15 +127,24 @@ export default function BoardEditor() {
     }, [boardId]);
 
     const handleBack = useCallback(async () => {
-        await saveThumbnail();
+        await saveBoardThumbnail();
         navigate('/boards');
-    }, [saveThumbnail, navigate]);
+    }, [saveBoardThumbnail, navigate]);
 
     // --- Page actions ---
+
+    const handleSelectPage = useCallback((pageId: string) => {
+        if (pageId === activePageId) return;
+        // Snapshot current page before switching
+        capturePageSnapshot();
+        setActivePageId(pageId);
+    }, [activePageId, capturePageSnapshot]);
 
     const handleAddPage = useCallback(async () => {
         if (!boardId) return;
         try {
+            // Snapshot current page before switching
+            capturePageSnapshot();
             const newPage = await createPage(boardId);
             setPages(prev => [...prev, newPage].sort((a, b) => a.sortOrder - b.sortOrder));
             setActivePageId(newPage.id);
@@ -119,7 +152,7 @@ export default function BoardEditor() {
         } catch (err) {
             console.error('Failed to create page:', err);
         }
-    }, [boardId, sendPageAdded]);
+    }, [boardId, sendPageAdded, capturePageSnapshot]);
 
     const handleDeletePage = useCallback(async (pageId: string) => {
         if (!boardId || pages.length <= 1) return;
@@ -133,15 +166,16 @@ export default function BoardEditor() {
                 }
                 return updated;
             });
+            setPageThumbnails(prev => {
+                const next = { ...prev };
+                delete next[pageId];
+                return next;
+            });
             sendPageDeletedSignalR(pageId);
         } catch (err) {
             console.error('Failed to delete page:', err);
         }
     }, [boardId, pages.length, activePageId, sendPageDeletedSignalR]);
-
-    const handleSelectPage = useCallback((pageId: string) => {
-        if (pageId !== activePageId) setActivePageId(pageId);
-    }, [activePageId]);
 
     // --- Export ---
 
@@ -155,6 +189,16 @@ export default function BoardEditor() {
         link.click();
     }, [board?.name]);
 
+    const handleRenamePage = useCallback(async (pageId: string, newTitle: string) => {
+        if (!boardId) return;
+        try {
+            await updatePage(boardId, pageId, newTitle);
+            setPages(prev => prev.map(p => p.id === pageId ? { ...p, title: newTitle } : p));
+        } catch (err) {
+            console.error('Failed to rename page:', err);
+        }
+    }, [boardId]);
+    
     return (
         <div className={styles.container}>
             <header className={styles.header}>
@@ -174,6 +218,8 @@ export default function BoardEditor() {
                     onSelectPage={handleSelectPage}
                     onAddPage={handleAddPage}
                     onDeletePage={handleDeletePage}
+                    onRenamePage={handleRenamePage}
+                    thumbnails={pageThumbnails}
                 />
 
                 <div className={styles.canvasArea}>

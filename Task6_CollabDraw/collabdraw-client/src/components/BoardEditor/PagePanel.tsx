@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import type { PageItem } from '../../types';
 import styles from './PagePanel.module.css';
 
@@ -8,6 +8,8 @@ interface PagePanelProps {
     onSelectPage: (pageId: string) => void;
     onAddPage: () => void;
     onDeletePage: (pageId: string) => void;
+    onRenamePage: (pageId: string, newTitle: string) => void;
+    thumbnails: Record<string, string>;
 }
 
 export default function PagePanel({
@@ -16,8 +18,39 @@ export default function PagePanel({
                                       onSelectPage,
                                       onAddPage,
                                       onDeletePage,
+                                      onRenamePage,
+                                      thumbnails,
                                   }: PagePanelProps) {
     const [collapsed, setCollapsed] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editValue, setEditValue] = useState('');
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (editingId && inputRef.current) {
+            inputRef.current.focus();
+            inputRef.current.select();
+        }
+    }, [editingId]);
+
+    const startEditing = (page: PageItem) => {
+        setEditingId(page.id);
+        setEditValue(page.title);
+    };
+
+    const commitEdit = () => {
+        if (!editingId) return;
+        const trimmed = editValue.trim();
+        if (trimmed && trimmed !== pages.find(p => p.id === editingId)?.title) {
+            onRenamePage(editingId, trimmed);
+        }
+        setEditingId(null);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') commitEdit();
+        if (e.key === 'Escape') setEditingId(null);
+    };
 
     return (
         <div className={`${styles.panel} ${collapsed ? styles.collapsed : ''}`}>
@@ -42,10 +75,42 @@ export default function PagePanel({
                                 onClick={() => onSelectPage(page.id)}
                             >
                                 <div className={styles.pageThumb}>
-                                    <span className={styles.pageNumber}>{index + 1}</span>
+                                    {thumbnails[page.id] ? (
+                                        <img
+                                            src={thumbnails[page.id]}
+                                            alt={page.title}
+                                            className={styles.thumbImg}
+                                        />
+                                    ) : (
+                                        <span className={styles.pageNumber}>{index + 1}</span>
+                                    )}
                                 </div>
-                                <span className={styles.pageTitle}>{page.title}</span>
-                                {pages.length > 1 && (
+
+                                {editingId === page.id ? (
+                                    <input
+                                        ref={inputRef}
+                                        className={styles.editInput}
+                                        value={editValue}
+                                        onChange={(e) => setEditValue(e.target.value)}
+                                        onBlur={commitEdit}
+                                        onKeyDown={handleKeyDown}
+                                        onClick={(e) => e.stopPropagation()}
+                                        maxLength={50}
+                                    />
+                                ) : (
+                                    <span
+                                        className={styles.pageTitle}
+                                        onDoubleClick={(e) => {
+                                            e.stopPropagation();
+                                            startEditing(page);
+                                        }}
+                                        title="Double-click to rename"
+                                    >
+                                        {page.title}
+                                    </span>
+                                )}
+
+                                {pages.length > 1 && editingId !== page.id && (
                                     <button
                                         className={styles.deleteBtn}
                                         onClick={(e) => {
