@@ -57,7 +57,7 @@ export function useSignalRSync({ boardId, pageId, canvas, onPageAdded, onPageDel
                     for (const obj of objects) {
                         (obj as any)._syncId = el.id;
                         (obj as any)._version = el.version;
-                        canvas.add(obj);
+                        canvas.add(obj as any);
                     }
                 }
                 canvas.renderAll();
@@ -75,8 +75,8 @@ export function useSignalRSync({ boardId, pageId, canvas, onPageAdded, onPageDel
         if (!conn || !canvas) return;
 
         const onElementAdded = async (
-            remotePageId: string, elementId: string, type: string,
-            properties: string, zIndex: number, userId: string
+            remotePageId: string, elementId: string, _type: string,
+            properties: string, _zIndex: number, _userId: string
         ) => {
             if (remotePageId !== pageId) return;
 
@@ -86,7 +86,7 @@ export function useSignalRSync({ boardId, pageId, canvas, onPageAdded, onPageDel
                 (obj as any)._syncId = elementId;
                 (obj as any)._version = 1;
                 isSyncing.current = true;
-                canvas.add(obj);
+                canvas.add(obj as any);
                 isSyncing.current = false;
             }
             canvas.renderAll();
@@ -111,7 +111,7 @@ export function useSignalRSync({ boardId, pageId, canvas, onPageAdded, onPageDel
 
                 isSyncing.current = true;
                 canvas.remove(existing);
-                canvas.add(newObj);
+                canvas.add(newObj as any);
                 isSyncing.current = false;
                 canvas.renderAll();
             }

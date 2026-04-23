@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, useCallback } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { Canvas as FabricCanvas } from 'fabric';
 
 interface UseCanvasProps {

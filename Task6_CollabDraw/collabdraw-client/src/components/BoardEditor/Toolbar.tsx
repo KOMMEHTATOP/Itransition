@@ -1,7 +1,7 @@
 ﻿import type { Tool } from './BoardEditor';
 import styles from './Toolbar.module.css';
 import {
-    MousePointer2, Pencil, Minus, MoveRight,
+    MousePointer2, Pencil, Minus,
     Square, Circle, Triangle, Type, Eraser, ZoomIn
 } from 'lucide-react';
 

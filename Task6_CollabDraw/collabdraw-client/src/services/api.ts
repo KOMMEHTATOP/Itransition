@@ -1,4 +1,4 @@
-﻿const API_URL = '/api';
+﻿const API_URL = 'http://localhost:5193/api';
 
 function getToken(): string | null {
     return localStorage.getItem('user_token');
