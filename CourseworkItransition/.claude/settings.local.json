@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npm create *)",
       "Bash(npm install *)",
-      "Bash(dotnet ef *)"
+      "Bash(dotnet ef *)",
+      "Bash(dotnet add *)",
+      "Bash(dotnet build *)",
+      "Bash(npx tsc *)"
     ]
   }
 }
