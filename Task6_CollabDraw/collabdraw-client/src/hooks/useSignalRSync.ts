@@ -157,9 +157,12 @@ export function useSignalRSync({ boardId, pageId, canvas, onPageAdded, onPageDel
         const conn = connectionRef.current;
         if (!conn || !boardId || !pageId || isSyncing.current) return;
 
-        const id = crypto.randomUUID();
-        obj._syncId = id;
-        obj._version = 1;
+        const id = typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
 
         const properties = JSON.stringify(obj.toObject());
         const type = obj.type || 'unknown';
