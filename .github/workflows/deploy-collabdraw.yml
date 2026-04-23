@@ -36,14 +36,15 @@ jobs:
       - name: Move frontend dist
         run: mv Task6_CollabDraw/collabdraw-client/dist Task6_CollabDraw/client-dist
 
-      - name: Copy files to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: 176.123.182.172
-          username: root
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          source: "Task6_CollabDraw/publish/,Task6_CollabDraw/client-dist/,Task6_CollabDraw/Dockerfile.server,Task6_CollabDraw/Dockerfile.client,Task6_CollabDraw/nginx-client.conf,Task6_CollabDraw/docker-compose.collabdraw.yml"
-          target: /root/
+  - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: 176.123.182.172
+        username: root
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "Task6_CollabDraw/publish/,Task6_CollabDraw/client-dist/,Task6_CollabDraw/Dockerfile.server,Task6_CollabDraw/Dockerfile.client,Task6_CollabDraw/nginx-client.conf,Task6_CollabDraw/docker-compose.collabdraw.yml"
+        target: /root/
+        debug: true
 
       - name: Start containers
         uses: appleboy/ssh-action@v1.0.3
