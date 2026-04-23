@@ -1,0 +1,76 @@
+# ===== C# / .NET =====
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+## NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+!**/packages/build/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## dotnet tools
+.config/dotnet-tools.json
+
+## EF Core migrations - keep migrations, ignore the snapshot only if needed
+# Uncomment below to ignore all migrations:
+# **/Migrations/
+
+## Secrets / connection strings
+appsettings.Production.json
+**/appsettings.Local.json
+**/secrets.json
+
+## Publish
+[Pp]ublish/
+PublishProfiles/
+
+## ===== Node / React =====
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+## Vite
+.vite/
+
+## ===== OS =====
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+MessageForClaude.md
+backend/appsettings.json
