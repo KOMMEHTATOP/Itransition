@@ -1,6 +1,6 @@
 ﻿import * as signalR from '@microsoft/signalr';
 
-const HUB_URL = 'http://localhost:5193/hub/whiteboard';
+const HUB_URL = '/hub/whiteboard';
 
 let connection: signalR.HubConnection | null = null;
 let startPromise: Promise<void> | null = null;

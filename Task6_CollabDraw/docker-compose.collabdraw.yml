@@ -1,0 +1,36 @@
+﻿services:
+  collabdraw-db:
+    image: postgres:16
+    container_name: collabdraw-db
+    environment:
+      POSTGRES_DB: collabdraw
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+    volumes:
+      - collabdraw-pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  collabdraw-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: collabdraw-server
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=collabdraw-db;Port=5432;Database=collabdraw;Username=postgres;Password=123"
+    ports:
+      - "5193:5193"
+    depends_on:
+      - collabdraw-db
+    restart: unless-stopped
+
+  collabdraw-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: collabdraw-client
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
+volumes:
+  collabdraw-pgdata:

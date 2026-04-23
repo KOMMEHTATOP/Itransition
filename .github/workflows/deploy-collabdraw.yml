@@ -1,0 +1,59 @@
+﻿name: Deploy Task6 CollabDraw to VPS
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'Task6_CollabDraw/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Publish backend
+        run: dotnet publish Task6_CollabDraw/CollabDraw.Server/CollabDraw.Server.csproj -c Release -o ./Task6_CollabDraw/publish
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build frontend
+        working-directory: Task6_CollabDraw/collabdraw-client
+        run: |
+          npm ci
+          npm run build
+
+      - name: Move frontend dist
+        run: mv Task6_CollabDraw/collabdraw-client/dist Task6_CollabDraw/client-dist
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 176.123.182.172
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "Task6_CollabDraw/publish/,Task6_CollabDraw/client-dist/,Task6_CollabDraw/Dockerfile.server,Task6_CollabDraw/Dockerfile.client,Task6_CollabDraw/nginx-client.conf,Task6_CollabDraw/docker-compose.collabdraw.yml"
+          target: /root/collabdraw
+          strip_components: 1
+
+      - name: Start containers
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 176.123.182.172
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /root/collabdraw
+            docker compose -f docker-compose.collabdraw.yml down
+            docker compose -f docker-compose.collabdraw.yml build --no-cache
+            docker compose -f docker-compose.collabdraw.yml up -d

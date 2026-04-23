@@ -1,0 +1,7 @@
+﻿FROM mcr.microsoft.com/dotnet/aspnet:10.0
+WORKDIR /app
+COPY publish/ .
+ENV ASPNETCORE_URLS=http://+:5193
+ENV ASPNETCORE_ENVIRONMENT=Production
+EXPOSE 5193
+ENTRYPOINT ["dotnet", "CollabDraw.Server.dll"]
