@@ -30,7 +30,7 @@ jobs:
       - name: Build frontend
         working-directory: Task6_CollabDraw/collabdraw-client
         run: |
-          npm ci
+          npm install
           npm run build
 
       - name: Move frontend dist
