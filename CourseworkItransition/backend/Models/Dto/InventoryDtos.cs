@@ -55,3 +55,78 @@ public record PagedResult<T>(
     int PageSize,
     int TotalPages
 );
+
+// --- Fields ---
+
+public record InventoryFieldDto(
+    Guid Id,
+    string Title,
+    string Description,
+    string Type,
+    int Order,
+    bool ShowInTable
+);
+
+public record CreateFieldRequest(
+    string Title,
+    string? Description,
+    string Type,
+    bool ShowInTable
+);
+
+public record UpdateFieldRequest(
+    string Title,
+    string? Description,
+    bool ShowInTable,
+    int Order
+);
+
+// --- Items ---
+
+public record ItemFieldValueDto(
+    Guid FieldId,
+    string FieldTitle,
+    string FieldType,
+    string Value
+);
+
+public record ItemListItemDto(
+    Guid Id,
+    string CustomId,
+    string AuthorId,
+    string AuthorDisplayName,
+    DateTime CreatedAt,
+    List<ItemFieldValueDto> FieldValues
+);
+
+public record ItemDetailDto(
+    Guid Id,
+    string CustomId,
+    string AuthorId,
+    string AuthorDisplayName,
+    DateTime CreatedAt,
+    DateTime UpdatedAt,
+    int Version,
+    Guid InventoryId,
+    bool CanEdit,
+    List<ItemFieldValueDto> FieldValues
+);
+
+public record ItemsPageDto(
+    List<InventoryFieldDto> Fields,
+    PagedResult<ItemListItemDto> Items,
+    bool CanEdit
+);
+
+public record ItemFieldValueRequest(Guid FieldId, string Value);
+
+public record CreateItemRequest(
+    string CustomId,
+    List<ItemFieldValueRequest>? FieldValues
+);
+
+public record UpdateItemRequest(
+    string CustomId,
+    List<ItemFieldValueRequest>? FieldValues,
+    int Version
+);

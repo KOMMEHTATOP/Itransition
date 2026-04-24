@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
 import InventoriesPage from './pages/InventoriesPage'
 import InventoryDetailPage from './pages/InventoryDetailPage'
+import ItemDetailPage from './pages/ItemDetailPage'
 import ProfilePage from './pages/ProfilePage'
 
 function Navbar() {
@@ -101,6 +102,7 @@ export default function App() {
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/inventories" element={<InventoriesPage />} />
         <Route path="/inventories/:id" element={<InventoryDetailPage />} />
+        <Route path="/items/:id" element={<ItemDetailPage />} />
         <Route
           path="/profile"
           element={

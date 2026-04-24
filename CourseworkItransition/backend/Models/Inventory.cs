@@ -18,4 +18,5 @@ public class Inventory
     public ApplicationUser Owner { get; set; } = null!;
 
     public ICollection<Item> Items { get; set; } = [];
+    public ICollection<InventoryField> Fields { get; set; } = [];
 }

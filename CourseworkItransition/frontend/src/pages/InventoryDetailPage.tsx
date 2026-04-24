@@ -1,27 +1,42 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { inventoriesApi } from '../api/inventoriesApi'
+import { fieldsApi } from '../api/fieldsApi'
 import { useAuth } from '../contexts/AuthContext'
 import { useAutosave } from '../hooks/useAutosave'
-import type { InventoryDetail, UpdateInventoryRequest } from '../types/inventory'
+import FieldsTab from '../components/FieldsTab'
+import ItemsTab from '../components/ItemsTab'
+import type { InventoryDetail, UpdateInventoryRequest, InventoryField } from '../types/inventory'
+
+type Tab = 'items' | 'fields' | 'settings'
 
 export default function InventoryDetailPage() {
-  const { id } = useParams<{ id: string }>()
+  const { id }   = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { isAuthenticated } = useAuth()
 
   const [inventory, setInventory] = useState<InventoryDetail | null>(null)
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState<string | null>(null)
 
-  // Editable fields (only used when canEdit)
+  const rawTab = searchParams.get('tab')
+  const activeTab: Tab = rawTab === 'fields' || rawTab === 'settings' ? rawTab : 'items'
+
+  const setActiveTab = (tab: Tab) => {
+    setSearchParams(tab === 'items' ? {} : { tab }, { replace: true })
+  }
+
+  // Fields state (owned at this level so both tabs share it)
+  const [fields, setFields] = useState<InventoryField[]>([])
+  const [fieldsLoading, setFieldsLoading] = useState(false)
+
+  // Settings form state
   const [title, setTitle]       = useState('')
   const [description, setDesc]  = useState('')
   const [isPublic, setIsPublic] = useState(true)
-
   const [formVersion, setFormVersion] = useState(1)
 
-  // The object passed to autosave — changes whenever a field changes
   const editData: UpdateInventoryRequest = {
     title,
     description,
@@ -34,7 +49,6 @@ export default function InventoryDetailPage() {
     async (data: UpdateInventoryRequest) => {
       if (!id) return
       const res = await inventoriesApi.update(id, data)
-      // Update local version so next autosave uses the new version
       setFormVersion(res.data.version)
       setInventory(res.data)
     },
@@ -45,7 +59,7 @@ export default function InventoryDetailPage() {
     data: editData,
     saveFn,
     delay: 8000,
-    enabled: !!inventory?.canEdit,
+    enabled: !!inventory?.canEdit && activeTab === 'settings',
   })
 
   const load = useCallback(async () => {
@@ -66,10 +80,24 @@ export default function InventoryDetailPage() {
     }
   }, [id])
 
+  const loadFields = useCallback(async () => {
+    if (!id) return
+    setFieldsLoading(true)
+    try {
+      const res = await fieldsApi.getAll(id)
+      setFields(res.data)
+    } catch {
+      // non-fatal
+    } finally {
+      setFieldsLoading(false)
+    }
+  }, [id])
+
   useEffect(() => { load() }, [load])
+  useEffect(() => { loadFields() }, [loadFields])
 
   const handleDelete = async () => {
-    if (!id || !confirm('Delete this inventory?')) return
+    if (!id || !confirm('Delete this inventory and all its items?')) return
     try {
       await inventoriesApi.delete(id)
       navigate('/inventories')
@@ -100,43 +128,99 @@ export default function InventoryDetailPage() {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger">{error ?? 'Not found.'}</div>
-        <button className="btn btn-secondary btn-sm" onClick={() => navigate(-1)}>
-          ← Back
-        </button>
+        <button className="btn btn-secondary btn-sm" onClick={() => navigate(-1)}>← Back</button>
       </div>
     )
   }
 
   return (
-    <div className="container mt-4" style={{ maxWidth: 720 }}>
-      <button className="btn btn-link ps-0 text-muted mb-3" onClick={() => navigate('/inventories')}>
+    <div className="container mt-4">
+      <button className="btn btn-link ps-0 text-muted mb-2" onClick={() => navigate('/inventories')}>
         ← Inventories
       </button>
 
-      {inventory.canEdit ? (
-        // Edit form for owner / admin
-        <>
-          <div className="d-flex align-items-center mb-1 gap-2">
-            <h2 className="mb-0 me-auto">{inventory.title}</h2>
-            {saveLabel() && (
+      <div className="d-flex align-items-start gap-2 mb-1 flex-wrap">
+        <div className="me-auto">
+          <h2 className="mb-0">{inventory.title}</h2>
+          <small className="text-muted">
+            By {inventory.ownerDisplayName} · {new Date(inventory.createdAt).toLocaleDateString()}
+            {inventory.categoryName && ` · ${inventory.categoryName}`}
+            {!inventory.isPublic && <span className="badge bg-secondary ms-2">private</span>}
+          </small>
+        </div>
+        {inventory.canEdit && (
+          <div className="d-flex align-items-center gap-2 flex-shrink-0">
+            {activeTab === 'settings' && saveLabel() && (
               <small
                 className={`text-${saveStatus === 'conflict' || saveStatus === 'error' ? 'danger' : saveStatus === 'saving' ? 'muted' : 'success'}`}
               >
                 {saveLabel()}
               </small>
             )}
-            <button className="btn btn-outline-primary btn-sm" onClick={saveNow}>
-              Save now
-            </button>
+            {activeTab === 'settings' && (
+              <button className="btn btn-outline-primary btn-sm" onClick={saveNow}>
+                Save now
+              </button>
+            )}
             <button className="btn btn-outline-danger btn-sm" onClick={handleDelete}>
-              Delete
+              Delete inventory
             </button>
           </div>
-          <small className="text-muted d-block mb-4">
-            By {inventory.ownerDisplayName} · {new Date(inventory.createdAt).toLocaleDateString()}
-            {inventory.categoryName && ` · ${inventory.categoryName}`}
-          </small>
+        )}
+      </div>
 
+      {/* Tabs */}
+      <ul className="nav nav-tabs mt-3 mb-3">
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === 'items' ? 'active' : ''}`}
+            onClick={() => setActiveTab('items')}
+          >
+            Items
+          </button>
+        </li>
+        {inventory.canEdit && (
+          <>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'fields' ? 'active' : ''}`}
+                onClick={() => setActiveTab('fields')}
+              >
+                Fields {fieldsLoading ? '' : `(${fields.length})`}
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === 'settings' ? 'active' : ''}`}
+                onClick={() => setActiveTab('settings')}
+              >
+                Settings
+              </button>
+            </li>
+          </>
+        )}
+      </ul>
+
+      {/* Tab content */}
+      {activeTab === 'items' && (
+        <ItemsTab
+          inventoryId={inventory.id}
+          fields={fields}
+          canEdit={inventory.canEdit}
+          isAuthenticated={isAuthenticated}
+        />
+      )}
+
+      {activeTab === 'fields' && inventory.canEdit && (
+        <FieldsTab
+          inventoryId={inventory.id}
+          fields={fields}
+          onChange={setFields}
+        />
+      )}
+
+      {activeTab === 'settings' && inventory.canEdit && (
+        <div style={{ maxWidth: 640 }}>
           {saveStatus === 'conflict' && (
             <div className="alert alert-warning">
               Save conflict: someone else modified this inventory. Please{' '}
@@ -167,7 +251,7 @@ export default function InventoryDetailPage() {
             />
           </div>
 
-          <div className="form-check mb-4">
+          <div className="form-check mb-3">
             <input
               type="checkbox"
               className="form-check-input"
@@ -180,27 +264,10 @@ export default function InventoryDetailPage() {
             </label>
           </div>
 
-          <hr />
           <p className="text-muted small">
-            Items, custom fields, and access settings will be available in the next phase.
+            Image upload, tags, and access management will be available in Phase 6.
           </p>
-        </>
-      ) : (
-        // Read-only view
-        <>
-          <h2 className="mb-1">{inventory.title}</h2>
-          <small className="text-muted d-block mb-3">
-            By {inventory.ownerDisplayName} · {new Date(inventory.createdAt).toLocaleDateString()}
-            {inventory.categoryName && ` · ${inventory.categoryName}`}
-            {!inventory.isPublic && (
-              <span className="badge bg-secondary ms-2">private</span>
-            )}
-          </small>
-          <p className="text-body">{inventory.description || <em className="text-muted">No description.</em>}</p>
-          {!isAuthenticated && (
-            <p className="text-muted small">Sign in to add items to this inventory.</p>
-          )}
-        </>
+        </div>
       )}
     </div>
   )

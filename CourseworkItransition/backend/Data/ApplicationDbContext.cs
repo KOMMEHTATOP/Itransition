@@ -11,6 +11,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Inventory> Inventories => Set<Inventory>();
     public DbSet<Item> Items => Set<Item>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<InventoryField> InventoryFields => Set<InventoryField>();
+    public DbSet<ItemFieldValue> ItemFieldValues => Set<ItemFieldValue>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -41,6 +43,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             e.Property(i => i.Version).IsConcurrencyToken();
         });
 
+        builder.Entity<InventoryField>(e =>
+        {
+            e.HasOne(f => f.Inventory)
+             .WithMany(i => i.Fields)
+             .HasForeignKey(f => f.InventoryId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
         builder.Entity<Item>(e =>
         {
             e.HasOne(i => i.Inventory)
@@ -54,6 +64,23 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.Restrict);
 
             e.Property(i => i.Version).IsConcurrencyToken();
+
+            e.HasIndex(i => new { i.InventoryId, i.CustomId }).IsUnique();
+        });
+
+        builder.Entity<ItemFieldValue>(e =>
+        {
+            e.HasKey(v => new { v.ItemId, v.FieldId });
+
+            e.HasOne(v => v.Item)
+             .WithMany(i => i.FieldValues)
+             .HasForeignKey(v => v.ItemId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(v => v.Field)
+             .WithMany(f => f.FieldValues)
+             .HasForeignKey(v => v.FieldId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

@@ -8,7 +8,9 @@
       "Bash(dotnet build *)",
       "Bash(npx tsc *)",
       "Bash(grep -E \"\\\\.\\(cs|tsx?|json\\)$\")",
-      "Bash(dotnet remove *)"
+      "Bash(dotnet remove *)",
+      "Bash(taskkill /PID 22372 /F)",
+      "PowerShell(Stop-Process -Name \"InventoryApi\" -Force -ErrorAction SilentlyContinue)"
     ]
   }
 }

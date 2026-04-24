@@ -44,3 +44,83 @@ export interface PagedResult<T> {
   pageSize: number
   totalPages: number
 }
+
+// --- Fields ---
+
+export type FieldType = 'Text' | 'MultilineText' | 'Number' | 'Link' | 'Boolean'
+
+export interface InventoryField {
+  id: string
+  title: string
+  description: string
+  type: FieldType
+  order: number
+  showInTable: boolean
+}
+
+export interface CreateFieldRequest {
+  title: string
+  description?: string
+  type: string
+  showInTable: boolean
+}
+
+export interface UpdateFieldRequest {
+  title: string
+  description?: string
+  showInTable: boolean
+  order: number
+}
+
+// --- Items ---
+
+export interface ItemFieldValue {
+  fieldId: string
+  fieldTitle: string
+  fieldType: string
+  value: string
+}
+
+export interface ItemListItem {
+  id: string
+  customId: string
+  authorId: string
+  authorDisplayName: string
+  createdAt: string
+  fieldValues: ItemFieldValue[]
+}
+
+export interface ItemDetail {
+  id: string
+  customId: string
+  authorId: string
+  authorDisplayName: string
+  createdAt: string
+  updatedAt: string
+  version: number
+  inventoryId: string
+  canEdit: boolean
+  fieldValues: ItemFieldValue[]
+}
+
+export interface ItemsPageResult {
+  fields: InventoryField[]
+  items: PagedResult<ItemListItem>
+  canEdit: boolean
+}
+
+export interface ItemFieldValueRequest {
+  fieldId: string
+  value: string
+}
+
+export interface CreateItemRequest {
+  customId: string
+  fieldValues: ItemFieldValueRequest[]
+}
+
+export interface UpdateItemRequest {
+  customId: string
+  fieldValues: ItemFieldValueRequest[]
+  version: number
+}
