@@ -16,7 +16,6 @@ export default function AuthCallbackPage() {
       return
     }
 
-    // Fetch user profile with the new token
     localStorage.setItem('token', token)
     api
       .get<AuthUser>('/auth/me')
@@ -28,6 +27,8 @@ export default function AuthCallbackPage() {
         localStorage.removeItem('token')
         navigate('/login?error=oauth_failed', { replace: true })
       })
+  // params and navigate are stable refs — intentionally omitted to run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

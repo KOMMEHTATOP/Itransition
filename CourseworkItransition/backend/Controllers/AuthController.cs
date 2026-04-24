@@ -3,8 +3,8 @@ using InventoryApi.Models;
 using InventoryApi.Models.Dto;
 using InventoryApi.Services;
 using Microsoft.AspNetCore.Authentication;
+using AspNet.Security.OAuth.GitHub;
 using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -80,16 +80,16 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> GoogleCallback() =>
         await HandleOAuthCallbackAsync();
 
-    [HttpGet("facebook")]
-    public IActionResult FacebookLogin()
+    [HttpGet("github")]
+    public IActionResult GitHubLogin()
     {
-        var redirectUrl = Url.Action(nameof(FacebookCallback), "Auth");
+        var redirectUrl = Url.Action(nameof(GitHubCallback), "Auth");
         var props = new AuthenticationProperties { RedirectUri = redirectUrl };
-        return Challenge(props, FacebookDefaults.AuthenticationScheme);
+        return Challenge(props, GitHubAuthenticationDefaults.AuthenticationScheme);
     }
 
-    [HttpGet("facebook/callback")]
-    public async Task<IActionResult> FacebookCallback() =>
+    [HttpGet("github/callback")]
+    public async Task<IActionResult> GitHubCallback() =>
         await HandleOAuthCallbackAsync();
 
     [HttpGet("me")]
@@ -111,8 +111,12 @@ public class AuthController : ControllerBase
         var email = result.Principal!.FindFirstValue(ClaimTypes.Email);
         var name = result.Principal.FindFirstValue(ClaimTypes.Name);
 
+        // GitHub may not expose email if user keeps it private — generate a placeholder
         if (string.IsNullOrEmpty(email))
-            return Redirect($"{FrontendUrl}/login?error=no_email");
+        {
+            var login = result.Principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? Guid.NewGuid().ToString("N");
+            email = $"github_{login}@noemail.placeholder";
+        }
 
         var user = await _userManager.FindByEmailAsync(email);
         if (user == null)

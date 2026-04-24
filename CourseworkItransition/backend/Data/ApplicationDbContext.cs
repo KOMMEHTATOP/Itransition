@@ -10,10 +10,21 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Inventory> Inventories => Set<Inventory>();
     public DbSet<Item> Items => Set<Item>();
+    public DbSet<Category> Categories => Set<Category>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.Entity<Category>(e =>
+        {
+            e.HasData(
+                new Category { Id = 1, Name = "Equipment" },
+                new Category { Id = 2, Name = "Furniture" },
+                new Category { Id = 3, Name = "Book" },
+                new Category { Id = 4, Name = "Other" }
+            );
+        });
 
         builder.Entity<Inventory>(e =>
         {
@@ -21,6 +32,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .WithMany(u => u.Inventories)
              .HasForeignKey(i => i.OwnerId)
              .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(i => i.Category)
+             .WithMany(c => c.Inventories)
+             .HasForeignKey(i => i.CategoryId)
+             .OnDelete(DeleteBehavior.SetNull);
 
             e.Property(i => i.Version).IsConcurrencyToken();
         });

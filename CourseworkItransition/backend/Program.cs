@@ -1,4 +1,5 @@
 using System.Text;
+using AspNet.Security.OAuth.GitHub;
 using InventoryApi.Data;
 using InventoryApi.Models;
 using InventoryApi.Services;
@@ -55,11 +56,13 @@ builder.Services.AddAuthentication(options =>
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
     options.SignInScheme = "External";
 })
-.AddFacebook(options =>
+.AddGitHub(options =>
 {
-    options.AppId = builder.Configuration["Authentication:Facebook:AppId"]!;
-    options.AppSecret = builder.Configuration["Authentication:Facebook:AppSecret"]!;
+    options.ClientId = builder.Configuration["Authentication:GitHub:ClientId"]!;
+    options.ClientSecret = builder.Configuration["Authentication:GitHub:ClientSecret"]!;
     options.SignInScheme = "External";
+    // Request email scope — GitHub users may have private emails
+    options.Scope.Add("user:email");
 });
 
 builder.Services.AddScoped<JwtService>();
@@ -70,11 +73,19 @@ builder.Services.AddOpenApi();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Dev", policy =>
-        policy.WithOrigins(
-                builder.Configuration.GetValue<string>("Frontend:Url") ?? "http://localhost:5173")
+    {
+        var origins = new List<string>
+        {
+            builder.Configuration.GetValue<string>("Frontend:Url") ?? "http://localhost:5173",
+        };
+        var prod = builder.Configuration.GetValue<string>("Frontend:ProdUrl");
+        if (!string.IsNullOrEmpty(prod)) origins.Add(prod);
+
+        policy.WithOrigins([.. origins])
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials());
+              .AllowCredentials();
+    });
 });
 
 var app = builder.Build();

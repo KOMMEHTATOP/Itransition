@@ -11,6 +11,9 @@ public class Inventory
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public int Version { get; set; } = 1;
 
+    public int? CategoryId { get; set; }
+    public Category? Category { get; set; }
+
     public string OwnerId { get; set; } = string.Empty;
     public ApplicationUser Owner { get; set; } = null!;
 

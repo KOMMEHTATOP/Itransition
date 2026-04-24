@@ -6,7 +6,9 @@
       "Bash(dotnet ef *)",
       "Bash(dotnet add *)",
       "Bash(dotnet build *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(grep -E \"\\\\.\\(cs|tsx?|json\\)$\")",
+      "Bash(dotnet remove *)"
     ]
   }
 }

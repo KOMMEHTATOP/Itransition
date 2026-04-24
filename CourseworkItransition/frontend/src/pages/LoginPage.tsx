@@ -94,8 +94,8 @@ export default function LoginPage() {
             <a href="/api/auth/google" className="btn btn-outline-danger">
               Continue with Google
             </a>
-            <a href="/api/auth/facebook" className="btn btn-outline-primary">
-              Continue with Facebook
+            <a href="/api/auth/github" className="btn btn-outline-dark">
+              Continue with GitHub
             </a>
           </div>
 
