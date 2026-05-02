@@ -24,6 +24,7 @@ public class InventoriesController : ControllerBase
         var query = _db.Inventories
             .Include(i => i.Owner)
             .Include(i => i.Category)
+            .Include(i => i.Tags)
             .Where(i => i.IsPublic)
             .AsNoTracking();
 
@@ -47,6 +48,7 @@ public class InventoriesController : ControllerBase
         var query = _db.Inventories
             .Include(i => i.Owner)
             .Include(i => i.Category)
+            .Include(i => i.Tags)
             .Where(i => i.OwnerId == userId)
             .AsNoTracking();
 
@@ -61,17 +63,19 @@ public class InventoriesController : ControllerBase
     }
 
     // GET /api/inventories/accessible?page=1&pageSize=20
-    // Returns public inventories the current user doesn't own (Phase 6 will add explicit access grants)
+    // Returns public inventories + inventories where user has explicit access (excluding own)
     [HttpGet("accessible")]
     [Authorize]
     public async Task<ActionResult<PagedResult<InventoryListItemDto>>> GetAccessible(
         int page = 1, int pageSize = 20, string sort = "newest")
     {
-        var userId = UserId();
+        var userId = UserId()!;
         var query = _db.Inventories
             .Include(i => i.Owner)
             .Include(i => i.Category)
-            .Where(i => i.IsPublic && i.OwnerId != userId)
+            .Include(i => i.Tags)
+            .Where(i => i.OwnerId != userId &&
+                        (i.IsPublic || i.AccessGrants.Any(a => a.UserId == userId)))
             .AsNoTracking();
 
         query = sort switch
@@ -91,6 +95,7 @@ public class InventoriesController : ControllerBase
         var inv = await _db.Inventories
             .Include(i => i.Owner)
             .Include(i => i.Category)
+            .Include(i => i.Tags)
             .AsNoTracking()
             .FirstOrDefaultAsync(i => i.Id == id);
 
@@ -99,8 +104,12 @@ public class InventoriesController : ControllerBase
         var userId = UserId();
         var isAdmin = User.IsInRole("Admin");
 
-        if (!inv.IsPublic && !isAdmin && inv.OwnerId != userId)
-            return Forbid();
+        var hasAccess = inv.IsPublic
+            || isAdmin
+            || inv.OwnerId == userId
+            || await _db.InventoryAccess.AnyAsync(a => a.InventoryId == id && a.UserId == userId);
+
+        if (!hasAccess) return Forbid();
 
         return ToDetailDto(inv, userId, isAdmin);
     }
@@ -153,6 +162,7 @@ public class InventoriesController : ControllerBase
         var inventory = await _db.Inventories
             .Include(i => i.Owner)
             .Include(i => i.Category)
+            .Include(i => i.Tags)
             .FirstOrDefaultAsync(i => i.Id == id);
 
         if (inventory is null) return NotFound();
@@ -168,8 +178,20 @@ public class InventoriesController : ControllerBase
         inventory.Description = req.Description?.Trim() ?? string.Empty;
         inventory.IsPublic    = req.IsPublic;
         inventory.CategoryId  = req.CategoryId;
+        inventory.ImageUrl    = req.ImageUrl;
         inventory.UpdatedAt   = DateTime.UtcNow;
         inventory.Version    += 1;
+
+        if (req.Tags is not null)
+        {
+            _db.InventoryTags.RemoveRange(inventory.Tags);
+            var newTags = req.Tags
+                .Select(t => t.Trim().ToLowerInvariant())
+                .Where(t => t.Length > 0)
+                .Distinct()
+                .Select(t => new InventoryTag { InventoryId = id, TagName = t });
+            _db.InventoryTags.AddRange(newTags);
+        }
 
         try
         {
@@ -180,6 +202,7 @@ public class InventoriesController : ControllerBase
             return Conflict(new { message = "Save conflict: the inventory was modified by someone else. Please reload." });
         }
 
+        await _db.Entry(inventory).Collection(i => i.Tags).LoadAsync();
         return Ok(ToDetailDto(inventory, userId, isAdmin));
     }
 
@@ -245,7 +268,8 @@ public class InventoriesController : ControllerBase
             inv.Version,
             inv.CategoryId,
             inv.Category?.Name,
-            CanEdit: isAdmin || inv.OwnerId == userId
+            CanEdit: isAdmin || inv.OwnerId == userId,
+            Tags: inv.Tags.Select(t => t.TagName).OrderBy(t => t).ToList()
         );
 
     private static InventoryListItemDto ToListDto(Inventory inv) =>
@@ -261,7 +285,8 @@ public class InventoriesController : ControllerBase
             inv.UpdatedAt,
             inv.Version,
             inv.CategoryId,
-            inv.Category?.Name
+            inv.Category?.Name,
+            Tags: inv.Tags.Select(t => t.TagName).OrderBy(t => t).ToList()
         );
 
     private static async Task<PagedResult<InventoryListItemDto>> ToPagedResult(

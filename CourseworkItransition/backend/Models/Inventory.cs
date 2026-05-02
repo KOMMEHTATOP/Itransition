@@ -21,4 +21,6 @@ public class Inventory
     public ICollection<Item> Items { get; set; } = [];
     public ICollection<InventoryField> Fields { get; set; } = [];
     public ICollection<CustomIdElement> CustomIdElements { get; set; } = [];
+    public ICollection<InventoryTag> Tags { get; set; } = [];
+    public ICollection<InventoryAccess> AccessGrants { get; set; } = [];
 }

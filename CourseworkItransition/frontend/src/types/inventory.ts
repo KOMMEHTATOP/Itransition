@@ -11,6 +11,7 @@ export interface InventoryListItem {
   version: number
   categoryId: number | null
   categoryName: string | null
+  tags: string[]
 }
 
 export interface InventoryDetail extends InventoryListItem {
@@ -35,6 +36,22 @@ export interface UpdateInventoryRequest {
   isPublic: boolean
   categoryId: number | null
   version: number
+  imageUrl: string | null
+  tags: string[]
+}
+
+// --- Access ---
+
+export interface AccessUser {
+  id: string
+  displayName: string
+  email: string
+}
+
+export interface UserSearchResult {
+  id: string
+  displayName: string
+  email: string
 }
 
 export interface PagedResult<T> {

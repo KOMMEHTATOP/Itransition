@@ -12,7 +12,8 @@ public record InventoryListItemDto(
     DateTime UpdatedAt,
     int Version,
     int? CategoryId,
-    string? CategoryName
+    string? CategoryName,
+    List<string> Tags
 );
 
 public record InventoryDetailDto(
@@ -28,7 +29,8 @@ public record InventoryDetailDto(
     int Version,
     int? CategoryId,
     string? CategoryName,
-    bool CanEdit
+    bool CanEdit,
+    List<string> Tags
 );
 
 public record CategoryDto(int Id, string Name);
@@ -45,8 +47,16 @@ public record UpdateInventoryRequest(
     string? Description,
     bool IsPublic,
     int? CategoryId,
-    int Version
+    int Version,
+    string? ImageUrl,
+    List<string>? Tags
 );
+
+// --- Access ---
+
+public record AccessUserDto(string Id, string DisplayName, string Email);
+
+public record UserSearchResultDto(string Id, string DisplayName, string Email);
 
 public record PagedResult<T>(
     List<T> Items,
