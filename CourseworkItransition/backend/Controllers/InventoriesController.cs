@@ -120,6 +120,28 @@ public class InventoriesController : ControllerBase
         return ToDetailDto(inv, userId, isAdmin);
     }
 
+    // GET /api/inventories/top?limit=5
+    [HttpGet("top")]
+    public async Task<ActionResult<List<TopInventoryDto>>> GetTop(int limit = 5)
+    {
+        limit = Math.Clamp(limit, 1, 20);
+
+        var top = await _db.Inventories
+            .Where(i => i.IsPublic)
+            .Include(i => i.Owner)
+            .OrderByDescending(i => i.Items.Count())
+            .Take(limit)
+            .AsNoTracking()
+            .Select(i => new TopInventoryDto(
+                i.Id,
+                i.Title,
+                i.Owner.DisplayName,
+                i.Items.Count()))
+            .ToListAsync();
+
+        return top;
+    }
+
     // GET /api/inventories/categories
     [HttpGet("categories")]
     public async Task<ActionResult<List<CategoryDto>>> GetCategories()

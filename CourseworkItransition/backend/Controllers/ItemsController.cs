@@ -144,6 +144,8 @@ public class ItemsController : ControllerBase
         await _db.Entry(item).Collection(i => i.FieldValues).Query()
             .Include(v => v.Field).LoadAsync();
 
+        await UpdateSearchVectorAsync(item.Id, req.FieldValues?.Select(v => v.Value).ToList());
+
         return CreatedAtAction(nameof(GetItem), new { id = item.Id },
             ToDetailDto(item, userId, isAdmin, likeCount: 0, isLikedByMe: false));
     }
@@ -281,6 +283,8 @@ public class ItemsController : ControllerBase
         await _db.Entry(item).Collection(i => i.FieldValues).Query()
             .Include(v => v.Field).LoadAsync();
 
+        await UpdateSearchVectorAsync(item.Id, req.FieldValues?.Select(v => v.Value).ToList());
+
         var likeCount   = item.Likes.Count;
         var isLikedByMe = item.Likes.Any(l => l.UserId == userId);
 
@@ -374,4 +378,13 @@ public class ItemsController : ControllerBase
                 .Select(v => new ItemFieldValueDto(v.FieldId, v.Field.Title, v.Field.Type.ToString(), v.Value))
                 .ToList()
         );
+
+    private async Task UpdateSearchVectorAsync(Guid itemId, List<string>? values)
+    {
+        var text = string.Join(" ", (values ?? []).Where(v => !string.IsNullOrWhiteSpace(v)));
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        await _db.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"Items\" SET \"SearchVector\" = to_tsvector('english', {text}) WHERE \"Id\" = {itemId}");
+    }
 }

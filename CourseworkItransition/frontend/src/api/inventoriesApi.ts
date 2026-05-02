@@ -5,6 +5,7 @@ import type {
   InventoryDetail,
   InventoryListItem,
   PagedResult,
+  TopInventory,
   UpdateInventoryRequest,
 } from '../types/inventory'
 
@@ -26,6 +27,9 @@ export const inventoriesApi = {
 
   getById: (id: string) =>
     api.get<InventoryDetail>(`/inventories/${id}`),
+
+  getTop: (limit = 5) =>
+    api.get<TopInventory[]>('/inventories/top', { params: { limit } }),
 
   getCategories: () =>
     api.get<Category[]>('/inventories/categories'),

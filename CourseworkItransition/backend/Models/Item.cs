@@ -1,3 +1,5 @@
+using NpgsqlTypes;
+
 namespace InventoryApi.Models;
 
 public class Item
@@ -13,6 +15,8 @@ public class Item
 
     public string AuthorId { get; set; } = string.Empty;
     public ApplicationUser Author { get; set; } = null!;
+
+    public NpgsqlTsVector? SearchVector { get; set; }
 
     public ICollection<ItemFieldValue> FieldValues { get; set; } = [];
     public ICollection<ItemLike> Likes { get; set; } = [];

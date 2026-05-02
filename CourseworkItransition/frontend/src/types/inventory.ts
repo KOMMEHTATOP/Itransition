@@ -176,6 +176,40 @@ export interface UpdateCustomIdElementRequest {
   order: number
 }
 
+// --- Search ---
+
+export interface SearchResult {
+  inventories: InventorySearchResult[]
+  items: ItemSearchResult[]
+}
+
+export interface InventorySearchResult {
+  id: string
+  title: string
+  description: string
+  ownerDisplayName: string
+  createdAt: string
+  categoryName: string | null
+}
+
+export interface ItemSearchResult {
+  id: string
+  customId: string
+  inventoryId: string
+  inventoryTitle: string
+  authorDisplayName: string
+  createdAt: string
+}
+
+// --- Home page ---
+
+export interface TopInventory {
+  id: string
+  title: string
+  ownerDisplayName: string
+  itemCount: number
+}
+
 export interface ItemFieldValueRequest {
   fieldId: string
   value: string

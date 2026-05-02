@@ -1,5 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import { TagCloud } from 'react-tagcloud'
 import { useAuth } from './contexts/AuthContext'
@@ -13,11 +13,33 @@ import ItemDetailPage from './pages/ItemDetailPage'
 import ProfilePage from './pages/ProfilePage'
 import SearchPage from './pages/SearchPage'
 import { tagsApi } from './api/tagsApi'
-import type { TagCloudItem } from './types/inventory'
+import { inventoriesApi } from './api/inventoriesApi'
+import type { InventoryListItem, TagCloudItem, TopInventory } from './types/inventory'
 
 function Navbar() {
   const { user, logout, isAuthenticated, isAdmin } = useAuth()
   const navigate = useNavigate()
+  const [q, setQ] = useState('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setQ(val)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      if (val.trim().length >= 2) {
+        navigate(`/search?q=${encodeURIComponent(val.trim())}`)
+      }
+    }, 300)
+  }
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (q.trim().length >= 2) {
+      navigate(`/search?q=${encodeURIComponent(q.trim())}`)
+    }
+  }
 
   const handleLogout = () => {
     logout()
@@ -45,6 +67,16 @@ function Navbar() {
             </Link>
           </li>
         </ul>
+        <form className="d-flex me-2" onSubmit={handleSearchSubmit}>
+          <input
+            className="form-control form-control-sm"
+            type="search"
+            placeholder="Search inventories &amp; items..."
+            style={{ width: 260 }}
+            value={q}
+            onChange={handleSearchChange}
+          />
+        </form>
         <div className="d-flex align-items-center gap-2">
           {isAuthenticated ? (
             <>
@@ -80,13 +112,21 @@ function HomePage() {
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const [tagCloud, setTagCloud] = useState<TagCloudItem[]>([])
+  const [latest, setLatest] = useState<InventoryListItem[]>([])
+  const [top, setTop] = useState<TopInventory[]>([])
 
   useEffect(() => {
     tagsApi.cloud(60).then(res => setTagCloud(res.data)).catch(() => {})
+    inventoriesApi.getAll(1, 10, 'newest')
+      .then(res => setLatest(res.data.items))
+      .catch(() => {})
+    inventoriesApi.getTop(5)
+      .then(res => setTop(res.data))
+      .catch(() => {})
   }, [])
 
   return (
-    <div className="container mt-5">
+    <div className="container mt-4">
       <h1>Inventory Management</h1>
       <p className="text-muted lead mb-4">
         Create inventories, define custom fields, and let others fill them with items.
@@ -100,8 +140,92 @@ function HomePage() {
         </Link>
       )}
 
+      <div className="row mt-5 g-4">
+        <div className="col-lg-7">
+          <h5 className="text-muted mb-3">Latest inventories</h5>
+          {latest.length === 0 ? (
+            <p className="text-muted small">No public inventories yet.</p>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-hover table-sm align-middle">
+                <thead className="table-light">
+                  <tr>
+                    <th>Name</th>
+                    <th>Owner</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {latest.map(inv => (
+                    <tr
+                      key={inv.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/inventories/${inv.id}`)}
+                    >
+                      <td>
+                        <Link
+                          to={`/inventories/${inv.id}`}
+                          className="text-decoration-none fw-semibold"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          {inv.title}
+                        </Link>
+                      </td>
+                      <td className="text-muted small">{inv.ownerDisplayName}</td>
+                      <td className="text-muted small text-nowrap">
+                        {new Date(inv.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="col-lg-5">
+          <h5 className="text-muted mb-3">Top 5 by items</h5>
+          {top.length === 0 ? (
+            <p className="text-muted small">No data yet.</p>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-hover table-sm align-middle">
+                <thead className="table-light">
+                  <tr>
+                    <th>Name</th>
+                    <th>Owner</th>
+                    <th className="text-end">Items</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {top.map(inv => (
+                    <tr
+                      key={inv.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate(`/inventories/${inv.id}`)}
+                    >
+                      <td>
+                        <Link
+                          to={`/inventories/${inv.id}`}
+                          className="text-decoration-none fw-semibold"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          {inv.title}
+                        </Link>
+                      </td>
+                      <td className="text-muted small">{inv.ownerDisplayName}</td>
+                      <td className="text-muted small text-end">{inv.itemCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
       {tagCloud.length > 0 && (
-        <div className="mt-5">
+        <div className="mt-4">
           <h5 className="text-muted mb-3">Popular tags</h5>
           <TagCloud
             minSize={13}

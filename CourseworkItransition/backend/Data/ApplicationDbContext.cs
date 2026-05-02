@@ -46,6 +46,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.SetNull);
 
             e.Property(i => i.Version).IsConcurrencyToken();
+
+            e.HasGeneratedTsVectorColumn(
+                i => i.SearchVector!,
+                "english",
+                i => new { i.Title, i.Description })
+             .HasIndex(i => i.SearchVector)
+             .HasMethod("GIN");
         });
 
         builder.Entity<InventoryField>(e =>
@@ -69,8 +76,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
              .OnDelete(DeleteBehavior.Restrict);
 
             e.Property(i => i.Version).IsConcurrencyToken();
+            e.Property(i => i.SearchVector).HasColumnType("tsvector");
 
             e.HasIndex(i => new { i.InventoryId, i.CustomId }).IsUnique();
+            e.HasIndex(i => i.SearchVector).HasMethod("GIN");
         });
 
         builder.Entity<CustomIdElement>(e =>

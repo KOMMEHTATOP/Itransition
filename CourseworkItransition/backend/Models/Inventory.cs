@@ -1,3 +1,5 @@
+using NpgsqlTypes;
+
 namespace InventoryApi.Models;
 
 public class Inventory
@@ -17,6 +19,8 @@ public class Inventory
 
     public string OwnerId { get; set; } = string.Empty;
     public ApplicationUser Owner { get; set; } = null!;
+
+    public NpgsqlTsVector? SearchVector { get; set; }
 
     public ICollection<Item> Items { get; set; } = [];
     public ICollection<InventoryField> Fields { get; set; } = [];
