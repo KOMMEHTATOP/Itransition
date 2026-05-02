@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import MDEditor from '@uiw/react-md-editor'
 import { useDropzone } from 'react-dropzone'
 import Tags from '@yaireo/tagify/dist/react.tagify'
@@ -49,9 +49,6 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
   const [uploading, setUploading]   = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tagifyRef = { current: null as any }
-
   // Keep in sync if parent reloads inventory (e.g. after conflict resolution)
   useEffect(() => {
     setTitle(inventory.title)
