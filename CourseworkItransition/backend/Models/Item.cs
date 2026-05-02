@@ -15,4 +15,5 @@ public class Item
     public ApplicationUser Author { get; set; } = null!;
 
     public ICollection<ItemFieldValue> FieldValues { get; set; } = [];
+    public ICollection<ItemLike> Likes { get; set; } = [];
 }

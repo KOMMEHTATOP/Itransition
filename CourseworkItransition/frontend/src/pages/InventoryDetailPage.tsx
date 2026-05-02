@@ -8,10 +8,11 @@ import ItemsTab from '../components/ItemsTab'
 import CustomIdTab from '../components/CustomIdTab'
 import SettingsTab from '../components/SettingsTab'
 import AccessTab from '../components/AccessTab'
+import DiscussionTab from '../components/DiscussionTab'
 import { customIdApi } from '../api/customIdApi'
 import type { Category, InventoryDetail, InventoryField, CustomIdElement } from '../types/inventory'
 
-type Tab = 'items' | 'fields' | 'customid' | 'settings' | 'access'
+type Tab = 'items' | 'discussion' | 'fields' | 'customid' | 'settings' | 'access'
 
 export default function InventoryDetailPage() {
   const { id }   = useParams<{ id: string }>()
@@ -26,7 +27,8 @@ export default function InventoryDetailPage() {
 
   const rawTab = searchParams.get('tab')
   const activeTab: Tab =
-    rawTab === 'fields' || rawTab === 'customid' || rawTab === 'settings' || rawTab === 'access'
+    rawTab === 'discussion' || rawTab === 'fields' || rawTab === 'customid' ||
+    rawTab === 'settings' || rawTab === 'access'
       ? rawTab
       : 'items'
 
@@ -147,6 +149,11 @@ export default function InventoryDetailPage() {
             Items
           </button>
         </li>
+        <li className="nav-item">
+          <button className={`nav-link ${activeTab === 'discussion' ? 'active' : ''}`} onClick={() => setActiveTab('discussion')}>
+            Discussion
+          </button>
+        </li>
         {inventory.canEdit && (
           <>
             <li className="nav-item">
@@ -174,6 +181,14 @@ export default function InventoryDetailPage() {
       </ul>
 
       {/* Tab content */}
+      {activeTab === 'discussion' && (
+        <DiscussionTab
+          inventoryId={inventory.id}
+          isAuthenticated={isAuthenticated}
+          active={activeTab === 'discussion'}
+        />
+      )}
+
       {activeTab === 'items' && (
         <ItemsTab
           inventoryId={inventory.id}

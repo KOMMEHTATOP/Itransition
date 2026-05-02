@@ -23,4 +23,5 @@ public class Inventory
     public ICollection<CustomIdElement> CustomIdElements { get; set; } = [];
     public ICollection<InventoryTag> Tags { get; set; } = [];
     public ICollection<InventoryAccess> AccessGrants { get; set; } = [];
+    public ICollection<Comment> Comments { get; set; } = [];
 }

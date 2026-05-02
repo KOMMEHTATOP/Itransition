@@ -118,6 +118,25 @@ export interface ItemDetail {
   inventoryId: string
   canEdit: boolean
   fieldValues: ItemFieldValue[]
+  likeCount: number
+  isLikedByMe: boolean
+}
+
+// --- Comments ---
+
+export interface Comment {
+  id: string
+  authorId: string
+  authorDisplayName: string
+  text: string
+  createdAt: string
+}
+
+// --- Tag cloud ---
+
+export interface TagCloudItem {
+  tag: string
+  count: number
 }
 
 export interface ItemsPageResult {

@@ -145,7 +145,7 @@ public class ItemsController : ControllerBase
             .Include(v => v.Field).LoadAsync();
 
         return CreatedAtAction(nameof(GetItem), new { id = item.Id },
-            ToDetailDto(item, userId, isAdmin));
+            ToDetailDto(item, userId, isAdmin, likeCount: 0, isLikedByMe: false));
     }
 
     // GET /api/items/{id}
@@ -156,6 +156,7 @@ public class ItemsController : ControllerBase
             .Include(i => i.Author)
             .Include(i => i.Inventory)
             .Include(i => i.FieldValues).ThenInclude(v => v.Field)
+            .Include(i => i.Likes)
             .AsNoTracking()
             .FirstOrDefaultAsync(i => i.Id == id);
 
@@ -167,7 +168,50 @@ public class ItemsController : ControllerBase
         if (!item.Inventory.IsPublic && !isAdmin && item.Inventory.OwnerId != userId)
             return Forbid();
 
-        return Ok(ToDetailDto(item, userId, isAdmin));
+        var likeCount   = item.Likes.Count;
+        var isLikedByMe = userId != null && item.Likes.Any(l => l.UserId == userId);
+
+        return Ok(ToDetailDto(item, userId, isAdmin, likeCount, isLikedByMe));
+    }
+
+    // POST /api/items/{id}/like
+    [HttpPost("api/items/{id:guid}/like")]
+    [Authorize]
+    public async Task<IActionResult> LikeItem(Guid id)
+    {
+        var item = await _db.Items.Include(i => i.Inventory).FirstOrDefaultAsync(i => i.Id == id);
+        if (item is null) return NotFound();
+
+        var userId  = UserId()!;
+        var isAdmin = User.IsInRole("Admin");
+
+        if (!item.Inventory.IsPublic && !isAdmin && item.Inventory.OwnerId != userId)
+            return Forbid();
+
+        var exists = await _db.ItemLikes.AnyAsync(l => l.ItemId == id && l.UserId == userId);
+        if (exists) return Conflict(new { message = "Already liked." });
+
+        _db.ItemLikes.Add(new ItemLike { ItemId = id, UserId = userId });
+        await _db.SaveChangesAsync();
+
+        var count = await _db.ItemLikes.CountAsync(l => l.ItemId == id);
+        return Ok(new { likeCount = count, isLikedByMe = true });
+    }
+
+    // DELETE /api/items/{id}/like
+    [HttpDelete("api/items/{id:guid}/like")]
+    [Authorize]
+    public async Task<IActionResult> UnlikeItem(Guid id)
+    {
+        var userId = UserId()!;
+        var like   = await _db.ItemLikes.FirstOrDefaultAsync(l => l.ItemId == id && l.UserId == userId);
+        if (like is null) return NotFound();
+
+        _db.ItemLikes.Remove(like);
+        await _db.SaveChangesAsync();
+
+        var count = await _db.ItemLikes.CountAsync(l => l.ItemId == id);
+        return Ok(new { likeCount = count, isLikedByMe = false });
     }
 
     // PUT /api/items/{id}
@@ -179,6 +223,7 @@ public class ItemsController : ControllerBase
             .Include(i => i.Author)
             .Include(i => i.Inventory)
             .Include(i => i.FieldValues).ThenInclude(v => v.Field)
+            .Include(i => i.Likes)
             .FirstOrDefaultAsync(i => i.Id == id);
 
         if (item is null) return NotFound();
@@ -236,7 +281,10 @@ public class ItemsController : ControllerBase
         await _db.Entry(item).Collection(i => i.FieldValues).Query()
             .Include(v => v.Field).LoadAsync();
 
-        return Ok(ToDetailDto(item, userId, isAdmin));
+        var likeCount   = item.Likes.Count;
+        var isLikedByMe = item.Likes.Any(l => l.UserId == userId);
+
+        return Ok(ToDetailDto(item, userId, isAdmin, likeCount, isLikedByMe));
     }
 
     // DELETE /api/items/{id}
@@ -294,7 +342,8 @@ public class ItemsController : ControllerBase
     private static bool CanModifyItem(Item item, string userId, bool isAdmin) =>
         isAdmin || item.Inventory.OwnerId == userId || item.AuthorId == userId;
 
-    private static ItemDetailDto ToDetailDto(Item item, string? userId, bool isAdmin) =>
+    private static ItemDetailDto ToDetailDto(
+        Item item, string? userId, bool isAdmin, int likeCount = 0, bool isLikedByMe = false) =>
         new(
             item.Id,
             item.CustomId,
@@ -308,7 +357,9 @@ public class ItemsController : ControllerBase
             item.FieldValues
                 .OrderBy(v => v.Field.Order)
                 .Select(v => new ItemFieldValueDto(v.FieldId, v.Field.Title, v.Field.Type.ToString(), v.Value))
-                .ToList()
+                .ToList(),
+            likeCount,
+            isLikedByMe
         );
 
     private static ItemListItemDto ToListDto(Item item) =>

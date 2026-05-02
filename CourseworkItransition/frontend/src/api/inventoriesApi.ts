@@ -9,9 +9,9 @@ import type {
 } from '../types/inventory'
 
 export const inventoriesApi = {
-  getAll: (page = 1, pageSize = 20, sort = 'newest') =>
+  getAll: (page = 1, pageSize = 20, sort = 'newest', tag?: string) =>
     api.get<PagedResult<InventoryListItem>>('/inventories', {
-      params: { page, pageSize, sort },
+      params: { page, pageSize, sort, ...(tag ? { tag } : {}) },
     }),
 
   getMy: (page = 1, pageSize = 20, sort = 'newest') =>

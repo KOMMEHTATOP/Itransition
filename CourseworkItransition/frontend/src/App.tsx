@@ -1,5 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
+import { useEffect, useState } from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
+import { TagCloud } from 'react-tagcloud'
 import { useAuth } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
@@ -9,6 +11,9 @@ import InventoriesPage from './pages/InventoriesPage'
 import InventoryDetailPage from './pages/InventoryDetailPage'
 import ItemDetailPage from './pages/ItemDetailPage'
 import ProfilePage from './pages/ProfilePage'
+import SearchPage from './pages/SearchPage'
+import { tagsApi } from './api/tagsApi'
+import type { TagCloudItem } from './types/inventory'
 
 function Navbar() {
   const { user, logout, isAuthenticated, isAdmin } = useAuth()
@@ -73,6 +78,13 @@ function Navbar() {
 
 function HomePage() {
   const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const [tagCloud, setTagCloud] = useState<TagCloudItem[]>([])
+
+  useEffect(() => {
+    tagsApi.cloud(60).then(res => setTagCloud(res.data)).catch(() => {})
+  }, [])
+
   return (
     <div className="container mt-5">
       <h1>Inventory Management</h1>
@@ -86,6 +98,18 @@ function HomePage() {
         <Link className="btn btn-outline-primary" to="/register">
           Get started
         </Link>
+      )}
+
+      {tagCloud.length > 0 && (
+        <div className="mt-5">
+          <h5 className="text-muted mb-3">Popular tags</h5>
+          <TagCloud
+            minSize={13}
+            maxSize={36}
+            tags={tagCloud.map(t => ({ value: t.tag, count: t.count }))}
+            onClick={(tag: { value: string }) => navigate(`/search?tag=${encodeURIComponent(tag.value)}`)}
+          />
+        </div>
       )}
     </div>
   )
@@ -111,6 +135,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/search" element={<SearchPage />} />
       </Routes>
     </>
   )

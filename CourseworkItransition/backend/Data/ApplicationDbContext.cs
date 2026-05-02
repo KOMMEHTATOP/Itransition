@@ -16,6 +16,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CustomIdElement> CustomIdElements => Set<CustomIdElement>();
     public DbSet<InventoryTag> InventoryTags => Set<InventoryTag>();
     public DbSet<InventoryAccess> InventoryAccess => Set<InventoryAccess>();
+    public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<ItemLike> ItemLikes => Set<ItemLike>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -98,6 +100,34 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             e.HasOne(a => a.User)
              .WithMany()
              .HasForeignKey(a => a.UserId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Comment>(e =>
+        {
+            e.HasOne(c => c.Inventory)
+             .WithMany(i => i.Comments)
+             .HasForeignKey(c => c.InventoryId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(c => c.Author)
+             .WithMany()
+             .HasForeignKey(c => c.AuthorId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ItemLike>(e =>
+        {
+            e.HasKey(l => new { l.ItemId, l.UserId });
+
+            e.HasOne(l => l.Item)
+             .WithMany(i => i.Likes)
+             .HasForeignKey(l => l.ItemId)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(l => l.User)
+             .WithMany()
+             .HasForeignKey(l => l.UserId)
              .OnDelete(DeleteBehavior.Cascade);
         });
 

@@ -119,7 +119,9 @@ public record ItemDetailDto(
     int Version,
     Guid InventoryId,
     bool CanEdit,
-    List<ItemFieldValueDto> FieldValues
+    List<ItemFieldValueDto> FieldValues,
+    int LikeCount,
+    bool IsLikedByMe
 );
 
 public record ItemsPageDto(
@@ -138,6 +140,22 @@ public record CreateCustomIdElementRequest(string Type, string FormatString);
 public record UpdateCustomIdElementRequest(string Type, string FormatString, int Order);
 
 public record ItemFieldValueRequest(Guid FieldId, string Value);
+
+// --- Comments ---
+
+public record CommentDto(
+    Guid Id,
+    string AuthorId,
+    string AuthorDisplayName,
+    string Text,
+    DateTime CreatedAt
+);
+
+public record CreateCommentRequest(string Text);
+
+// --- Tag cloud ---
+
+public record TagCloudItemDto(string Tag, int Count);
 
 public record CreateItemRequest(
     string CustomId,

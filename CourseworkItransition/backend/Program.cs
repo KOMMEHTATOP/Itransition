@@ -1,6 +1,7 @@
 using System.Text;
 using AspNet.Security.OAuth.GitHub;
 using InventoryApi.Data;
+using InventoryApi.Hubs;
 using InventoryApi.Models;
 using InventoryApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -45,6 +46,18 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
     };
+    // SignalR sends token via query string because WebSocket headers are not supported
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var token = context.Request.Query["access_token"];
+            var path  = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(token) && path.StartsWithSegments("/hubs"))
+                context.Token = token;
+            return Task.CompletedTask;
+        }
+    };
 })
 .AddCookie("External", options =>
 {
@@ -68,6 +81,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<CustomIdGeneratorService>();
 
+builder.Services.AddSignalR();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
@@ -101,6 +115,7 @@ app.UseCors("Dev");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<InventoryHub>("/hubs/inventory");
 
 app.Run();
 

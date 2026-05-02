@@ -1,16 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { itemsApi } from '../api/itemsApi'
+import { likesApi } from '../api/likesApi'
 import { useAutosave } from '../hooks/useAutosave'
-import type { ItemDetail, UpdateItemRequest, ItemFieldValueRequest } from '../types/inventory'
+import type { ItemDetail, UpdateItemRequest } from '../types/inventory'
 
 export default function ItemDetailPage() {
   const { id }   = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const [item, setItem]     = useState<ItemDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState<string | null>(null)
+  const [item, setItem]         = useState<ItemDetail | null>(null)
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState<string | null>(null)
+  const [likeCount, setLikeCount]   = useState(0)
+  const [isLikedByMe, setIsLiked]   = useState(false)
+  const [liking, setLiking]         = useState(false)
 
   const [customId, setCustomId]   = useState('')
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
@@ -48,6 +52,8 @@ export default function ItemDetailPage() {
       setItem(res.data)
       setCustomId(res.data.customId)
       setFormVersion(res.data.version)
+      setLikeCount(res.data.likeCount)
+      setIsLiked(res.data.isLikedByMe)
       const fvMap: Record<string, string> = {}
       for (const fv of res.data.fieldValues) {
         fvMap[fv.fieldId] = fv.value
@@ -61,6 +67,25 @@ export default function ItemDetailPage() {
   }, [id])
 
   useEffect(() => { load() }, [load])
+
+  const handleLike = async () => {
+    if (!id || liking) return
+    setLiking(true)
+    try {
+      if (isLikedByMe) {
+        const res = await likesApi.unlike(id)
+        setLikeCount(res.data.likeCount)
+        setIsLiked(false)
+      } else {
+        const res = await likesApi.like(id)
+        if (res.status === 409) return
+        setLikeCount(res.data.likeCount)
+        setIsLiked(true)
+      }
+    } catch { /* ignore */ } finally {
+      setLiking(false)
+    }
+  }
 
   const handleDelete = async () => {
     if (!id || !confirm('Delete this item?')) return
@@ -156,6 +181,17 @@ export default function ItemDetailPage() {
     )
   }
 
+  const LikeButton = () => (
+    <button
+      className={`btn btn-sm ${isLikedByMe ? 'btn-danger' : 'btn-outline-secondary'}`}
+      onClick={handleLike}
+      disabled={liking}
+      title={isLikedByMe ? 'Unlike' : 'Like'}
+    >
+      ♥ {likeCount}
+    </button>
+  )
+
   return (
     <div className="container mt-4" style={{ maxWidth: 720 }}>
       <button className="btn btn-link ps-0 text-muted mb-3" onClick={() => navigate(`/inventories/${item.inventoryId}`)}>
@@ -175,6 +211,7 @@ export default function ItemDetailPage() {
                 {saveLabel()}
               </small>
             )}
+            <LikeButton />
             <button className="btn btn-outline-primary btn-sm" onClick={saveNow}>
               Save now
             </button>
@@ -224,9 +261,12 @@ export default function ItemDetailPage() {
       ) : (
         // Read-only view
         <>
-          <h4 className="mb-1">
-            {item.customId || <span className="text-muted fst-italic">no id</span>}
-          </h4>
+          <div className="d-flex align-items-center gap-2 mb-1">
+            <h4 className="mb-0 me-auto">
+              {item.customId || <span className="text-muted fst-italic">no id</span>}
+            </h4>
+            <LikeButton />
+          </div>
           <small className="text-muted d-block mb-4">
             By {item.authorDisplayName} · {new Date(item.createdAt).toLocaleDateString()}
           </small>

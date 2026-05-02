@@ -1,4 +1,5 @@
 using InventoryApi.Data;
+using InventoryApi.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,5 +40,21 @@ public class TagsController : ControllerBase
             .ToListAsync();
 
         return tags;
+    }
+
+    // GET /api/tags/cloud — tag frequencies for the cloud widget
+    [HttpGet("cloud")]
+    public async Task<ActionResult<List<TagCloudItemDto>>> Cloud(int limit = 50)
+    {
+        limit = Math.Clamp(limit, 1, 200);
+
+        var cloud = await _db.InventoryTags
+            .GroupBy(t => t.TagName)
+            .OrderByDescending(g => g.Count())
+            .Take(limit)
+            .Select(g => new TagCloudItemDto(g.Key, g.Count()))
+            .ToListAsync();
+
+        return cloud;
     }
 }

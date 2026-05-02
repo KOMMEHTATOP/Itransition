@@ -16,10 +16,10 @@ public class InventoriesController : ControllerBase
 
     public InventoriesController(ApplicationDbContext db) => _db = db;
 
-    // GET /api/inventories?page=1&pageSize=20&sort=newest
+    // GET /api/inventories?page=1&pageSize=20&sort=newest&tag=optional
     [HttpGet]
     public async Task<ActionResult<PagedResult<InventoryListItemDto>>> GetAll(
-        int page = 1, int pageSize = 20, string sort = "newest")
+        int page = 1, int pageSize = 20, string sort = "newest", string? tag = null)
     {
         var query = _db.Inventories
             .Include(i => i.Owner)
@@ -27,6 +27,12 @@ public class InventoriesController : ControllerBase
             .Include(i => i.Tags)
             .Where(i => i.IsPublic)
             .AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(tag))
+        {
+            var t = tag.Trim().ToLowerInvariant();
+            query = query.Where(i => i.Tags.Any(tt => tt.TagName == t));
+        }
 
         query = sort switch
         {
