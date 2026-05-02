@@ -2,6 +2,7 @@ using System.Security.Claims;
 using InventoryApi.Data;
 using InventoryApi.Models;
 using InventoryApi.Models.Dto;
+using InventoryApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,8 +13,13 @@ namespace InventoryApi.Controllers;
 public class ItemsController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
+    private readonly CustomIdGeneratorService _generator;
 
-    public ItemsController(ApplicationDbContext db) => _db = db;
+    public ItemsController(ApplicationDbContext db, CustomIdGeneratorService generator)
+    {
+        _db        = db;
+        _generator = generator;
+    }
 
     // GET /api/inventories/{inventoryId}/items
     [HttpGet("api/inventories/{inventoryId:guid}/items")]
@@ -63,10 +69,13 @@ public class ItemsController : ControllerBase
 
         var itemDtos = items.Select(item => ToListDto(item)).ToList();
 
+        var hasCustomIdFormat = await _db.CustomIdElements.AnyAsync(e => e.InventoryId == inventoryId);
+
         return Ok(new ItemsPageDto(
             fieldDtos,
             new PagedResult<ItemListItemDto>(itemDtos, total, page, pageSize, totalPages),
-            canEdit
+            canEdit,
+            hasCustomIdFormat
         ));
     }
 
@@ -84,15 +93,23 @@ public class ItemsController : ControllerBase
         if (!inv.IsPublic && !isAdmin && inv.OwnerId != userId)
             return Forbid();
 
-        if (!string.IsNullOrWhiteSpace(req.CustomId))
+        var customId = req.CustomId?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(customId))
         {
-            var exists = await _db.Items.AnyAsync(i => i.InventoryId == inventoryId && i.CustomId == req.CustomId.Trim());
-            if (exists) return Conflict(new { message = "An item with this Custom ID already exists in this inventory." });
+            var hasFormat = await _db.CustomIdElements.AnyAsync(e => e.InventoryId == inventoryId);
+            if (hasFormat)
+                customId = await _generator.GenerateAsync(inventoryId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(customId))
+        {
+            var exists = await _db.Items.AnyAsync(i => i.InventoryId == inventoryId && i.CustomId == customId);
+            if (exists) return Conflict(new { message = "An item with this Custom ID already exists. Please modify it manually." });
         }
 
         var item = new Item
         {
-            CustomId    = req.CustomId?.Trim() ?? string.Empty,
+            CustomId    = customId,
             InventoryId = inventoryId,
             AuthorId    = userId,
         };

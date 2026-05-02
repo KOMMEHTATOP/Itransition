@@ -13,6 +13,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<InventoryField> InventoryFields => Set<InventoryField>();
     public DbSet<ItemFieldValue> ItemFieldValues => Set<ItemFieldValue>();
+    public DbSet<CustomIdElement> CustomIdElements => Set<CustomIdElement>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -66,6 +67,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             e.Property(i => i.Version).IsConcurrencyToken();
 
             e.HasIndex(i => new { i.InventoryId, i.CustomId }).IsUnique();
+        });
+
+        builder.Entity<CustomIdElement>(e =>
+        {
+            e.HasOne(el => el.Inventory)
+             .WithMany(i => i.CustomIdElements)
+             .HasForeignKey(el => el.InventoryId)
+             .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<ItemFieldValue>(e =>

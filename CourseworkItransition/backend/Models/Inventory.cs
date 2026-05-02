@@ -10,6 +10,7 @@ public class Inventory
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public int Version { get; set; } = 1;
+    public int SequenceCounter { get; set; } = 0;
 
     public int? CategoryId { get; set; }
     public Category? Category { get; set; }
@@ -19,4 +20,5 @@ public class Inventory
 
     public ICollection<Item> Items { get; set; } = [];
     public ICollection<InventoryField> Fields { get; set; } = [];
+    public ICollection<CustomIdElement> CustomIdElements { get; set; } = [];
 }

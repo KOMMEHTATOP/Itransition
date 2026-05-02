@@ -66,6 +66,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<CustomIdGeneratorService>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

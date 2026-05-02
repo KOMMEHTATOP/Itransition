@@ -13,9 +13,10 @@ interface Props {
   fields: InventoryField[]
   canEdit: boolean
   isAuthenticated: boolean
+  hasCustomIdFormat?: boolean
 }
 
-export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated }: Props) {
+export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated, hasCustomIdFormat }: Props) {
   const navigate = useNavigate()
 
   const [items, setItems]           = useState<PagedResult<ItemListItem> | null>(null)
@@ -250,7 +251,7 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
                   <input
                     type="text"
                     className="form-control"
-                    placeholder="Leave blank to use auto-generated ID (Phase 5)"
+                    placeholder={hasCustomIdFormat ? 'Leave blank to auto-generate' : 'Custom ID (optional)'}
                     value={newCustomId}
                     onChange={e => setNewCustomId(e.target.value)}
                   />

@@ -6,9 +6,11 @@ import { useAuth } from '../contexts/AuthContext'
 import { useAutosave } from '../hooks/useAutosave'
 import FieldsTab from '../components/FieldsTab'
 import ItemsTab from '../components/ItemsTab'
-import type { InventoryDetail, UpdateInventoryRequest, InventoryField } from '../types/inventory'
+import CustomIdTab from '../components/CustomIdTab'
+import { customIdApi } from '../api/customIdApi'
+import type { InventoryDetail, UpdateInventoryRequest, InventoryField, CustomIdElement } from '../types/inventory'
 
-type Tab = 'items' | 'fields' | 'settings'
+type Tab = 'items' | 'fields' | 'customid' | 'settings'
 
 export default function InventoryDetailPage() {
   const { id }   = useParams<{ id: string }>()
@@ -21,7 +23,8 @@ export default function InventoryDetailPage() {
   const [error, setError]         = useState<string | null>(null)
 
   const rawTab = searchParams.get('tab')
-  const activeTab: Tab = rawTab === 'fields' || rawTab === 'settings' ? rawTab : 'items'
+  const activeTab: Tab =
+    rawTab === 'fields' || rawTab === 'customid' || rawTab === 'settings' ? rawTab : 'items'
 
   const setActiveTab = (tab: Tab) => {
     setSearchParams(tab === 'items' ? {} : { tab }, { replace: true })
@@ -30,6 +33,10 @@ export default function InventoryDetailPage() {
   // Fields state (owned at this level so both tabs share it)
   const [fields, setFields] = useState<InventoryField[]>([])
   const [fieldsLoading, setFieldsLoading] = useState(false)
+
+  // Custom ID elements state
+  const [customIdElements, setCustomIdElements] = useState<CustomIdElement[]>([])
+  const [customIdLoading, setCustomIdLoading] = useState(false)
 
   // Settings form state
   const [title, setTitle]       = useState('')
@@ -93,8 +100,22 @@ export default function InventoryDetailPage() {
     }
   }, [id])
 
+  const loadCustomIdElements = useCallback(async () => {
+    if (!id) return
+    setCustomIdLoading(true)
+    try {
+      const res = await customIdApi.getAll(id)
+      setCustomIdElements(res.data)
+    } catch {
+      // non-fatal
+    } finally {
+      setCustomIdLoading(false)
+    }
+  }, [id])
+
   useEffect(() => { load() }, [load])
   useEffect(() => { loadFields() }, [loadFields])
+  useEffect(() => { loadCustomIdElements() }, [loadCustomIdElements])
 
   const handleDelete = async () => {
     if (!id || !confirm('Delete this inventory and all its items?')) return
@@ -191,6 +212,14 @@ export default function InventoryDetailPage() {
             </li>
             <li className="nav-item">
               <button
+                className={`nav-link ${activeTab === 'customid' ? 'active' : ''}`}
+                onClick={() => setActiveTab('customid')}
+              >
+                Custom ID {customIdLoading ? '' : customIdElements.length > 0 ? `(${customIdElements.length})` : ''}
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
                 className={`nav-link ${activeTab === 'settings' ? 'active' : ''}`}
                 onClick={() => setActiveTab('settings')}
               >
@@ -208,6 +237,7 @@ export default function InventoryDetailPage() {
           fields={fields}
           canEdit={inventory.canEdit}
           isAuthenticated={isAuthenticated}
+          hasCustomIdFormat={customIdElements.length > 0}
         />
       )}
 
@@ -216,6 +246,14 @@ export default function InventoryDetailPage() {
           inventoryId={inventory.id}
           fields={fields}
           onChange={setFields}
+        />
+      )}
+
+      {activeTab === 'customid' && inventory.canEdit && (
+        <CustomIdTab
+          inventoryId={inventory.id}
+          elements={customIdElements}
+          onChange={setCustomIdElements}
         />
       )}
 

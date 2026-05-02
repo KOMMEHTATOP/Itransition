@@ -107,6 +107,37 @@ export interface ItemsPageResult {
   fields: InventoryField[]
   items: PagedResult<ItemListItem>
   canEdit: boolean
+  hasCustomIdFormat: boolean
+}
+
+// --- Custom ID ---
+
+export type CustomIdElementType =
+  | 'Fixed'
+  | 'Random20bit'
+  | 'Random32bit'
+  | 'Random6digit'
+  | 'Random9digit'
+  | 'GUID'
+  | 'DateTime'
+  | 'Sequence'
+
+export interface CustomIdElement {
+  id: string
+  type: CustomIdElementType
+  formatString: string
+  order: number
+}
+
+export interface CreateCustomIdElementRequest {
+  type: CustomIdElementType
+  formatString: string
+}
+
+export interface UpdateCustomIdElementRequest {
+  type: CustomIdElementType
+  formatString: string
+  order: number
 }
 
 export interface ItemFieldValueRequest {

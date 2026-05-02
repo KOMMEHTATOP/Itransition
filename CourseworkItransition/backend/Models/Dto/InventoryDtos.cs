@@ -115,8 +115,17 @@ public record ItemDetailDto(
 public record ItemsPageDto(
     List<InventoryFieldDto> Fields,
     PagedResult<ItemListItemDto> Items,
-    bool CanEdit
+    bool CanEdit,
+    bool HasCustomIdFormat
 );
+
+// --- Custom ID ---
+
+public record CustomIdElementDto(Guid Id, string Type, string FormatString, int Order);
+
+public record CreateCustomIdElementRequest(string Type, string FormatString);
+
+public record UpdateCustomIdElementRequest(string Type, string FormatString, int Order);
 
 public record ItemFieldValueRequest(Guid FieldId, string Value);
 
