@@ -189,6 +189,7 @@ public record InventorySearchResultDto(
 public record ItemSearchResultDto(
     Guid Id,
     string CustomId,
+    string? Name,
     Guid InventoryId,
     string InventoryTitle,
     string AuthorDisplayName,

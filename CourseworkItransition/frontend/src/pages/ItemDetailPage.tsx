@@ -137,15 +137,18 @@ export default function ItemDetailPage() {
         )
       case 'Boolean':
         return (
-          <div className="form-check">
+          <div className="form-check form-switch">
             <input
               type="checkbox"
               className="form-check-input"
+              role="switch"
               id={`fv-${fieldId}`}
               checked={value === 'true'}
               onChange={e => update(e.target.checked ? 'true' : 'false')}
             />
-            <label className="form-check-label" htmlFor={`fv-${fieldId}`}>{t('itemDetail.boolYes')}</label>
+            <label className="form-check-label" htmlFor={`fv-${fieldId}`}>
+              {value === 'true' ? t('itemDetail.boolYes') : t('itemDetail.boolNo')}
+            </label>
           </div>
         )
       case 'Number':

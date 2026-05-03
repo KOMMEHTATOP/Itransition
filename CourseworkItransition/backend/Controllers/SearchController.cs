@@ -1,4 +1,5 @@
 using InventoryApi.Data;
+using InventoryApi.Models;
 using InventoryApi.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -56,9 +57,23 @@ public class SearchController : ControllerBase
             i.Category?.Name
         )).ToList();
 
+        var itemIds = items.Select(i => i.Id).ToList();
+        var firstFieldValues = await _db.ItemFieldValues
+            .Include(fv => fv.Field)
+            .Where(fv => itemIds.Contains(fv.ItemId) && fv.Value != "" &&
+                         (fv.Field.Type == FieldType.Text || fv.Field.Type == FieldType.MultilineText))
+            .OrderBy(fv => fv.Field.Order)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var nameMap = firstFieldValues
+            .GroupBy(fv => fv.ItemId)
+            .ToDictionary(g => g.Key, g => g.First().Value);
+
         var itemDtos = items.Select(item => new ItemSearchResultDto(
             item.Id,
             item.CustomId,
+            nameMap.TryGetValue(item.Id, out var name) ? name : null,
             item.InventoryId,
             item.Inventory.Title,
             item.Author.DisplayName,

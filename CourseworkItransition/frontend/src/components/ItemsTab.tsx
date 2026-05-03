@@ -110,7 +110,9 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
   const renderFieldValue = (item: ItemListItem, field: InventoryField) => {
     const fv = item.fieldValues.find(v => v.fieldId === field.id)
     if (!fv || fv.value === '') return <span className="text-muted">—</span>
-    if (field.type === 'Boolean') return fv.value === 'true' ? '✓' : '✗'
+    if (field.type === 'Boolean') return fv.value === 'true'
+      ? <span className="badge bg-success">{t('itemsTab.boolYes')}</span>
+      : <span className="badge bg-secondary">{t('itemsTab.boolNo')}</span>
     if (field.type === 'Link') {
       return (
         <a href={fv.value} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
@@ -271,16 +273,17 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
                         onChange={e => setNewFieldValues(prev => ({ ...prev, [f.id]: e.target.value }))}
                       />
                     ) : f.type === 'Boolean' ? (
-                      <div className="form-check">
+                      <div className="form-check form-switch">
                         <input
                           type="checkbox"
                           className="form-check-input"
+                          role="switch"
                           id={`nfv-${f.id}`}
                           checked={newFieldValues[f.id] === 'true'}
                           onChange={e => setNewFieldValues(prev => ({ ...prev, [f.id]: e.target.checked ? 'true' : 'false' }))}
                         />
                         <label className="form-check-label" htmlFor={`nfv-${f.id}`}>
-                          {t('itemsTab.boolYes')}
+                          {newFieldValues[f.id] === 'true' ? t('itemsTab.boolYes') : t('itemsTab.boolNo')}
                         </label>
                       </div>
                     ) : (

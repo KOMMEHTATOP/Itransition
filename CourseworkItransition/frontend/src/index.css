@@ -130,3 +130,27 @@ code {
   background-color: transparent !important;
   color: inherit !important;
 }
+
+/* tagify: fix cursor alignment — override center from #root text-align */
+.tagify__input {
+  text-align: left !important;
+}
+.tagify {
+  text-align: left;
+}
+
+/* responsive: prevent horizontal scroll on small screens */
+@media (max-width: 576px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  h1 {
+    font-size: 28px;
+    margin: 16px 0;
+  }
+  .navbar .d-flex.align-items-center.gap-2 {
+    flex-wrap: wrap;
+    gap: 4px !important;
+  }
+}

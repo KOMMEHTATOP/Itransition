@@ -148,6 +148,7 @@ export default function SearchPage() {
               <table className="table table-hover align-middle">
                 <thead className="table-light">
                   <tr>
+                    <th>{t('searchPage.colName')}</th>
                     <th>{t('searchPage.colCustomId')}</th>
                     <th>{t('searchPage.colInventory')}</th>
                     <th>{t('searchPage.colAuthor')}</th>
@@ -161,6 +162,13 @@ export default function SearchPage() {
                       style={{ cursor: 'pointer' }}
                       onClick={() => navigate(`/items/${item.id}`)}
                     >
+                      <td>
+                        {item.name ? (
+                          <span className="d-block text-truncate" style={{ maxWidth: 200 }}>
+                            {item.name}
+                          </span>
+                        ) : <span className="text-muted">—</span>}
+                      </td>
                       <td>
                         <Link
                           to={`/items/${item.id}`}

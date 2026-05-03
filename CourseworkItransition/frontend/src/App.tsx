@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { useEffect, useRef, useState } from 'react'
-import { Routes, Route, Link, useNavigate } from 'react-router-dom'
+import { Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom'
 import { TagCloud } from 'react-tagcloud'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './contexts/AuthContext'
@@ -74,9 +74,9 @@ function Navbar() {
       <div className="collapse navbar-collapse" id="navbarNav">
         <ul className="navbar-nav me-auto">
           <li className="nav-item">
-            <Link className="nav-link" to="/inventories">
+            <NavLink className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} to="/inventories">
               {t('nav.browse')}
-            </Link>
+            </NavLink>
           </li>
         </ul>
         <form className="d-flex me-2" onSubmit={handleSearchSubmit}>
@@ -84,7 +84,7 @@ function Navbar() {
             className="form-control form-control-sm"
             type="search"
             placeholder={t('nav.searchPlaceholder')}
-            style={{ width: 260 }}
+            style={{ width: 'clamp(140px, 20vw, 260px)' }}
             value={q}
             onChange={handleSearchChange}
           />

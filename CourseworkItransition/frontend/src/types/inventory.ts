@@ -201,6 +201,7 @@ export interface InventorySearchResult {
 export interface ItemSearchResult {
   id: string
   customId: string
+  name?: string
   inventoryId: string
   inventoryTitle: string
   authorDisplayName: string
