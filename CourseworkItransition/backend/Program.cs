@@ -5,11 +5,19 @@ using InventoryApi.Hubs;
 using InventoryApi.Models;
 using InventoryApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -118,6 +126,7 @@ await SeedAsync(app.Services, app.Configuration);
 if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
+app.UseForwardedHeaders();
 app.UseCors("Dev");
 app.UseAuthentication();
 app.UseAuthorization();
