@@ -48,5 +48,5 @@ jobs:
             cd /opt/inventory
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose -f docker-compose.prod.yml --env-file .env.prod pull api
-            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-recreate
             docker image prune -f
