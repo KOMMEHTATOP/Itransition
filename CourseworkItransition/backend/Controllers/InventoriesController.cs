@@ -21,11 +21,12 @@ public class InventoriesController : ControllerBase
     public async Task<ActionResult<PagedResult<InventoryListItemDto>>> GetAll(
         int page = 1, int pageSize = 20, string sort = "newest", string? tag = null)
     {
+        var isAdmin = User.IsInRole("Admin");
         var query = _db.Inventories
             .Include(i => i.Owner)
             .Include(i => i.Category)
             .Include(i => i.Tags)
-            .Where(i => i.IsPublic)
+            .Where(i => isAdmin || i.IsPublic)
             .AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(tag))
@@ -76,12 +77,13 @@ public class InventoriesController : ControllerBase
         int page = 1, int pageSize = 20, string sort = "newest")
     {
         var userId = UserId()!;
+        var isAdmin = User.IsInRole("Admin");
         var query = _db.Inventories
             .Include(i => i.Owner)
             .Include(i => i.Category)
             .Include(i => i.Tags)
             .Where(i => i.OwnerId != userId &&
-                        (i.IsPublic || i.AccessGrants.Any(a => a.UserId == userId)))
+                        (isAdmin || i.IsPublic || i.AccessGrants.Any(a => a.UserId == userId)))
             .AsNoTracking();
 
         query = sort switch
