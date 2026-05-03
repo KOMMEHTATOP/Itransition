@@ -105,6 +105,13 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Apply migrations
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 // Seed roles and admin user
 await SeedAsync(app.Services, app.Configuration);
 
