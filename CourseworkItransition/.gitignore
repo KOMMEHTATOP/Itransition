@@ -73,8 +73,13 @@ Thumbs.db
 Desktop.ini
 
 MessageForClaude.md
+*ForClaude.md
 backend/appsettings.json
 
 
 ## AI Assistant
 .claude/
+
+## IDE HTTP client files
+*.http
+*.rest
