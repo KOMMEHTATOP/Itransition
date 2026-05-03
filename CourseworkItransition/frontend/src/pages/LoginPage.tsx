@@ -93,10 +93,10 @@ export default function LoginPage() {
           <hr />
 
           <div className="d-grid gap-2">
-            <a href="/api/auth/google" className="btn btn-outline-danger">
+            <a href="https://api.basharov.org/api/auth/google" className="btn btn-outline-danger">
               {t('auth.continueWithGoogle')}
             </a>
-            <a href="/api/auth/github" className="btn btn-outline-dark">
+            <a href="https://api.basharov.org/api/auth/github" className="btn btn-outline-dark">
               {t('auth.continueWithGithub')}
             </a>
           </div>
