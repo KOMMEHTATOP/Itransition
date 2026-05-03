@@ -96,7 +96,7 @@ export default function LoginPage() {
             <a href="https://api.basharov.org/api/auth/google" className="btn btn-outline-danger">
               {t('auth.continueWithGoogle')}
             </a>
-            <a href="https://api.basharov.org/api/auth/github" className="btn btn-outline-dark">
+            <a href="https://api.basharov.org/api/auth/github" className="btn btn-outline-secondary">
               {t('auth.continueWithGithub')}
             </a>
           </div>
