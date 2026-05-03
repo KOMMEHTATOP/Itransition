@@ -18,15 +18,18 @@ public class AuthController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly JwtService _jwt;
     private readonly IConfiguration _config;
+    private readonly IWebHostEnvironment _env;
 
     public AuthController(
         UserManager<ApplicationUser> userManager,
         JwtService jwt,
-        IConfiguration config)
+        IConfiguration config,
+        IWebHostEnvironment env)
     {
         _userManager = userManager;
         _jwt = jwt;
         _config = config;
+        _env = env;
     }
 
     [HttpPost("register")]
@@ -143,7 +146,9 @@ public class AuthController : ControllerBase
     }
 
     private string FrontendUrl =>
-        _config.GetValue<string>("Frontend:Url") ?? "http://localhost:5173";
+        _env.IsProduction()
+            ? _config.GetValue<string>("Frontend:ProdUrl") ?? "https://app.basharov.org"
+            : _config.GetValue<string>("Frontend:Url") ?? "http://localhost:5173";
 
     private async Task<UserDto> MapUserAsync(ApplicationUser user)
     {

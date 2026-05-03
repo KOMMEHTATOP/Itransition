@@ -76,14 +76,15 @@ builder.Services.AddAuthentication(options =>
     options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
     options.SignInScheme = "External";
+    options.CallbackPath = builder.Configuration["Authentication:Google:CallbackPath"] ?? "/signin-google";
 })
 .AddGitHub(options =>
 {
     options.ClientId = builder.Configuration["Authentication:GitHub:ClientId"]!;
     options.ClientSecret = builder.Configuration["Authentication:GitHub:ClientSecret"]!;
     options.SignInScheme = "External";
-    // Request email scope — GitHub users may have private emails
     options.Scope.Add("user:email");
+    options.CallbackPath = builder.Configuration["Authentication:GitHub:CallbackPath"] ?? "/signin-github";
 });
 
 builder.Services.AddScoped<JwtService>();
