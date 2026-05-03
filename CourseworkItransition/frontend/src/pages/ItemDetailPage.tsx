@@ -219,9 +219,13 @@ export default function ItemDetailPage() {
 
       {item.canEdit ? (
         <>
-          <div className="d-flex align-items-center mb-1 gap-2">
-            <h4 className="mb-0 me-auto">
-              {item.customId || <span className="text-muted fst-italic">{t('itemDetail.noId')}</span>}
+          <div className="d-flex align-items-center mb-1 gap-2" style={{ minWidth: 0 }}>
+            <h4
+              className="mb-0 me-auto text-truncate font-monospace"
+              title={item.customId || undefined}
+              style={{ minWidth: 0 }}
+            >
+              {item.customId || <span className="text-muted fst-italic fw-normal" style={{ fontFamily: 'inherit' }}>{t('itemDetail.noId')}</span>}
             </h4>
             {saveLabel() && (
               <small
@@ -279,9 +283,13 @@ export default function ItemDetailPage() {
         </>
       ) : (
         <>
-          <div className="d-flex align-items-center gap-2 mb-1">
-            <h4 className="mb-0 me-auto">
-              {item.customId || <span className="text-muted fst-italic">{t('itemDetail.noId')}</span>}
+          <div className="d-flex align-items-center gap-2 mb-1" style={{ minWidth: 0 }}>
+            <h4
+              className="mb-0 me-auto text-truncate font-monospace"
+              title={item.customId || undefined}
+              style={{ minWidth: 0 }}
+            >
+              {item.customId || <span className="text-muted fst-italic fw-normal" style={{ fontFamily: 'inherit' }}>{t('itemDetail.noId')}</span>}
             </h4>
             <LikeButton />
           </div>
@@ -292,20 +300,37 @@ export default function ItemDetailPage() {
           {item.fieldValues.length === 0 ? (
             <p className="text-muted">{t('itemDetail.noFieldsView')}</p>
           ) : (
-            <dl className="row">
-              {item.fieldValues.map(fv => (
-                <div key={fv.fieldId} className="col-12 mb-2">
-                  <dt className="fw-semibold">{fv.fieldTitle}</dt>
-                  <dd className="ms-3">
-                    {fv.fieldType === 'Boolean'
-                      ? (fv.value === 'true' ? t('itemDetail.boolReadYes') : t('itemDetail.boolReadNo'))
-                      : fv.fieldType === 'Link'
-                      ? <a href={fv.value} target="_blank" rel="noreferrer">{fv.value}</a>
-                      : fv.value || <span className="text-muted">—</span>}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+            <table className="table table-borderless table-sm align-middle mb-0">
+              <colgroup>
+                <col style={{ width: '38%' }} />
+                <col />
+              </colgroup>
+              <tbody>
+                {item.fieldValues.map(fv => (
+                  <tr key={fv.fieldId}>
+                    <td className="fw-semibold text-start align-top pt-2">
+                      {fv.fieldTitle}
+                      <span className="badge bg-secondary fw-normal ms-2" style={{ fontSize: '0.7em' }}>{fv.fieldType}</span>
+                    </td>
+                    <td className="pt-2">
+                      {fv.fieldType === 'Boolean' ? (
+                        fv.value === 'true'
+                          ? <span className="badge bg-success">{t('itemDetail.boolReadYes')}</span>
+                          : <span className="badge bg-secondary">{t('itemDetail.boolReadNo')}</span>
+                      ) : fv.fieldType === 'Link' ? (
+                        fv.value
+                          ? <a href={fv.value} target="_blank" rel="noreferrer" className="text-break">{fv.value}</a>
+                          : <span className="text-muted">—</span>
+                      ) : fv.fieldType === 'MultilineText' ? (
+                        <span style={{ whiteSpace: 'pre-wrap' }}>{fv.value || <span className="text-muted">—</span>}</span>
+                      ) : (
+                        fv.value || <span className="text-muted">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </>
       )}
