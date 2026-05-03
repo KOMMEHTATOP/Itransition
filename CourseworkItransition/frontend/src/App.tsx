@@ -112,7 +112,7 @@ function Navbar() {
                   {t('nav.admin')}
                 </Link>
               )}
-              <Link className="btn btn-outline-light btn-sm" to="/profile">
+              <Link className="btn btn-outline-secondary btn-sm" to="/profile">
                 {user?.displayName}
               </Link>
               <button className="btn btn-outline-secondary btn-sm" onClick={handleLogout}>
@@ -121,7 +121,7 @@ function Navbar() {
             </>
           ) : (
             <>
-              <Link className="btn btn-outline-light btn-sm" to="/login">
+              <Link className="btn btn-outline-secondary btn-sm" to="/login">
                 {t('nav.signIn')}
               </Link>
               <Link className="btn btn-primary btn-sm" to="/register">
