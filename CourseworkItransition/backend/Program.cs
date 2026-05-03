@@ -105,10 +105,13 @@ builder.Services.AddCors(options =>
         var prod = builder.Configuration.GetValue<string>("Frontend:ProdUrl");
         if (!string.IsNullOrEmpty(prod)) origins.Add(prod);
 
+        var pages = builder.Configuration.GetValue<string>("Frontend:PagesUrl");
+        if (!string.IsNullOrEmpty(pages)) origins.Add(pages);
+
         policy.WithOrigins([.. origins])
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 

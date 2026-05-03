@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
@@ -19,7 +19,7 @@ export default function LoginPage() {
 
   const urlError = new URLSearchParams(location.search).get('error')
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.BaseSyntheticEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
