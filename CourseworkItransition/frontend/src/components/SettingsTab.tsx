@@ -3,15 +3,12 @@ import MDEditor from '@uiw/react-md-editor'
 import { useDropzone } from 'react-dropzone'
 import Tags from '@yaireo/tagify/dist/react.tagify'
 import '@yaireo/tagify/dist/tagify.css'
+import { useTranslation } from 'react-i18next'
 import { inventoriesApi } from '../api/inventoriesApi'
 import { tagsApi } from '../api/tagsApi'
 import { useAutosave } from '../hooks/useAutosave'
 import type { Category, InventoryDetail, UpdateInventoryRequest } from '../types/inventory'
 
-// ---------------------------------------------------------------------------
-// Cloudinary config — set VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET
-// in .env.local (or in the production environment).
-// ---------------------------------------------------------------------------
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string | undefined
 
@@ -29,8 +26,6 @@ async function uploadToCloudinary(file: File): Promise<string> {
   return data.secure_url as string
 }
 
-// ---------------------------------------------------------------------------
-
 interface Props {
   inventory: InventoryDetail
   categories: Category[]
@@ -38,6 +33,7 @@ interface Props {
 }
 
 export default function SettingsTab({ inventory, categories, onSaved }: Props) {
+  const { t } = useTranslation()
   const [title, setTitle]       = useState(inventory.title)
   const [description, setDesc]  = useState(inventory.description)
   const [isPublic, setIsPublic] = useState(inventory.isPublic)
@@ -49,7 +45,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
   const [uploading, setUploading]   = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
-  // Keep in sync if parent reloads inventory (e.g. after conflict resolution)
+
   useEffect(() => {
     setTitle(inventory.title)
     setDesc(inventory.description)
@@ -58,7 +54,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
     setImageUrl(inventory.imageUrl)
     setTags(inventory.tags)
     setFormVersion(inventory.version)
-  }, [inventory.id]) // only reset when switching to a different inventory
+  }, [inventory.id])
 
   const editData: UpdateInventoryRequest = {
     title,
@@ -86,7 +82,6 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
     enabled: true,
   })
 
-  // Tagify: load suggestions when input changes
   const tagifyRef = useRef<{ getCleanValue: () => Array<{ value: string }> } | null>(null)
   const loadSuggestions = useCallback(async (e: CustomEvent) => {
     const q: string = (e.detail as { value: string }).value ?? ''
@@ -97,7 +92,6 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
     } catch { /* ignore */ }
   }, [])
 
-  // Image dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'image/*': [] },
     maxFiles: 1,
@@ -110,7 +104,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
         const url = await uploadToCloudinary(files[0])
         setImageUrl(url)
       } catch {
-        setUploadError('Upload failed. Check Cloudinary configuration.')
+        setUploadError(t('settingsTab.uploadFailed'))
       } finally {
         setUploading(false)
       }
@@ -119,10 +113,10 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
 
   const saveLabel = () => {
     switch (saveStatus) {
-      case 'saving':   return { text: '⏳ Saving…',             cls: 'text-muted' }
-      case 'saved':    return { text: '✓ Saved',                cls: 'text-success' }
-      case 'conflict': return { text: '⚠ Conflict — reload',   cls: 'text-danger' }
-      case 'error':    return { text: '✗ Save failed',          cls: 'text-danger' }
+      case 'saving':   return { text: t('settingsTab.saving'),   cls: 'text-muted' }
+      case 'saved':    return { text: t('settingsTab.saved'),    cls: 'text-success' }
+      case 'conflict': return { text: t('settingsTab.conflict'), cls: 'text-danger' }
+      case 'error':    return { text: t('settingsTab.error'),    cls: 'text-danger' }
       default:         return null
     }
   }
@@ -130,23 +124,21 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
 
   return (
     <div style={{ maxWidth: 640 }}>
-      {/* Save status + button */}
       <div className="d-flex align-items-center gap-2 mb-3">
         {sl && <small className={sl.cls}>{sl.text}</small>}
         <button className="btn btn-outline-primary btn-sm ms-auto" onClick={saveNow}>
-          Save now
+          {t('settingsTab.saveNow')}
         </button>
       </div>
 
       {saveStatus === 'conflict' && (
         <div className="alert alert-warning py-2">
-          Save conflict: someone else modified this inventory. Reload the page to get the latest version.
+          {t('settingsTab.saveConflict')}
         </div>
       )}
 
-      {/* Title */}
       <div className="mb-3">
-        <label className="form-label fw-semibold">Title</label>
+        <label className="form-label fw-semibold">{t('settingsTab.titleLabel')}</label>
         <input
           type="text"
           className="form-control"
@@ -155,9 +147,8 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
         />
       </div>
 
-      {/* Description — Markdown editor */}
       <div className="mb-3">
-        <label className="form-label fw-semibold">Description</label>
+        <label className="form-label fw-semibold">{t('settingsTab.descriptionLabel')}</label>
         <div data-color-mode="light">
           <MDEditor
             value={description}
@@ -168,22 +159,20 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
         </div>
       </div>
 
-      {/* Category */}
       <div className="mb-3">
-        <label className="form-label fw-semibold">Category</label>
+        <label className="form-label fw-semibold">{t('settingsTab.categoryLabel')}</label>
         <select
           className="form-select"
           value={categoryId ?? ''}
           onChange={e => setCat(e.target.value === '' ? null : Number(e.target.value))}
         >
-          <option value="">— None —</option>
+          <option value="">{t('settingsTab.noneCategory')}</option>
           {categories.map(c => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
       </div>
 
-      {/* Public toggle */}
       <div className="form-check mb-3">
         <input
           type="checkbox"
@@ -193,17 +182,15 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
           onChange={e => setIsPublic(e.target.checked)}
         />
         <label className="form-check-label" htmlFor="isPublic">
-          Public inventory (any authenticated user can add items)
+          {t('settingsTab.publicLabel')}
         </label>
       </div>
 
-      {/* Image */}
       <div className="mb-3">
-        <label className="form-label fw-semibold">Cover image</label>
+        <label className="form-label fw-semibold">{t('settingsTab.coverLabel')}</label>
         {!CLOUD_NAME || !UPLOAD_PRESET ? (
           <div className="alert alert-warning py-2 small">
-            Cloudinary is not configured. Set <code>VITE_CLOUDINARY_CLOUD_NAME</code> and{' '}
-            <code>VITE_CLOUDINARY_UPLOAD_PRESET</code> in <code>.env.local</code>.
+            {t('settingsTab.cloudinaryWarning')}
           </div>
         ) : (
           <>
@@ -214,10 +201,10 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
             >
               <input {...getInputProps()} />
               {uploading
-                ? <span className="text-muted small">Uploading…</span>
+                ? <span className="text-muted small">{t('settingsTab.uploading')}</span>
                 : isDragActive
-                  ? <span className="text-primary small">Drop image here</span>
-                  : <span className="text-muted small">Drag & drop an image, or click to select</span>
+                  ? <span className="text-primary small">{t('settingsTab.dropHere')}</span>
+                  : <span className="text-muted small">{t('settingsTab.dragDrop')}</span>
               }
             </div>
             {uploadError && <div className="text-danger small mb-2">{uploadError}</div>}
@@ -229,7 +216,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
                   className="btn btn-outline-danger btn-sm"
                   onClick={() => setImageUrl(null)}
                 >
-                  Remove
+                  {t('settingsTab.remove')}
                 </button>
               </div>
             )}
@@ -237,9 +224,8 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
         )}
       </div>
 
-      {/* Tags */}
       <div className="mb-3">
-        <label className="form-label fw-semibold">Tags</label>
+        <label className="form-label fw-semibold">{t('settingsTab.tagsLabel')}</label>
         <Tags
           tagifyRef={tagifyRef}
           value={tags.join(',')}
@@ -250,11 +236,11 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
           onInput={loadSuggestions as unknown as (e: CustomEvent) => void}
           onChange={(e: CustomEvent) => {
             const detail = e.detail as { tagify: { getCleanValue: () => Array<{ value: string }> } }
-            setTags(detail.tagify.getCleanValue().map((t) => t.value))
+            setTags(detail.tagify.getCleanValue().map((tag) => tag.value))
           }}
           className="form-control"
         />
-        <div className="form-text">Press Enter or comma to add a tag.</div>
+        <div className="form-text">{t('settingsTab.tagsHelp')}</div>
       </div>
     </div>
   )

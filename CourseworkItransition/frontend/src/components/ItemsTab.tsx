@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { itemsApi } from '../api/itemsApi'
 import type {
   InventoryField,
@@ -18,6 +19,7 @@ interface Props {
 
 export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated, hasCustomIdFormat }: Props) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const [items, setItems]           = useState<PagedResult<ItemListItem> | null>(null)
   const [loading, setLoading]       = useState(true)
@@ -27,7 +29,6 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
   const [sort, setSort]             = useState('newest')
   const [deleting, setDeleting]     = useState(false)
 
-  // Create modal state
   const [showCreate, setShowCreate] = useState(false)
   const [newCustomId, setNewCustomId] = useState('')
   const [newFieldValues, setNewFieldValues] = useState<Record<string, string>>({})
@@ -43,11 +44,11 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
       const res = await itemsApi.getAll(inventoryId, page, 20, sort)
       setItems(res.data.items)
     } catch {
-      setError('Failed to load items.')
+      setError(t('itemsTab.failedToLoad'))
     } finally {
       setLoading(false)
     }
-  }, [inventoryId, page, sort])
+  }, [inventoryId, page, sort, t])
 
   useEffect(() => { load() }, [load])
 
@@ -70,14 +71,14 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
   }
 
   const handleDeleteSelected = async () => {
-    if (!confirm(`Delete ${selected.size} item(s)?`)) return
+    if (!confirm(t('itemsTab.confirmDelete', { count: selected.size }))) return
     setDeleting(true)
     try {
       await itemsApi.deleteBatch(inventoryId, [...selected])
       setSelected(new Set())
       await load()
     } catch {
-      setError('Failed to delete items.')
+      setError(t('itemsTab.failedToLoad'))
     } finally {
       setDeleting(false)
     }
@@ -100,7 +101,7 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
       await load()
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setCreateError(msg ?? 'Failed to create item.')
+      setCreateError(msg ?? t('itemsTab.failedToCreate'))
     } finally {
       setCreating(false)
     }
@@ -139,11 +140,10 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
 
   return (
     <div>
-      {/* Toolbar */}
       <div className="d-flex align-items-center gap-2 mb-3">
         {isAuthenticated && (
           <button className="btn btn-outline-primary btn-sm" onClick={() => setShowCreate(true)}>
-            + Add item
+            {t('itemsTab.addItem')}
           </button>
         )}
         {canEdit && selected.size > 0 && (
@@ -152,18 +152,20 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
             onClick={handleDeleteSelected}
             disabled={deleting}
           >
-            {deleting ? 'Deleting…' : `Delete selected (${selected.size})`}
+            {deleting ? t('itemsTab.deleting') : t('itemsTab.deleteSelected', { count: selected.size })}
           </button>
         )}
         {items && (
-          <small className="text-muted ms-auto">{items.total} item{items.total !== 1 ? 's' : ''}</small>
+          <small className="text-muted ms-auto">{t('itemsTab.count', { count: items.total })}</small>
         )}
       </div>
 
       {error && <div className="alert alert-danger py-2">{error}</div>}
 
       {items && items.items.length === 0 ? (
-        <p className="text-muted">No items yet.{isAuthenticated ? ' Be the first to add one!' : ' Sign in to add items.'}</p>
+        <p className="text-muted">
+          {isAuthenticated ? t('itemsTab.noItemsAuth') : t('itemsTab.noItemsGuest')}
+        </p>
       ) : (
         <>
           <div className="table-responsive">
@@ -180,10 +182,10 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
                       />
                     </th>
                   )}
-                  {sortHeader('customId', 'ID')}
+                  {sortHeader('customId', t('itemsTab.colId'))}
                   {tableFields.map(f => <th key={f.id}>{f.title}</th>)}
-                  {sortHeader('oldest', 'Added')}
-                  <th>By</th>
+                  {sortHeader('oldest', t('itemsTab.colAdded'))}
+                  <th>{t('itemsTab.colBy')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -204,7 +206,7 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
                       </td>
                     )}
                     <td className="text-monospace fw-semibold">
-                      {item.customId || <span className="text-muted fst-italic">no id</span>}
+                      {item.customId || <span className="text-muted fst-italic">{t('itemsTab.noId')}</span>}
                     </td>
                     {tableFields.map(f => (
                       <td key={f.id}>{renderFieldValue(item, f)}</td>
@@ -217,7 +219,6 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
             </table>
           </div>
 
-          {/* Pagination */}
           {items && items.totalPages > 1 && (
             <nav>
               <ul className="pagination pagination-sm justify-content-center">
@@ -232,13 +233,12 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
         </>
       )}
 
-      {/* Create item modal */}
       {showCreate && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Add Item</h5>
+                <h5 className="modal-title">{t('itemsTab.addItemTitle')}</h5>
                 <button
                   className="btn-close"
                   onClick={() => { setShowCreate(false); setCreateError(null) }}
@@ -247,11 +247,11 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
               <div className="modal-body">
                 {createError && <div className="alert alert-danger py-2">{createError}</div>}
                 <div className="mb-3">
-                  <label className="form-label fw-semibold">Custom ID</label>
+                  <label className="form-label fw-semibold">{t('itemsTab.customIdLabel')}</label>
                   <input
                     type="text"
                     className="form-control"
-                    placeholder={hasCustomIdFormat ? 'Leave blank to auto-generate' : 'Custom ID (optional)'}
+                    placeholder={hasCustomIdFormat ? t('itemsTab.placeholderAutoGenerate') : t('itemsTab.placeholderOptional')}
                     value={newCustomId}
                     onChange={e => setNewCustomId(e.target.value)}
                   />
@@ -279,7 +279,9 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
                           checked={newFieldValues[f.id] === 'true'}
                           onChange={e => setNewFieldValues(prev => ({ ...prev, [f.id]: e.target.checked ? 'true' : 'false' }))}
                         />
-                        <label className="form-check-label" htmlFor={`nfv-${f.id}`}>Yes</label>
+                        <label className="form-check-label" htmlFor={`nfv-${f.id}`}>
+                          {t('itemsTab.boolYes')}
+                        </label>
                       </div>
                     ) : (
                       <input
@@ -297,10 +299,10 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
                   className="btn btn-secondary"
                   onClick={() => { setShowCreate(false); setCreateError(null) }}
                 >
-                  Cancel
+                  {t('itemsTab.cancel')}
                 </button>
                 <button className="btn btn-primary" onClick={handleCreate} disabled={creating}>
-                  {creating ? 'Adding…' : 'Add item'}
+                  {creating ? t('itemsTab.adding') : t('itemsTab.addButton')}
                 </button>
               </div>
             </div>

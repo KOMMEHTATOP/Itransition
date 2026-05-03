@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Popover } from 'bootstrap'
 import {
   DndContext,
@@ -24,17 +25,6 @@ const ELEMENT_TYPES: CustomIdElementType[] = [
   'Fixed', 'Random20bit', 'Random32bit', 'Random6digit', 'Random9digit', 'GUID', 'DateTime', 'Sequence',
 ]
 
-const HELP_TEXT: Record<CustomIdElementType, string> = {
-  Fixed:       'Fixed text. Supports Unicode and emoji. E.g. "BOOK-" or "📚".',
-  Random20bit:  'Random 20-bit number (0–1048575). Format: X5 = 5 hex chars, D6 = 6 decimal digits.',
-  Random32bit:  'Random 32-bit number (0–2147483647). Format: X8 = 8 hex chars.',
-  Random6digit: 'Random 6-digit decimal number (000000–999999). No format string needed.',
-  Random9digit: 'Random 9-digit decimal number. No format string needed.',
-  GUID:         'Globally unique identifier (UUID v4). No format string needed.',
-  DateTime:     'UTC date/time of creation. Format: yyyy = year, MM = month, dd = day, HH = hour, mm = minute.',
-  Sequence:     'Sequential integer, unique per inventory. Format: D3 = 3 digits with leading zeros (001, 002, ...).',
-}
-
 const DEFAULT_FORMAT: Record<CustomIdElementType, string> = {
   Fixed:       '',
   Random20bit:  'X5',
@@ -47,8 +37,6 @@ const DEFAULT_FORMAT: Record<CustomIdElementType, string> = {
 }
 
 const NO_FORMAT_TYPES: CustomIdElementType[] = ['Random6digit', 'Random9digit', 'GUID']
-
-// --- Preview helpers ---
 
 function fmtNum(n: number, fmt: string): string {
   const m = fmt.match(/^([XxDd])(\d+)$/)
@@ -87,8 +75,6 @@ function generatePreview(elements: CustomIdElement[]): string {
     .join('')
 }
 
-// --- HelpPopover ---
-
 function HelpPopover({ content }: { content: string }) {
   const ref = useRef<HTMLButtonElement>(null)
   useEffect(() => {
@@ -103,17 +89,17 @@ function HelpPopover({ content }: { content: string }) {
   )
 }
 
-// --- SortableRow ---
-
 interface RowProps {
   el: CustomIdElement
+  helpText: string
   onUpdate: (id: string, type: CustomIdElementType, formatString: string) => void
   onDelete: (id: string) => void
 }
 
-function SortableRow({ el, onUpdate, onDelete }: RowProps) {
+function SortableRow({ el, helpText, onUpdate, onDelete }: RowProps) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: el.id })
   const style = { transform: CSS.Transform.toString(transform), transition }
+  const { t } = useTranslation()
 
   const [fmt, setFmt] = useState(el.formatString)
   useEffect(() => setFmt(el.formatString), [el.formatString])
@@ -129,7 +115,7 @@ function SortableRow({ el, onUpdate, onDelete }: RowProps) {
             {...listeners}
             className="text-muted"
             style={{ cursor: 'grab', fontSize: '1.2rem', lineHeight: 1 }}
-            title="Drag to reorder"
+            title={t('customIdTab.dragToReorder')}
           >
             ⠿
           </span>
@@ -138,12 +124,12 @@ function SortableRow({ el, onUpdate, onDelete }: RowProps) {
             style={{ width: 150 }}
             value={el.type}
             onChange={e => {
-              const t = e.target.value as CustomIdElementType
-              onUpdate(el.id, t, DEFAULT_FORMAT[t])
+              const type = e.target.value as CustomIdElementType
+              onUpdate(el.id, type, DEFAULT_FORMAT[type])
             }}
           >
-            {ELEMENT_TYPES.map(t => (
-              <option key={t} value={t}>{t}</option>
+            {ELEMENT_TYPES.map(type => (
+              <option key={type} value={type}>{type}</option>
             ))}
           </select>
           {showFormat ? (
@@ -160,7 +146,7 @@ function SortableRow({ el, onUpdate, onDelete }: RowProps) {
           ) : (
             <span className="text-muted small" style={{ width: 110 }}>—</span>
           )}
-          <HelpPopover content={HELP_TEXT[el.type]} />
+          <HelpPopover content={helpText} />
           <button
             type="button"
             className="btn btn-outline-danger btn-sm ms-auto"
@@ -174,8 +160,6 @@ function SortableRow({ el, onUpdate, onDelete }: RowProps) {
   )
 }
 
-// --- CustomIdTab ---
-
 interface Props {
   inventoryId: string
   elements: CustomIdElement[]
@@ -183,8 +167,20 @@ interface Props {
 }
 
 export default function CustomIdTab({ inventoryId, elements, onChange }: Props) {
+  const { t } = useTranslation()
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState(() => generatePreview(elements))
+
+  const helpTexts: Record<CustomIdElementType, string> = {
+    Fixed:       t('customIdTab.helpFixed'),
+    Random20bit:  t('customIdTab.helpRandom20bit'),
+    Random32bit:  t('customIdTab.helpRandom32bit'),
+    Random6digit: t('customIdTab.helpRandom6digit'),
+    Random9digit: t('customIdTab.helpRandom9digit'),
+    GUID:         t('customIdTab.helpGUID'),
+    DateTime:     t('customIdTab.helpDateTime'),
+    Sequence:     t('customIdTab.helpSequence'),
+  }
 
   useEffect(() => {
     setPreview(generatePreview(elements))
@@ -205,7 +201,7 @@ export default function CustomIdTab({ inventoryId, elements, onChange }: Props) 
     try {
       await customIdApi.reorder(inventoryId, reordered.map(e => e.id))
     } catch {
-      setError('Failed to save order.')
+      setError(t('customIdTab.failedToReorder'))
     }
   }
 
@@ -218,7 +214,7 @@ export default function CustomIdTab({ inventoryId, elements, onChange }: Props) 
     })
     if (res.status === 400) {
       const body = res.data as unknown as { message?: string }
-      setError(body.message ?? 'Failed to add element.')
+      setError(body.message ?? t('customIdTab.failedToAdd'))
       return
     }
     onChange([...elements, res.data])
@@ -236,7 +232,7 @@ export default function CustomIdTab({ inventoryId, elements, onChange }: Props) 
       })
       onChange(elements.map(e => (e.id === id ? res.data : e)))
     } catch {
-      setError('Failed to update element.')
+      setError(t('customIdTab.failedToUpdate'))
     }
   }
 
@@ -246,21 +242,21 @@ export default function CustomIdTab({ inventoryId, elements, onChange }: Props) 
       await customIdApi.delete(inventoryId, id)
       onChange(elements.filter(e => e.id !== id))
     } catch {
-      setError('Failed to delete element.')
+      setError(t('customIdTab.failedToDelete'))
     }
   }
 
   return (
     <div>
       <div className="d-flex align-items-center mb-3 gap-2">
-        <h5 className="mb-0 me-auto">Custom ID Format</h5>
-        <small className="text-muted">Max 10 elements · drag to reorder</small>
+        <h5 className="mb-0 me-auto">{t('customIdTab.title')}</h5>
+        <small className="text-muted">{t('customIdTab.hint')}</small>
         <button
           className="btn btn-outline-primary btn-sm"
           onClick={handleAdd}
           disabled={elements.length >= 10}
         >
-          + Add element
+          {t('customIdTab.addElement')}
         </button>
       </div>
 
@@ -268,13 +264,13 @@ export default function CustomIdTab({ inventoryId, elements, onChange }: Props) 
 
       {elements.length > 0 && (
         <div className="alert alert-secondary py-2 mb-3 d-flex align-items-center gap-2">
-          <span className="text-muted small">Preview:</span>
+          <span className="text-muted small">{t('customIdTab.preview')}</span>
           <code className="fw-semibold">{preview}</code>
           <button
             type="button"
             className="btn btn-link btn-sm p-0 ms-1 text-muted"
             onClick={() => setPreview(generatePreview(elements))}
-            title="Regenerate preview"
+            title="↺"
           >
             ↺
           </button>
@@ -282,10 +278,7 @@ export default function CustomIdTab({ inventoryId, elements, onChange }: Props) 
       )}
 
       {elements.length === 0 ? (
-        <p className="text-muted">
-          No elements yet. Add elements to define the auto-generated ID format for new items.
-          If no format is defined, items will have an empty ID by default.
-        </p>
+        <p className="text-muted">{t('customIdTab.noElements')}</p>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={elements.map(e => e.id)} strategy={verticalListSortingStrategy}>
@@ -295,6 +288,7 @@ export default function CustomIdTab({ inventoryId, elements, onChange }: Props) 
                 <SortableRow
                   key={el.id}
                   el={el}
+                  helpText={helpTexts[el.type]}
                   onUpdate={handleUpdate}
                   onDelete={handleDelete}
                 />
@@ -303,10 +297,7 @@ export default function CustomIdTab({ inventoryId, elements, onChange }: Props) 
         </DndContext>
       )}
 
-      <p className="text-muted small mt-3">
-        When creating an item, if the Custom ID field is left blank, it will be auto-generated
-        using this format. Existing item IDs are never changed when the format is updated.
-      </p>
+      <p className="text-muted small mt-3">{t('customIdTab.helpText')}</p>
     </div>
   )
 }

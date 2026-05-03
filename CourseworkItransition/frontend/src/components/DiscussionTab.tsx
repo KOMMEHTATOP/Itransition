@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useTranslation } from 'react-i18next'
 import { commentsApi } from '../api/commentsApi'
 import { useInventoryHub } from '../hooks/useInventoryHub'
 import type { Comment } from '../types/inventory'
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function DiscussionTab({ inventoryId, isAuthenticated, active }: Props) {
+  const { t } = useTranslation()
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading]   = useState(true)
   const [text, setText]         = useState('')
@@ -52,7 +54,7 @@ export default function DiscussionTab({ inventoryId, isAuthenticated, active }: 
       await commentsApi.create(inventoryId, { text: text.trim() })
       setText('')
     } catch {
-      setError('Failed to post comment.')
+      setError(t('discussionTab.failedToPost'))
     } finally {
       setSubmitting(false)
     }
@@ -69,7 +71,7 @@ export default function DiscussionTab({ inventoryId, isAuthenticated, active }: 
   return (
     <div style={{ maxWidth: 720 }}>
       {comments.length === 0 ? (
-        <p className="text-muted">No comments yet. Be the first!</p>
+        <p className="text-muted">{t('discussionTab.noComments')}</p>
       ) : (
         <div className="mb-4">
           {comments.map(c => (
@@ -94,7 +96,7 @@ export default function DiscussionTab({ inventoryId, isAuthenticated, active }: 
             <textarea
               className="form-control"
               rows={3}
-              placeholder="Write a comment (Markdown supported)…"
+              placeholder={t('discussionTab.placeholder')}
               value={text}
               onChange={e => setText(e.target.value)}
             />
@@ -104,12 +106,13 @@ export default function DiscussionTab({ inventoryId, isAuthenticated, active }: 
             className="btn btn-primary btn-sm"
             disabled={submitting || !text.trim()}
           >
-            {submitting ? 'Posting…' : 'Post comment'}
+            {submitting ? t('discussionTab.posting') : t('discussionTab.postComment')}
           </button>
         </form>
       ) : (
         <p className="text-muted small">
-          <a href="/login">Sign in</a> to leave a comment.
+          <a href="/login">{t('discussionTab.signIn')}</a>{' '}
+          {t('discussionTab.signInToComment')}
         </p>
       )}
     </div>

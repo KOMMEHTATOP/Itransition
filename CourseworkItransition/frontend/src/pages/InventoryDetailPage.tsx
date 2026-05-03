@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { inventoriesApi } from '../api/inventoriesApi'
 import { fieldsApi } from '../api/fieldsApi'
 import { useAuth } from '../contexts/AuthContext'
@@ -17,6 +18,7 @@ type Tab = 'items' | 'discussion' | 'fields' | 'customid' | 'settings' | 'access
 export default function InventoryDetailPage() {
   const { id }   = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const { isAuthenticated } = useAuth()
 
@@ -54,11 +56,11 @@ export default function InventoryDetailPage() {
       setInventory(invRes.data)
       setCategories(catRes.data)
     } catch {
-      setError('Inventory not found or access denied.')
+      setError(t('inventory.notFoundError'))
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, t])
 
   const loadFields = useCallback(async () => {
     if (!id) return
@@ -87,12 +89,12 @@ export default function InventoryDetailPage() {
   useEffect(() => { loadCustomIdElements() }, [loadCustomIdElements])
 
   const handleDelete = async () => {
-    if (!id || !confirm('Delete this inventory and all its items?')) return
+    if (!id || !confirm(t('inventory.confirmDelete'))) return
     try {
       await inventoriesApi.delete(id)
       navigate('/inventories')
     } catch {
-      setError('Failed to delete inventory.')
+      setError(t('inventory.failedToDelete'))
     }
   }
 
@@ -107,8 +109,10 @@ export default function InventoryDetailPage() {
   if (error || !inventory) {
     return (
       <div className="container mt-4">
-        <div className="alert alert-danger">{error ?? 'Not found.'}</div>
-        <button className="btn btn-secondary btn-sm" onClick={() => navigate(-1)}>← Back</button>
+        <div className="alert alert-danger">{error ?? t('inventory.notFound')}</div>
+        <button className="btn btn-secondary btn-sm" onClick={() => navigate(-1)}>
+          {t('inventory.backShort')}
+        </button>
       </div>
     )
   }
@@ -116,20 +120,20 @@ export default function InventoryDetailPage() {
   return (
     <div className="container mt-4">
       <button className="btn btn-link ps-0 text-muted mb-2" onClick={() => navigate('/inventories')}>
-        ← Inventories
+        {t('inventory.back')}
       </button>
 
       <div className="d-flex align-items-start gap-2 mb-1 flex-wrap">
         <div className="me-auto">
           <h2 className="mb-0">{inventory.title}</h2>
           <small className="text-muted">
-            By {inventory.ownerDisplayName} · {new Date(inventory.createdAt).toLocaleDateString()}
+            {t('inventory.by')} {inventory.ownerDisplayName} · {new Date(inventory.createdAt).toLocaleDateString()}
             {inventory.categoryName && ` · ${inventory.categoryName}`}
-            {!inventory.isPublic && <span className="badge bg-secondary ms-2">private</span>}
+            {!inventory.isPublic && <span className="badge bg-secondary ms-2">{t('inventoriesList.private')}</span>}
             {inventory.tags.length > 0 && (
               <span className="ms-2">
-                {inventory.tags.map(t => (
-                  <span key={t} className="badge bg-light text-secondary border me-1">{t}</span>
+                {inventory.tags.map(tag => (
+                  <span key={tag} className="badge bg-light text-secondary border me-1">{tag}</span>
                 ))}
               </span>
             )}
@@ -137,50 +141,48 @@ export default function InventoryDetailPage() {
         </div>
         {inventory.canEdit && (
           <button className="btn btn-outline-danger btn-sm flex-shrink-0" onClick={handleDelete}>
-            Delete inventory
+            {t('inventory.deleteInventory')}
           </button>
         )}
       </div>
 
-      {/* Tabs */}
       <ul className="nav nav-tabs mt-3 mb-3">
         <li className="nav-item">
           <button className={`nav-link ${activeTab === 'items' ? 'active' : ''}`} onClick={() => setActiveTab('items')}>
-            Items
+            {t('inventory.tabItems')}
           </button>
         </li>
         <li className="nav-item">
           <button className={`nav-link ${activeTab === 'discussion' ? 'active' : ''}`} onClick={() => setActiveTab('discussion')}>
-            Discussion
+            {t('inventory.tabDiscussion')}
           </button>
         </li>
         {inventory.canEdit && (
           <>
             <li className="nav-item">
               <button className={`nav-link ${activeTab === 'fields' ? 'active' : ''}`} onClick={() => setActiveTab('fields')}>
-                Fields {fieldsLoading ? '' : `(${fields.length})`}
+                {t('inventory.tabFields')} {fieldsLoading ? '' : `(${fields.length})`}
               </button>
             </li>
             <li className="nav-item">
               <button className={`nav-link ${activeTab === 'customid' ? 'active' : ''}`} onClick={() => setActiveTab('customid')}>
-                Custom ID {customIdLoading ? '' : customIdElements.length > 0 ? `(${customIdElements.length})` : ''}
+                {t('inventory.tabCustomId')} {customIdLoading ? '' : customIdElements.length > 0 ? `(${customIdElements.length})` : ''}
               </button>
             </li>
             <li className="nav-item">
               <button className={`nav-link ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
-                Settings
+                {t('inventory.tabSettings')}
               </button>
             </li>
             <li className="nav-item">
               <button className={`nav-link ${activeTab === 'access' ? 'active' : ''}`} onClick={() => setActiveTab('access')}>
-                Access
+                {t('inventory.tabAccess')}
               </button>
             </li>
           </>
         )}
       </ul>
 
-      {/* Tab content */}
       {activeTab === 'discussion' && (
         <DiscussionTab
           inventoryId={inventory.id}

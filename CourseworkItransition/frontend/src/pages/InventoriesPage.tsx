@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { inventoriesApi } from '../api/inventoriesApi'
 import { useAuth } from '../contexts/AuthContext'
 import type { InventoryListItem } from '../types/inventory'
@@ -11,6 +12,7 @@ const PAGE_SIZE = 20
 export default function InventoriesPage() {
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const [items, setItems]       = useState<InventoryListItem[]>([])
   const [total, setTotal]       = useState(0)
@@ -21,7 +23,6 @@ export default function InventoriesPage() {
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState<string | null>(null)
 
-  // Create modal state
   const [showCreate, setShowCreate] = useState(false)
   const [newTitle, setNewTitle]     = useState('')
   const [newDesc, setNewDesc]       = useState('')
@@ -39,11 +40,11 @@ export default function InventoriesPage() {
       setTotalPages(res.data.totalPages)
       setSelected(new Set())
     } catch {
-      setError('Failed to load inventories.')
+      setError(t('inventoriesList.failedToLoad'))
     } finally {
       setLoading(false)
     }
-  }, [page, sort])
+  }, [page, sort, t])
 
   useEffect(() => { load() }, [load])
 
@@ -66,12 +67,12 @@ export default function InventoriesPage() {
 
   const handleDeleteSelected = async () => {
     if (selected.size === 0) return
-    if (!confirm(`Delete ${selected.size} inventory(ies)?`)) return
+    if (!confirm(t('inventoriesList.confirmDelete', { count: selected.size }))) return
     try {
       await inventoriesApi.deleteBatch([...selected])
       await load()
     } catch {
-      setError('Failed to delete selected inventories.')
+      setError(t('inventoriesList.failedToDelete'))
     }
   }
 
@@ -93,7 +94,7 @@ export default function InventoriesPage() {
       setNewPublic(true)
       navigate(`/inventories/${res.data.id}`)
     } catch {
-      setCreateError('Failed to create inventory.')
+      setCreateError(t('inventoriesList.failedToCreate'))
     } finally {
       setCreating(false)
     }
@@ -104,17 +105,16 @@ export default function InventoriesPage() {
   return (
     <div className="container mt-4">
       <div className="d-flex align-items-center mb-3 gap-2 flex-wrap">
-        <h2 className="me-auto mb-0">Inventories</h2>
+        <h2 className="me-auto mb-0">{t('inventoriesList.title')}</h2>
 
-        {/* Toolbar */}
         {isAuthenticated && (
           <button className="btn btn-primary btn-sm" onClick={() => setShowCreate(true)}>
-            + Create
+            {t('inventoriesList.createButton')}
           </button>
         )}
         {isAuthenticated && selected.size > 0 && (
           <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>
-            Delete selected ({selected.size})
+            {t('inventoriesList.deleteSelected', { count: selected.size })}
           </button>
         )}
       </div>
@@ -126,7 +126,7 @@ export default function InventoriesPage() {
           <div className="spinner-border" role="status" />
         </div>
       ) : items.length === 0 ? (
-        <p className="text-muted">No inventories yet.</p>
+        <p className="text-muted">{t('inventoriesList.noInventories')}</p>
       ) : (
         <>
           <div className="table-responsive">
@@ -146,16 +146,16 @@ export default function InventoriesPage() {
                     style={{ cursor: 'pointer' }}
                     onClick={() => toggleSort('title')}
                   >
-                    Name{sortIndicator('title')}
+                    {t('inventoriesList.colName')}{sortIndicator('title')}
                   </th>
-                  <th>Description</th>
-                  <th>Owner</th>
+                  <th>{t('inventoriesList.colDescription')}</th>
+                  <th>{t('inventoriesList.colOwner')}</th>
                   <th
                     className="user-select-none"
                     style={{ cursor: 'pointer' }}
                     onClick={() => toggleSort(sort === 'newest' ? 'oldest' : 'newest')}
                   >
-                    Date{sort === 'newest' ? ' ▼' : sort === 'oldest' ? ' ▲' : ''}
+                    {t('inventoriesList.colDate')}{sort === 'newest' ? ' ▼' : sort === 'oldest' ? ' ▲' : ''}
                   </th>
                 </tr>
               </thead>
@@ -183,7 +183,7 @@ export default function InventoriesPage() {
                         {inv.title}
                       </Link>
                       {!inv.isPublic && (
-                        <span className="badge bg-secondary ms-2 small">private</span>
+                        <span className="badge bg-secondary ms-2 small">{t('inventoriesList.private')}</span>
                       )}
                     </td>
                     <td className="text-muted" style={{ maxWidth: 300 }}>
@@ -201,29 +201,22 @@ export default function InventoriesPage() {
             </table>
           </div>
 
-          {/* Pagination */}
           <div className="d-flex justify-content-between align-items-center mt-2">
             <small className="text-muted">
-              {total} inventori{total !== 1 ? 'es' : 'y'} total
+              {t('inventoriesList.total', { count: total })}
             </small>
             <nav>
               <ul className="pagination pagination-sm mb-0">
                 <li className={`page-item ${page <= 1 ? 'disabled' : ''}`}>
-                  <button className="page-link" onClick={() => setPage(p => p - 1)}>
-                    ‹
-                  </button>
+                  <button className="page-link" onClick={() => setPage(p => p - 1)}>‹</button>
                 </li>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
                   <li key={p} className={`page-item ${p === page ? 'active' : ''}`}>
-                    <button className="page-link" onClick={() => setPage(p)}>
-                      {p}
-                    </button>
+                    <button className="page-link" onClick={() => setPage(p)}>{p}</button>
                   </li>
                 ))}
                 <li className={`page-item ${page >= totalPages ? 'disabled' : ''}`}>
-                  <button className="page-link" onClick={() => setPage(p => p + 1)}>
-                    ›
-                  </button>
+                  <button className="page-link" onClick={() => setPage(p => p + 1)}>›</button>
                 </li>
               </ul>
             </nav>
@@ -231,7 +224,6 @@ export default function InventoriesPage() {
         </>
       )}
 
-      {/* Create modal */}
       {showCreate && (
         <div
           className="modal show d-block"
@@ -245,19 +237,15 @@ export default function InventoriesPage() {
             <div className="modal-content">
               <form onSubmit={handleCreate}>
                 <div className="modal-header">
-                  <h5 className="modal-title">New Inventory</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setShowCreate(false)}
-                  />
+                  <h5 className="modal-title">{t('inventoriesList.newInventory')}</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowCreate(false)} />
                 </div>
                 <div className="modal-body">
                   {createError && (
                     <div className="alert alert-danger py-2">{createError}</div>
                   )}
                   <div className="mb-3">
-                    <label className="form-label">Title *</label>
+                    <label className="form-label">{t('inventoriesList.titleLabel')}</label>
                     <input
                       type="text"
                       className="form-control"
@@ -268,7 +256,7 @@ export default function InventoriesPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Description</label>
+                    <label className="form-label">{t('inventoriesList.descriptionLabel')}</label>
                     <textarea
                       className="form-control"
                       rows={3}
@@ -285,7 +273,7 @@ export default function InventoriesPage() {
                       onChange={e => setNewPublic(e.target.checked)}
                     />
                     <label className="form-check-label" htmlFor="newPublic">
-                      Public (anyone can add items)
+                      {t('inventoriesList.publicLabel')}
                     </label>
                   </div>
                 </div>
@@ -295,10 +283,10 @@ export default function InventoriesPage() {
                     className="btn btn-secondary"
                     onClick={() => setShowCreate(false)}
                   >
-                    Cancel
+                    {t('inventoriesList.cancel')}
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={creating}>
-                    {creating ? 'Creating…' : 'Create'}
+                    {creating ? t('inventoriesList.creating') : t('inventoriesList.create')}
                   </button>
                 </div>
               </form>

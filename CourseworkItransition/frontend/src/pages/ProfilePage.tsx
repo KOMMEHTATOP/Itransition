@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { inventoriesApi } from '../api/inventoriesApi'
 import { useAuth } from '../contexts/AuthContext'
 import type { InventoryListItem } from '../types/inventory'
@@ -46,6 +47,7 @@ function InventoryTable({
   onCreateClick,
 }: InventoryTableProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   return (
     <div className="mb-5">
@@ -53,12 +55,12 @@ function InventoryTable({
         <h5 className="mb-0 me-auto">{title}</h5>
         {showCreate && (
           <button className="btn btn-primary btn-sm" onClick={onCreateClick}>
-            + Create
+            {t('inventoriesList.createButton')}
           </button>
         )}
         {selected.size > 0 && (
           <button className="btn btn-danger btn-sm" onClick={onDeleteSelected}>
-            Delete selected ({selected.size})
+            {t('inventoriesList.deleteSelected', { count: selected.size })}
           </button>
         )}
       </div>
@@ -70,7 +72,7 @@ function InventoryTable({
           <div className="spinner-border spinner-border-sm" role="status" />
         </div>
       ) : items.length === 0 ? (
-        <p className="text-muted small">No inventories here yet.</p>
+        <p className="text-muted small">{t('inventoriesList.noInventoriesHere')}</p>
       ) : (
         <>
           <div className="table-responsive">
@@ -90,16 +92,16 @@ function InventoryTable({
                     className="user-select-none"
                     onClick={() => onSortChange('title')}
                   >
-                    Name{sort === 'title' ? ' ▲' : ''}
+                    {t('inventoriesList.colName')}{sort === 'title' ? ' ▲' : ''}
                   </th>
-                  <th>Description</th>
-                  <th>Owner</th>
+                  <th>{t('inventoriesList.colDescription')}</th>
+                  <th>{t('inventoriesList.colOwner')}</th>
                   <th
                     style={{ cursor: 'pointer' }}
                     className="user-select-none"
                     onClick={() => onSortChange(sort === 'newest' ? 'oldest' : 'newest')}
                   >
-                    Date{sort === 'newest' ? ' ▼' : sort === 'oldest' ? ' ▲' : ''}
+                    {t('inventoriesList.colDate')}{sort === 'newest' ? ' ▼' : sort === 'oldest' ? ' ▲' : ''}
                   </th>
                 </tr>
               </thead>
@@ -127,7 +129,7 @@ function InventoryTable({
                         {inv.title}
                       </Link>
                       {!inv.isPublic && (
-                        <span className="badge bg-secondary ms-1 small">private</span>
+                        <span className="badge bg-secondary ms-1 small">{t('inventoriesList.private')}</span>
                       )}
                     </td>
                     <td className="text-muted">
@@ -150,21 +152,15 @@ function InventoryTable({
             <nav>
               <ul className="pagination pagination-sm mb-0">
                 <li className={`page-item ${page <= 1 ? 'disabled' : ''}`}>
-                  <button className="page-link" onClick={() => onPageChange(page - 1)}>
-                    ‹
-                  </button>
+                  <button className="page-link" onClick={() => onPageChange(page - 1)}>‹</button>
                 </li>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
                   <li key={p} className={`page-item ${p === page ? 'active' : ''}`}>
-                    <button className="page-link" onClick={() => onPageChange(p)}>
-                      {p}
-                    </button>
+                    <button className="page-link" onClick={() => onPageChange(p)}>{p}</button>
                   </li>
                 ))}
                 <li className={`page-item ${page >= totalPages ? 'disabled' : ''}`}>
-                  <button className="page-link" onClick={() => onPageChange(page + 1)}>
-                    ›
-                  </button>
+                  <button className="page-link" onClick={() => onPageChange(page + 1)}>›</button>
                 </li>
               </ul>
             </nav>
@@ -178,8 +174,8 @@ function InventoryTable({
 export default function ProfilePage() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
-  // --- My inventories state ---
   const [myItems, setMyItems]           = useState<InventoryListItem[]>([])
   const [myTotal, setMyTotal]           = useState(0)
   const [myTotalPages, setMyTotalPages] = useState(1)
@@ -189,7 +185,6 @@ export default function ProfilePage() {
   const [myLoading, setMyLoading]       = useState(true)
   const [myError, setMyError]           = useState<string | null>(null)
 
-  // --- Accessible inventories state ---
   const [accItems, setAccItems]           = useState<InventoryListItem[]>([])
   const [accTotal, setAccTotal]           = useState(0)
   const [accTotalPages, setAccTotalPages] = useState(1)
@@ -198,7 +193,6 @@ export default function ProfilePage() {
   const [accLoading, setAccLoading]       = useState(true)
   const [accError, setAccError]           = useState<string | null>(null)
 
-  // Create modal
   const [showCreate, setShowCreate]     = useState(false)
   const [newTitle, setNewTitle]         = useState('')
   const [newDesc, setNewDesc]           = useState('')
@@ -216,11 +210,11 @@ export default function ProfilePage() {
       setMyTotalPages(res.data.totalPages)
       setMySelected(new Set())
     } catch {
-      setMyError('Failed to load your inventories.')
+      setMyError(t('profile.failedToLoadMy'))
     } finally {
       setMyLoading(false)
     }
-  }, [myPage, mySort])
+  }, [myPage, mySort, t])
 
   const loadAcc = useCallback(async () => {
     setAccLoading(true)
@@ -231,23 +225,23 @@ export default function ProfilePage() {
       setAccTotal(res.data.total)
       setAccTotalPages(res.data.totalPages)
     } catch {
-      setAccError('Failed to load accessible inventories.')
+      setAccError(t('profile.failedToLoadAccessible'))
     } finally {
       setAccLoading(false)
     }
-  }, [accPage, accSort])
+  }, [accPage, accSort, t])
 
   useEffect(() => { loadMy() }, [loadMy])
   useEffect(() => { loadAcc() }, [loadAcc])
 
   const handleDeleteMySelected = async () => {
     if (mySelected.size === 0) return
-    if (!confirm(`Delete ${mySelected.size} inventory(ies)?`)) return
+    if (!confirm(t('profile.confirmDelete', { count: mySelected.size }))) return
     try {
       await inventoriesApi.deleteBatch([...mySelected])
       await loadMy()
     } catch {
-      setMyError('Failed to delete selected inventories.')
+      setMyError(t('profile.failedToDeleteSelected'))
     }
   }
 
@@ -269,7 +263,7 @@ export default function ProfilePage() {
       setNewPublic(true)
       navigate(`/inventories/${res.data.id}`)
     } catch {
-      setCreateError('Failed to create inventory.')
+      setCreateError(t('profile.failedToCreate'))
     } finally {
       setCreating(false)
     }
@@ -281,7 +275,7 @@ export default function ProfilePage() {
       <p className="text-muted mb-4">{user?.email}</p>
 
       <InventoryTable
-        title="My Inventories"
+        title={t('profile.myInventories')}
         items={myItems}
         total={myTotal}
         page={myPage}
@@ -308,7 +302,7 @@ export default function ProfilePage() {
       />
 
       <InventoryTable
-        title="Accessible to Me"
+        title={t('profile.accessibleToMe')}
         items={accItems}
         total={accTotal}
         page={accPage}
@@ -324,7 +318,6 @@ export default function ProfilePage() {
         onDeleteSelected={() => {}}
       />
 
-      {/* Create modal */}
       {showCreate && (
         <div
           className="modal show d-block"
@@ -338,19 +331,15 @@ export default function ProfilePage() {
             <div className="modal-content">
               <form onSubmit={handleCreate}>
                 <div className="modal-header">
-                  <h5 className="modal-title">New Inventory</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setShowCreate(false)}
-                  />
+                  <h5 className="modal-title">{t('inventoriesList.newInventory')}</h5>
+                  <button type="button" className="btn-close" onClick={() => setShowCreate(false)} />
                 </div>
                 <div className="modal-body">
                   {createError && (
                     <div className="alert alert-danger py-2">{createError}</div>
                   )}
                   <div className="mb-3">
-                    <label className="form-label">Title *</label>
+                    <label className="form-label">{t('inventoriesList.titleLabel')}</label>
                     <input
                       type="text"
                       className="form-control"
@@ -361,7 +350,7 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label">Description</label>
+                    <label className="form-label">{t('inventoriesList.descriptionLabel')}</label>
                     <textarea
                       className="form-control"
                       rows={3}
@@ -378,7 +367,7 @@ export default function ProfilePage() {
                       onChange={e => setNewPublic(e.target.checked)}
                     />
                     <label className="form-check-label" htmlFor="createPublic">
-                      Public
+                      {t('inventoriesList.publicShort')}
                     </label>
                   </div>
                 </div>
@@ -388,10 +377,10 @@ export default function ProfilePage() {
                     className="btn btn-secondary"
                     onClick={() => setShowCreate(false)}
                   >
-                    Cancel
+                    {t('inventoriesList.cancel')}
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={creating}>
-                    {creating ? 'Creating…' : 'Create'}
+                    {creating ? t('inventoriesList.creating') : t('inventoriesList.create')}
                   </button>
                 </div>
               </form>

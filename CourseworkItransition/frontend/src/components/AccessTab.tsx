@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { accessApi } from '../api/accessApi'
 import { usersApi } from '../api/usersApi'
 import type { AccessUser, UserSearchResult } from '../types/inventory'
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function AccessTab({ inventoryId, isPublic }: Props) {
+  const { t } = useTranslation()
   const [users, setUsers]       = useState<AccessUser[]>([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState<string | null>(null)
@@ -16,7 +18,6 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
   const [sortBy, setSortBy]     = useState<'name' | 'email'>('name')
   const [removing, setRemoving] = useState(false)
 
-  // Search state
   const [query, setQuery]               = useState('')
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([])
   const [searchLoading, setSearchLoading] = useState(false)
@@ -30,18 +31,17 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
       const res = await accessApi.getAll(inventoryId)
       setUsers(res.data)
     } catch {
-      setError('Failed to load access list.')
+      setError(t('accessTab.failedToLoad'))
     } finally {
       setLoading(false)
     }
-  }, [inventoryId])
+  }, [inventoryId, t])
 
   useEffect(() => { load() }, [load])
 
-  // Debounced user search
   useEffect(() => {
     if (query.trim().length < 2) { setSearchResults([]); setShowDropdown(false); return }
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       setSearchLoading(true)
       try {
         const res = await usersApi.search(query)
@@ -51,7 +51,7 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
         setSearchLoading(false)
       }
     }, 300)
-    return () => clearTimeout(t)
+    return () => clearTimeout(timer)
   }, [query])
 
   const handleAdd = async (user: UserSearchResult) => {
@@ -59,24 +59,24 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
     setShowDropdown(false)
     setQuery('')
     const res = await accessApi.grant(inventoryId, user.id)
-    if (res.status === 409) { setAddError('User already has access.'); return }
+    if (res.status === 409) { setAddError(t('accessTab.alreadyHasAccess')); return }
     if (res.status === 400) {
       const body = res.data as unknown as { message?: string }
-      setAddError(body.message ?? 'Cannot add this user.')
+      setAddError(body.message ?? t('accessTab.cannotAdd'))
       return
     }
     await load()
   }
 
   const handleRemoveSelected = async () => {
-    if (!confirm(`Remove access for ${selected.size} user(s)?`)) return
+    if (!confirm(t('accessTab.confirmRemove', { count: selected.size }))) return
     setRemoving(true)
     try {
       await accessApi.revokeBatch(inventoryId, [...selected])
       setSelected(new Set())
       await load()
     } catch {
-      setError('Failed to remove access.')
+      setError(t('accessTab.failedToRemove'))
     } finally {
       setRemoving(false)
     }
@@ -106,21 +106,19 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
     <div style={{ maxWidth: 640 }}>
       {isPublic && (
         <div className="alert alert-info py-2 mb-3">
-          This inventory is <strong>public</strong> — all authenticated users already have write access.
-          You can still grant explicit access to users for when the inventory is made private.
+          {t('accessTab.publicInfo')}
         </div>
       )}
 
       {error && <div className="alert alert-danger py-2">{error}</div>}
 
-      {/* Add user search */}
       <div className="mb-3 position-relative">
-        <label className="form-label fw-semibold">Add user by name or email</label>
+        <label className="form-label fw-semibold">{t('accessTab.addUserLabel')}</label>
         <div className="input-group">
           <input
             type="text"
             className="form-control"
-            placeholder="Search users…"
+            placeholder={t('accessTab.searchPlaceholder')}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
@@ -155,27 +153,26 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
         )}
         {showDropdown && searchResults.length === 0 && !searchLoading && (
           <div className="border rounded p-2 text-muted small bg-white" style={{ position: 'absolute', width: '100%', zIndex: 1000 }}>
-            No users found.
+            {t('accessTab.noUsersFound')}
           </div>
         )}
       </div>
 
-      {/* Toolbar */}
       <div className="d-flex align-items-center gap-2 mb-2">
-        <span className="text-muted small">{users.length} user{users.length !== 1 ? 's' : ''} with access</span>
+        <span className="text-muted small">{t('accessTab.usersWithAccess', { count: users.length })}</span>
         <div className="ms-auto d-flex gap-2 align-items-center">
-          <span className="text-muted small">Sort by:</span>
+          <span className="text-muted small">{t('accessTab.sortBy')}</span>
           <button
             className={`btn btn-sm ${sortBy === 'name' ? 'btn-secondary' : 'btn-outline-secondary'}`}
             onClick={() => setSortBy('name')}
           >
-            Name
+            {t('accessTab.sortName')}
           </button>
           <button
             className={`btn btn-sm ${sortBy === 'email' ? 'btn-secondary' : 'btn-outline-secondary'}`}
             onClick={() => setSortBy('email')}
           >
-            Email
+            {t('accessTab.sortEmail')}
           </button>
           {selected.size > 0 && (
             <button
@@ -183,14 +180,14 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
               onClick={handleRemoveSelected}
               disabled={removing}
             >
-              {removing ? 'Removing…' : `Remove selected (${selected.size})`}
+              {removing ? t('accessTab.removing') : t('accessTab.removeSelected', { count: selected.size })}
             </button>
           )}
         </div>
       </div>
 
       {users.length === 0 ? (
-        <p className="text-muted">No users have been granted access yet.</p>
+        <p className="text-muted">{t('accessTab.noUsers')}</p>
       ) : (
         <table className="table table-sm align-middle">
           <thead>
@@ -203,8 +200,8 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
                   onChange={toggleAll}
                 />
               </th>
-              <th>Name</th>
-              <th>Email</th>
+              <th>{t('accessTab.colName')}</th>
+              <th>{t('accessTab.colEmail')}</th>
             </tr>
           </thead>
           <tbody>

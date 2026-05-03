@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   DndContext,
   closestCenter,
@@ -36,6 +37,7 @@ interface SortableRowProps {
 function SortableRow({ field, onSave, onDelete }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: field.id })
   const style = { transform: CSS.Transform.toString(transform), transition }
+  const { t } = useTranslation()
 
   const [editing, setEditing]           = useState(false)
   const [title, setTitle]               = useState(field.title)
@@ -62,7 +64,7 @@ function SortableRow({ field, onSave, onDelete }: SortableRowProps) {
             <div className="d-flex gap-2 mb-2">
               <input
                 className="form-control form-control-sm"
-                placeholder="Title"
+                placeholder={t('fieldsTab.titlePlaceholder')}
                 value={title}
                 onChange={e => setTitle(e.target.value)}
               />
@@ -70,7 +72,7 @@ function SortableRow({ field, onSave, onDelete }: SortableRowProps) {
             </div>
             <input
               className="form-control form-control-sm mb-2"
-              placeholder="Description (optional)"
+              placeholder={t('fieldsTab.descPlaceholder')}
               value={description}
               onChange={e => setDescription(e.target.value)}
             />
@@ -82,11 +84,13 @@ function SortableRow({ field, onSave, onDelete }: SortableRowProps) {
                 checked={showInTable}
                 onChange={e => setShowInTable(e.target.checked)}
               />
-              <label className="form-check-label small" htmlFor={`sit-${field.id}`}>Show in table</label>
+              <label className="form-check-label small" htmlFor={`sit-${field.id}`}>
+                {t('fieldsTab.showInTable')}
+              </label>
             </div>
             <div className="d-flex gap-2">
-              <button className="btn btn-primary btn-sm" onClick={handleSave}>Save</button>
-              <button className="btn btn-outline-secondary btn-sm" onClick={handleCancel}>Cancel</button>
+              <button className="btn btn-primary btn-sm" onClick={handleSave}>{t('fieldsTab.save')}</button>
+              <button className="btn btn-outline-secondary btn-sm" onClick={handleCancel}>{t('fieldsTab.cancel')}</button>
             </div>
           </div>
         ) : (
@@ -96,7 +100,7 @@ function SortableRow({ field, onSave, onDelete }: SortableRowProps) {
               {...listeners}
               className="text-muted"
               style={{ cursor: 'grab', fontSize: '1.2rem', lineHeight: 1 }}
-              title="Drag to reorder"
+              title={t('fieldsTab.dragToReorder')}
             >
               ⠿
             </span>
@@ -114,7 +118,7 @@ function SortableRow({ field, onSave, onDelete }: SortableRowProps) {
               className="btn btn-outline-secondary btn-sm"
               onClick={() => setEditing(true)}
             >
-              Edit
+              {t('fieldsTab.edit')}
             </button>
             <button
               className="btn btn-outline-danger btn-sm"
@@ -130,6 +134,7 @@ function SortableRow({ field, onSave, onDelete }: SortableRowProps) {
 }
 
 export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
+  const { t } = useTranslation()
   const [error, setError]       = useState<string | null>(null)
   const [adding, setAdding]     = useState(false)
   const [newTitle, setNewTitle] = useState('')
@@ -154,7 +159,7 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
     try {
       await fieldsApi.reorder(inventoryId, reordered.map(f => f.id))
     } catch {
-      setError('Failed to save order.')
+      setError(t('fieldsTab.failedToReorder'))
     }
   }
 
@@ -171,7 +176,7 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
       const res = await fieldsApi.create(inventoryId, data)
       if (res.status === 400) {
         const body = res.data as unknown as { message?: string }
-        setError(body.message ?? 'Maximum 3 fields of this type allowed.')
+        setError(body.message ?? t('fieldsTab.maxTypeError'))
         return
       }
       onChange([...fields, res.data])
@@ -181,7 +186,7 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
       setNewType('Text')
       setNewShow(true)
     } catch {
-      setError('Failed to add field.')
+      setError(t('fieldsTab.failedToAdd'))
     }
   }
 
@@ -191,32 +196,32 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
       const res = await fieldsApi.update(inventoryId, field.id, data)
       onChange(fields.map(f => (f.id === field.id ? res.data : f)))
     } catch {
-      setError('Failed to save field.')
+      setError(t('fieldsTab.failedToSave'))
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this field? All item values for this field will be lost.')) return
+    if (!confirm(t('fieldsTab.confirmDelete'))) return
     setError(null)
     try {
       await fieldsApi.delete(inventoryId, id)
       onChange(fields.filter(f => f.id !== id))
     } catch {
-      setError('Failed to delete field.')
+      setError(t('fieldsTab.failedToDelete'))
     }
   }
 
   return (
     <div>
       <div className="d-flex align-items-center mb-3 gap-2">
-        <h5 className="mb-0 me-auto">Custom Fields</h5>
-        <small className="text-muted">Max 3 per type · drag to reorder</small>
+        <h5 className="mb-0 me-auto">{t('fieldsTab.title')}</h5>
+        <small className="text-muted">{t('fieldsTab.hint')}</small>
         <button
           className="btn btn-outline-primary btn-sm"
           onClick={() => setAdding(true)}
           disabled={adding}
         >
-          + Add field
+          {t('fieldsTab.addField')}
         </button>
       </div>
 
@@ -229,7 +234,7 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
               <div className="col-md-5">
                 <input
                   className="form-control form-control-sm"
-                  placeholder="Field title *"
+                  placeholder={t('fieldsTab.titlePlaceholder')}
                   value={newTitle}
                   onChange={e => setNewTitle(e.target.value)}
                   autoFocus
@@ -241,15 +246,15 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
                   value={newType}
                   onChange={e => setNewType(e.target.value as FieldType)}
                 >
-                  {FIELD_TYPES.map(t => (
-                    <option key={t} value={t}>{t}</option>
+                  {FIELD_TYPES.map(type => (
+                    <option key={type} value={type}>{type}</option>
                   ))}
                 </select>
               </div>
               <div className="col-md-4">
                 <input
                   className="form-control form-control-sm"
-                  placeholder="Description (optional)"
+                  placeholder={t('fieldsTab.descPlaceholder')}
                   value={newDesc}
                   onChange={e => setNewDesc(e.target.value)}
                 />
@@ -264,14 +269,16 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
                   checked={newShow}
                   onChange={e => setNewShow(e.target.checked)}
                 />
-                <label className="form-check-label small" htmlFor="newFieldShow">Show in table</label>
+                <label className="form-check-label small" htmlFor="newFieldShow">
+                  {t('fieldsTab.showInTable')}
+                </label>
               </div>
-              <button className="btn btn-primary btn-sm" onClick={handleAdd}>Add</button>
+              <button className="btn btn-primary btn-sm" onClick={handleAdd}>{t('fieldsTab.add')}</button>
               <button
                 className="btn btn-outline-secondary btn-sm"
-                onClick={() => { setAdding(false); setNewTitle(''); setNewDesc(''); }}
+                onClick={() => { setAdding(false); setNewTitle(''); setNewDesc('') }}
               >
-                Cancel
+                {t('fieldsTab.cancel')}
               </button>
             </div>
           </div>
@@ -279,7 +286,7 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
       )}
 
       {fields.length === 0 && !adding ? (
-        <p className="text-muted">No fields yet. Add a field to start collecting structured data.</p>
+        <p className="text-muted">{t('fieldsTab.noFields')}</p>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>

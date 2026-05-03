@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { itemsApi } from '../api/itemsApi'
 import { likesApi } from '../api/likesApi'
 import { useAutosave } from '../hooks/useAutosave'
@@ -8,6 +9,7 @@ import type { ItemDetail, UpdateItemRequest } from '../types/inventory'
 export default function ItemDetailPage() {
   const { id }   = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const [item, setItem]         = useState<ItemDetail | null>(null)
   const [loading, setLoading]   = useState(true)
@@ -60,11 +62,11 @@ export default function ItemDetailPage() {
       }
       setFieldValues(fvMap)
     } catch {
-      setError('Item not found or access denied.')
+      setError(t('itemDetail.notFound'))
     } finally {
       setLoading(false)
     }
-  }, [id])
+  }, [id, t])
 
   useEffect(() => { load() }, [load])
 
@@ -88,21 +90,21 @@ export default function ItemDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!id || !confirm('Delete this item?')) return
+    if (!id || !confirm(t('itemDetail.confirmDelete'))) return
     try {
       await itemsApi.delete(id)
       navigate(-1)
     } catch {
-      setError('Failed to delete item.')
+      setError(t('itemDetail.failedToDelete'))
     }
   }
 
   const saveLabel = () => {
     switch (saveStatus) {
-      case 'saving':   return '⏳ Saving…'
-      case 'saved':    return '✓ Saved'
-      case 'conflict': return '⚠ Save conflict — please reload'
-      case 'error':    return '✗ Save failed'
+      case 'saving':   return t('itemDetail.savingStatus')
+      case 'saved':    return t('itemDetail.savedStatus')
+      case 'conflict': return t('itemDetail.conflictStatus')
+      case 'error':    return t('itemDetail.errorStatus')
       default:         return null
     }
   }
@@ -131,7 +133,7 @@ export default function ItemDetailPage() {
               checked={value === 'true'}
               onChange={e => update(e.target.checked ? 'true' : 'false')}
             />
-            <label className="form-check-label" htmlFor={`fv-${fieldId}`}>Yes</label>
+            <label className="form-check-label" htmlFor={`fv-${fieldId}`}>{t('itemDetail.boolYes')}</label>
           </div>
         )
       case 'Number':
@@ -175,8 +177,10 @@ export default function ItemDetailPage() {
   if (error || !item) {
     return (
       <div className="container mt-4">
-        <div className="alert alert-danger">{error ?? 'Not found.'}</div>
-        <button className="btn btn-secondary btn-sm" onClick={() => navigate(-1)}>← Back</button>
+        <div className="alert alert-danger">{error ?? t('itemDetail.notFound')}</div>
+        <button className="btn btn-secondary btn-sm" onClick={() => navigate(-1)}>
+          {t('itemDetail.backShort')}
+        </button>
       </div>
     )
   }
@@ -186,7 +190,7 @@ export default function ItemDetailPage() {
       className={`btn btn-sm ${isLikedByMe ? 'btn-danger' : 'btn-outline-secondary'}`}
       onClick={handleLike}
       disabled={liking}
-      title={isLikedByMe ? 'Unlike' : 'Like'}
+      title={isLikedByMe ? t('itemDetail.unlike') : t('itemDetail.like')}
     >
       ♥ {likeCount}
     </button>
@@ -195,14 +199,14 @@ export default function ItemDetailPage() {
   return (
     <div className="container mt-4" style={{ maxWidth: 720 }}>
       <button className="btn btn-link ps-0 text-muted mb-3" onClick={() => navigate(`/inventories/${item.inventoryId}`)}>
-        ← Back to inventory
+        {t('itemDetail.backToInventory')}
       </button>
 
       {item.canEdit ? (
         <>
           <div className="d-flex align-items-center mb-1 gap-2">
             <h4 className="mb-0 me-auto">
-              {item.customId || <span className="text-muted fst-italic">no id</span>}
+              {item.customId || <span className="text-muted fst-italic">{t('itemDetail.noId')}</span>}
             </h4>
             {saveLabel() && (
               <small
@@ -213,34 +217,34 @@ export default function ItemDetailPage() {
             )}
             <LikeButton />
             <button className="btn btn-outline-primary btn-sm" onClick={saveNow}>
-              Save now
+              {t('itemDetail.saveNow')}
             </button>
             <button className="btn btn-outline-danger btn-sm" onClick={handleDelete}>
-              Delete
+              {t('itemDetail.delete')}
             </button>
           </div>
           <small className="text-muted d-block mb-4">
-            By {item.authorDisplayName} · {new Date(item.createdAt).toLocaleDateString()}
+            {t('inventory.by')} {item.authorDisplayName} · {new Date(item.createdAt).toLocaleDateString()}
           </small>
 
           {saveStatus === 'conflict' && (
             <div className="alert alert-warning">
-              Save conflict: someone else modified this item. Please{' '}
+              {t('itemDetail.saveConflictMsg')}{' '}
               <button className="btn btn-link p-0 align-baseline" onClick={load}>
-                reload
+                {t('itemDetail.reload')}
               </button>{' '}
-              to get the latest version.
+              {t('itemDetail.saveConflictSuffix')}
             </div>
           )}
 
           <div className="mb-3">
-            <label className="form-label fw-semibold">Custom ID</label>
+            <label className="form-label fw-semibold">{t('itemDetail.customIdLabel')}</label>
             <input
               type="text"
               className="form-control"
               value={customId}
               onChange={e => setCustomId(e.target.value)}
-              placeholder="Leave blank for no ID"
+              placeholder={t('itemDetail.customIdPlaceholder')}
             />
           </div>
 
@@ -255,24 +259,23 @@ export default function ItemDetailPage() {
           ))}
 
           {item.fieldValues.length === 0 && (
-            <p className="text-muted">This inventory has no custom fields yet.</p>
+            <p className="text-muted">{t('itemDetail.noFieldsEdit')}</p>
           )}
         </>
       ) : (
-        // Read-only view
         <>
           <div className="d-flex align-items-center gap-2 mb-1">
             <h4 className="mb-0 me-auto">
-              {item.customId || <span className="text-muted fst-italic">no id</span>}
+              {item.customId || <span className="text-muted fst-italic">{t('itemDetail.noId')}</span>}
             </h4>
             <LikeButton />
           </div>
           <small className="text-muted d-block mb-4">
-            By {item.authorDisplayName} · {new Date(item.createdAt).toLocaleDateString()}
+            {t('inventory.by')} {item.authorDisplayName} · {new Date(item.createdAt).toLocaleDateString()}
           </small>
 
           {item.fieldValues.length === 0 ? (
-            <p className="text-muted">No fields defined for this inventory.</p>
+            <p className="text-muted">{t('itemDetail.noFieldsView')}</p>
           ) : (
             <dl className="row">
               {item.fieldValues.map(fv => (
@@ -280,7 +283,7 @@ export default function ItemDetailPage() {
                   <dt className="fw-semibold">{fv.fieldTitle}</dt>
                   <dd className="ms-3">
                     {fv.fieldType === 'Boolean'
-                      ? (fv.value === 'true' ? '✓ Yes' : '✗ No')
+                      ? (fv.value === 'true' ? t('itemDetail.boolReadYes') : t('itemDetail.boolReadNo'))
                       : fv.fieldType === 'Link'
                       ? <a href={fv.value} target="_blank" rel="noreferrer">{fv.value}</a>
                       : fv.value || <span className="text-muted">—</span>}

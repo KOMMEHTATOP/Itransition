@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { inventoriesApi } from '../api/inventoriesApi'
 import { searchApi } from '../api/searchApi'
 import type { InventoryListItem, SearchResult } from '../types/inventory'
@@ -9,13 +10,12 @@ export default function SearchPage() {
   const q   = searchParams.get('q') ?? ''
   const tag = searchParams.get('tag') ?? ''
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
-  // --- Full-text search state ---
   const [ftsResult, setFtsResult] = useState<SearchResult | null>(null)
   const [ftsLoading, setFtsLoading] = useState(false)
   const [ftsError, setFtsError] = useState<string | null>(null)
 
-  // --- Tag filter state ---
   const [tagItems, setTagItems] = useState<InventoryListItem[]>([])
   const [tagTotal, setTagTotal] = useState(0)
   const [tagLoading, setTagLoading] = useState(false)
@@ -29,9 +29,9 @@ export default function SearchPage() {
     searchApi
       .search(q)
       .then(res => setFtsResult(res.data))
-      .catch(() => setFtsError('Search failed. Please try again.'))
+      .catch(() => setFtsError(t('searchPage.searchFailed')))
       .finally(() => setFtsLoading(false))
-  }, [q])
+  }, [q, t])
 
   useEffect(() => {
     if (!tag) return
@@ -43,9 +43,9 @@ export default function SearchPage() {
         setTagItems(res.data.items)
         setTagTotal(res.data.total)
       })
-      .catch(() => setTagError('Search failed.'))
+      .catch(() => setTagError(t('searchPage.searchTagFailed')))
       .finally(() => setTagLoading(false))
-  }, [tag])
+  }, [tag, t])
 
   const loading = q ? ftsLoading : tagLoading
   const error   = q ? ftsError  : tagError
@@ -53,18 +53,18 @@ export default function SearchPage() {
   return (
     <div className="container mt-4">
       <button className="btn btn-link ps-0 text-muted mb-3" onClick={() => navigate('/')}>
-        ← Home
+        {t('searchPage.home')}
       </button>
 
       {q && (
         <>
           <h2 className="mb-1">
-            Results for: <span className="text-secondary">&ldquo;{q}&rdquo;</span>
+            {t('searchPage.resultsFor')} <span className="text-secondary">&ldquo;{q}&rdquo;</span>
           </h2>
           {ftsResult && (
             <p className="text-muted small mb-3">
-              {ftsResult.inventories.length} inventor{ftsResult.inventories.length !== 1 ? 'ies' : 'y'},{' '}
-              {ftsResult.items.length} item{ftsResult.items.length !== 1 ? 's' : ''}
+              {t('searchPage.inventoriesCount', { count: ftsResult.inventories.length })},{' '}
+              {t('searchPage.itemsCount', { count: ftsResult.items.length })}
             </p>
           )}
         </>
@@ -73,10 +73,10 @@ export default function SearchPage() {
       {tag && (
         <>
           <h2 className="mb-1">
-            Tag: <span className="badge bg-secondary">{tag}</span>
+            {t('searchPage.tag')} <span className="badge bg-secondary">{tag}</span>
           </h2>
           <p className="text-muted small mb-3">
-            {tagTotal} public inventor{tagTotal !== 1 ? 'ies' : 'y'} found
+            {t('searchPage.publicInventoriesFound', { count: tagTotal })}
           </p>
         </>
       )}
@@ -89,22 +89,21 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* Full-text search results */}
       {!loading && q && ftsResult && (
         <>
-          <h5 className="text-muted mt-3 mb-2">Inventories</h5>
+          <h5 className="text-muted mt-3 mb-2">{t('searchPage.sectionInventories')}</h5>
           {ftsResult.inventories.length === 0 ? (
-            <p className="text-muted small">No inventories found.</p>
+            <p className="text-muted small">{t('searchPage.noInventories')}</p>
           ) : (
             <div className="table-responsive mb-4">
               <table className="table table-hover align-middle">
                 <thead className="table-light">
                   <tr>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Owner</th>
-                    <th>Category</th>
-                    <th>Date</th>
+                    <th>{t('searchPage.colName')}</th>
+                    <th>{t('searchPage.colDescription')}</th>
+                    <th>{t('searchPage.colOwner')}</th>
+                    <th>{t('searchPage.colCategory')}</th>
+                    <th>{t('searchPage.colDate')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -140,18 +139,18 @@ export default function SearchPage() {
             </div>
           )}
 
-          <h5 className="text-muted mb-2">Items</h5>
+          <h5 className="text-muted mb-2">{t('searchPage.sectionItems')}</h5>
           {ftsResult.items.length === 0 ? (
-            <p className="text-muted small">No items found.</p>
+            <p className="text-muted small">{t('searchPage.noItems')}</p>
           ) : (
             <div className="table-responsive">
               <table className="table table-hover align-middle">
                 <thead className="table-light">
                   <tr>
-                    <th>Custom ID</th>
-                    <th>Inventory</th>
-                    <th>Author</th>
-                    <th>Date</th>
+                    <th>{t('searchPage.colCustomId')}</th>
+                    <th>{t('searchPage.colInventory')}</th>
+                    <th>{t('searchPage.colAuthor')}</th>
+                    <th>{t('searchPage.colDate')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -192,20 +191,19 @@ export default function SearchPage() {
         </>
       )}
 
-      {/* Tag filter results */}
       {!loading && tag && (
         <>
           {tagItems.length === 0 ? (
-            <p className="text-muted">No public inventories with this tag.</p>
+            <p className="text-muted">{t('searchPage.noTagInventories')}</p>
           ) : (
             <div className="table-responsive">
               <table className="table table-hover align-middle">
                 <thead className="table-light">
                   <tr>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Owner</th>
-                    <th>Date</th>
+                    <th>{t('searchPage.colName')}</th>
+                    <th>{t('searchPage.colDescription')}</th>
+                    <th>{t('searchPage.colOwner')}</th>
+                    <th>{t('searchPage.colDate')}</th>
                   </tr>
                 </thead>
                 <tbody>

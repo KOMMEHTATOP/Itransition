@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../api/axios'
 import type { AuthUser } from '../contexts/AuthContext'
@@ -7,6 +8,7 @@ import type { AuthUser } from '../contexts/AuthContext'
 export default function RegisterPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   const [email, setEmail] = useState('')
   const [displayName, setDisplayName] = useState('')
@@ -32,7 +34,7 @@ export default function RegisterPage() {
         setError(data.map((e: { description: string }) => e.description).join(' '))
       } else {
         setError(
-          (data as { message?: string })?.message ?? 'Registration failed'
+          (data as { message?: string })?.message ?? t('auth.registrationFailed')
         )
       }
     } finally {
@@ -44,13 +46,13 @@ export default function RegisterPage() {
     <div className="container d-flex justify-content-center mt-5">
       <div className="card shadow-sm" style={{ width: '100%', maxWidth: 420 }}>
         <div className="card-body p-4">
-          <h4 className="card-title mb-4 text-center">Create account</h4>
+          <h4 className="card-title mb-4 text-center">{t('auth.createAccount')}</h4>
 
           {error && <div className="alert alert-danger py-2">{error}</div>}
 
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label className="form-label">Display name</label>
+              <label className="form-label">{t('auth.displayNameLabel')}</label>
               <input
                 type="text"
                 className="form-control"
@@ -61,7 +63,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Email</label>
+              <label className="form-label">{t('auth.emailLabel')}</label>
               <input
                 type="email"
                 className="form-control"
@@ -71,7 +73,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Password</label>
+              <label className="form-label">{t('auth.passwordLabel')}</label>
               <input
                 type="password"
                 className="form-control"
@@ -86,13 +88,13 @@ export default function RegisterPage() {
               className="btn btn-primary w-100"
               disabled={loading}
             >
-              {loading ? 'Creating account…' : 'Register'}
+              {loading ? t('auth.creatingAccount') : t('auth.registerButton')}
             </button>
           </form>
 
           <p className="text-center mt-3 mb-0 small">
-            Already have an account?{' '}
-            <Link to="/login">Sign in</Link>
+            {t('auth.alreadyHaveAccount')}{' '}
+            <Link to="/login">{t('auth.signIn')}</Link>
           </p>
         </div>
       </div>

@@ -2,6 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import { useEffect, useRef, useState } from 'react'
 import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import { TagCloud } from 'react-tagcloud'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
@@ -19,6 +20,7 @@ import type { InventoryListItem, TagCloudItem, TopInventory } from './types/inve
 function Navbar() {
   const { user, logout, isAuthenticated, isAdmin } = useAuth()
   const navigate = useNavigate()
+  const { t, i18n } = useTranslation()
   const [q, setQ] = useState('')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -46,10 +48,16 @@ function Navbar() {
     navigate('/login')
   }
 
+  const switchLang = () => {
+    const next = i18n.language === 'en' ? 'ru' : 'en'
+    i18n.changeLanguage(next)
+    localStorage.setItem('lang', next)
+  }
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark px-3">
       <Link className="navbar-brand" to="/">
-        Inventories
+        {t('nav.brand')}
       </Link>
       <button
         className="navbar-toggler"
@@ -63,7 +71,7 @@ function Navbar() {
         <ul className="navbar-nav me-auto">
           <li className="nav-item">
             <Link className="nav-link" to="/inventories">
-              Browse
+              {t('nav.browse')}
             </Link>
           </li>
         </ul>
@@ -71,34 +79,41 @@ function Navbar() {
           <input
             className="form-control form-control-sm"
             type="search"
-            placeholder="Search inventories &amp; items..."
+            placeholder={t('nav.searchPlaceholder')}
             style={{ width: 260 }}
             value={q}
             onChange={handleSearchChange}
           />
         </form>
         <div className="d-flex align-items-center gap-2">
+          <button
+            className="btn btn-outline-secondary btn-sm"
+            onClick={switchLang}
+            title={i18n.language === 'en' ? 'Switch to Russian' : 'Switch to English'}
+          >
+            {i18n.language === 'en' ? 'RU' : 'EN'}
+          </button>
           {isAuthenticated ? (
             <>
               {isAdmin && (
                 <Link className="btn btn-outline-warning btn-sm" to="/admin">
-                  Admin
+                  {t('nav.admin')}
                 </Link>
               )}
               <Link className="btn btn-outline-light btn-sm" to="/profile">
                 {user?.displayName}
               </Link>
               <button className="btn btn-outline-secondary btn-sm" onClick={handleLogout}>
-                Sign out
+                {t('nav.signOut')}
               </button>
             </>
           ) : (
             <>
               <Link className="btn btn-outline-light btn-sm" to="/login">
-                Sign in
+                {t('nav.signIn')}
               </Link>
               <Link className="btn btn-primary btn-sm" to="/register">
-                Register
+                {t('nav.register')}
               </Link>
             </>
           )}
@@ -111,6 +126,7 @@ function Navbar() {
 function HomePage() {
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [tagCloud, setTagCloud] = useState<TagCloudItem[]>([])
   const [latest, setLatest] = useState<InventoryListItem[]>([])
   const [top, setTop] = useState<TopInventory[]>([])
@@ -127,32 +143,30 @@ function HomePage() {
 
   return (
     <div className="container mt-4">
-      <h1>Inventory Management</h1>
-      <p className="text-muted lead mb-4">
-        Create inventories, define custom fields, and let others fill them with items.
-      </p>
+      <h1>{t('home.title')}</h1>
+      <p className="text-muted lead mb-4">{t('home.lead')}</p>
       <Link className="btn btn-primary me-2" to="/inventories">
-        Browse Inventories
+        {t('home.browseInventories')}
       </Link>
       {!isAuthenticated && (
         <Link className="btn btn-outline-primary" to="/register">
-          Get started
+          {t('home.getStarted')}
         </Link>
       )}
 
       <div className="row mt-5 g-4">
         <div className="col-lg-7">
-          <h5 className="text-muted mb-3">Latest inventories</h5>
+          <h5 className="text-muted mb-3">{t('home.latestInventories')}</h5>
           {latest.length === 0 ? (
-            <p className="text-muted small">No public inventories yet.</p>
+            <p className="text-muted small">{t('home.noPublicInventories')}</p>
           ) : (
             <div className="table-responsive">
               <table className="table table-hover table-sm align-middle">
                 <thead className="table-light">
                   <tr>
-                    <th>Name</th>
-                    <th>Owner</th>
-                    <th>Date</th>
+                    <th>{t('home.colName')}</th>
+                    <th>{t('home.colOwner')}</th>
+                    <th>{t('home.colDate')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -184,17 +198,17 @@ function HomePage() {
         </div>
 
         <div className="col-lg-5">
-          <h5 className="text-muted mb-3">Top 5 by items</h5>
+          <h5 className="text-muted mb-3">{t('home.topByItems')}</h5>
           {top.length === 0 ? (
-            <p className="text-muted small">No data yet.</p>
+            <p className="text-muted small">{t('home.noData')}</p>
           ) : (
             <div className="table-responsive">
               <table className="table table-hover table-sm align-middle">
                 <thead className="table-light">
                   <tr>
-                    <th>Name</th>
-                    <th>Owner</th>
-                    <th className="text-end">Items</th>
+                    <th>{t('home.colName')}</th>
+                    <th>{t('home.colOwner')}</th>
+                    <th className="text-end">{t('home.colItems')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -226,7 +240,7 @@ function HomePage() {
 
       {tagCloud.length > 0 && (
         <div className="mt-4">
-          <h5 className="text-muted mb-3">Popular tags</h5>
+          <h5 className="text-muted mb-3">{t('home.popularTags')}</h5>
           <TagCloud
             minSize={13}
             maxSize={36}

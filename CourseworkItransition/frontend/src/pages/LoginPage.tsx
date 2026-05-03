@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../api/axios'
 import type { AuthUser } from '../contexts/AuthContext'
@@ -8,6 +9,7 @@ export default function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useTranslation()
   const from = (location.state as { from?: Location })?.from?.pathname ?? '/'
 
   const [email, setEmail] = useState('')
@@ -31,7 +33,7 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const msg =
         (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? 'Login failed'
+          ?.message ?? t('auth.loginFailed')
       setError(msg)
     } finally {
       setLoading(false)
@@ -39,27 +41,27 @@ export default function LoginPage() {
   }
 
   const oauthError: Record<string, string> = {
-    oauth_failed: 'OAuth authentication failed. Please try again.',
-    no_email: 'Could not retrieve email from OAuth provider.',
-    create_failed: 'Failed to create account. Please try again.',
-    blocked: 'Your account has been blocked.',
+    oauth_failed: t('auth.oauthFailed'),
+    no_email: t('auth.noEmail'),
+    create_failed: t('auth.createFailed'),
+    blocked: t('auth.blocked'),
   }
 
   return (
     <div className="container d-flex justify-content-center mt-5">
       <div className="card shadow-sm" style={{ width: '100%', maxWidth: 420 }}>
         <div className="card-body p-4">
-          <h4 className="card-title mb-4 text-center">Sign in</h4>
+          <h4 className="card-title mb-4 text-center">{t('auth.signIn')}</h4>
 
           {(urlError || error) && (
             <div className="alert alert-danger py-2">
-              {urlError ? (oauthError[urlError] ?? 'Authentication error') : error}
+              {urlError ? (oauthError[urlError] ?? t('auth.authError')) : error}
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label className="form-label">Email</label>
+              <label className="form-label">{t('auth.emailLabel')}</label>
               <input
                 type="email"
                 className="form-control"
@@ -70,7 +72,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Password</label>
+              <label className="form-label">{t('auth.passwordLabel')}</label>
               <input
                 type="password"
                 className="form-control"
@@ -84,7 +86,7 @@ export default function LoginPage() {
               className="btn btn-primary w-100"
               disabled={loading}
             >
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? t('auth.signingIn') : t('auth.signIn')}
             </button>
           </form>
 
@@ -92,16 +94,16 @@ export default function LoginPage() {
 
           <div className="d-grid gap-2">
             <a href="/api/auth/google" className="btn btn-outline-danger">
-              Continue with Google
+              {t('auth.continueWithGoogle')}
             </a>
             <a href="/api/auth/github" className="btn btn-outline-dark">
-              Continue with GitHub
+              {t('auth.continueWithGithub')}
             </a>
           </div>
 
           <p className="text-center mt-3 mb-0 small">
-            No account?{' '}
-            <Link to="/register">Register</Link>
+            {t('auth.noAccount')}{' '}
+            <Link to="/register">{t('nav.register')}</Link>
           </p>
         </div>
       </div>
