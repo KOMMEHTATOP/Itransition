@@ -4,9 +4,9 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
-COPY ["backend/InventoryApi.csproj", "backend/"]
+COPY ["CourseworkItransition/backend/InventoryApi.csproj", "backend/"]
 RUN dotnet restore "backend/InventoryApi.csproj"
-COPY backend/ backend/
+COPY CourseworkItransition/backend/ backend/
 WORKDIR /src/backend
 RUN dotnet publish -c Release -o /app/publish
 
