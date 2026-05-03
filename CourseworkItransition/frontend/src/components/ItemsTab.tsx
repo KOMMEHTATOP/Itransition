@@ -109,10 +109,10 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
 
   const renderFieldValue = (item: ItemListItem, field: InventoryField) => {
     const fv = item.fieldValues.find(v => v.fieldId === field.id)
-    if (!fv || fv.value === '') return <span className="text-muted">—</span>
-    if (field.type === 'Boolean') return fv.value === 'true'
+    if (field.type === 'Boolean') return fv?.value === 'true'
       ? <span className="badge bg-success">{t('itemsTab.boolYes')}</span>
       : <span className="badge bg-secondary">{t('itemsTab.boolNo')}</span>
+    if (!fv || fv.value === '') return <span className="text-muted">—</span>
     if (field.type === 'Link') {
       return (
         <a href={fv.value} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
