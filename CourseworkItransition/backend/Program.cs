@@ -128,6 +128,16 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 
 app.UseForwardedHeaders();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.Use((context, next) =>
+    {
+        context.Request.Scheme = "https";
+        return next();
+    });
+}
+
 app.UseCors("Dev");
 app.UseAuthentication();
 app.UseAuthorization();
