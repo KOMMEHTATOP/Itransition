@@ -97,8 +97,9 @@ public class ItemsController : ControllerBase
         if (string.IsNullOrWhiteSpace(customId))
         {
             var hasFormat = await _db.CustomIdElements.AnyAsync(e => e.InventoryId == inventoryId);
-            if (hasFormat)
-                customId = await _generator.GenerateAsync(inventoryId);
+            customId = hasFormat
+                ? await _generator.GenerateAsync(inventoryId)
+                : Guid.NewGuid().ToString("N").ToUpperInvariant();
         }
 
         if (!string.IsNullOrWhiteSpace(customId))
