@@ -1,10 +1,12 @@
 using System.Security.Claims;
 using InventoryApi.Data;
+using InventoryApi.Hubs;
 using InventoryApi.Models;
 using InventoryApi.Models.Dto;
 using InventoryApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventoryApi.Controllers;
@@ -14,11 +16,13 @@ public class ItemsController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
     private readonly CustomIdGeneratorService _generator;
+    private readonly IHubContext<InventoryHub> _hub;
 
-    public ItemsController(ApplicationDbContext db, CustomIdGeneratorService generator)
+    public ItemsController(ApplicationDbContext db, CustomIdGeneratorService generator, IHubContext<InventoryHub> hub)
     {
         _db        = db;
         _generator = generator;
+        _hub       = hub;
     }
 
     // GET /api/inventories/{inventoryId}/items
@@ -189,7 +193,7 @@ public class ItemsController : ControllerBase
     [Authorize]
     public async Task<IActionResult> LikeItem(Guid id)
     {
-        var item = await _db.Items.Include(i => i.Inventory).FirstOrDefaultAsync(i => i.Id == id);
+        var item = await _db.Items.Include(i => i.Inventory).AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
         if (item is null) return NotFound();
 
         var userId  = UserId()!;
@@ -205,6 +209,7 @@ public class ItemsController : ControllerBase
         await _db.SaveChangesAsync();
 
         var count = await _db.ItemLikes.CountAsync(l => l.ItemId == id);
+        await _hub.Clients.Group($"inv-{item.InventoryId}").SendAsync("LikeUpdated", id, count);
         return Ok(new { likeCount = count, isLikedByMe = true });
     }
 
@@ -213,6 +218,9 @@ public class ItemsController : ControllerBase
     [Authorize]
     public async Task<IActionResult> UnlikeItem(Guid id)
     {
+        var item = await _db.Items.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
+        if (item is null) return NotFound();
+
         var userId = UserId()!;
         var like   = await _db.ItemLikes.FirstOrDefaultAsync(l => l.ItemId == id && l.UserId == userId);
         if (like is null) return NotFound();
@@ -221,6 +229,7 @@ public class ItemsController : ControllerBase
         await _db.SaveChangesAsync();
 
         var count = await _db.ItemLikes.CountAsync(l => l.ItemId == id);
+        await _hub.Clients.Group($"inv-{item.InventoryId}").SendAsync("LikeUpdated", id, count);
         return Ok(new { likeCount = count, isLikedByMe = false });
     }
 

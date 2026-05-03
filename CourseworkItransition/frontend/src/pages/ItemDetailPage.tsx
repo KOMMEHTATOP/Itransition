@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { itemsApi } from '../api/itemsApi'
 import { likesApi } from '../api/likesApi'
 import { useAutosave } from '../hooks/useAutosave'
+import { useInventoryHub } from '../hooks/useInventoryHub'
 import type { ItemDetail, UpdateItemRequest } from '../types/inventory'
 
 export default function ItemDetailPage() {
@@ -44,6 +45,17 @@ export default function ItemDetailPage() {
     delay: 8000,
     enabled: !!item?.canEdit,
   })
+
+  const handleLikeUpdated = useCallback((updatedItemId: string, count: number) => {
+    if (updatedItemId === id) setLikeCount(count)
+  }, [id])
+
+  useInventoryHub(
+    item?.inventoryId ?? '',
+    () => {},
+    !!item,
+    handleLikeUpdated,
+  )
 
   const load = useCallback(async () => {
     if (!id) return

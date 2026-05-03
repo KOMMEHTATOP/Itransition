@@ -8,9 +8,12 @@ export function useInventoryHub(
   inventoryId: string,
   onComment: (comment: Comment) => void,
   enabled: boolean,
+  onLikeUpdated?: (itemId: string, likeCount: number) => void,
 ) {
-  const onCommentRef = useRef(onComment)
-  onCommentRef.current = onComment
+  const onCommentRef     = useRef(onComment)
+  const onLikeUpdatedRef = useRef(onLikeUpdated)
+  onCommentRef.current     = onComment
+  onLikeUpdatedRef.current = onLikeUpdated
 
   useEffect(() => {
     if (!enabled) return
@@ -26,6 +29,9 @@ export function useInventoryHub(
         .build()
 
     conn.on('NewComment', (comment: Comment) => onCommentRef.current(comment))
+    conn.on('LikeUpdated', (itemId: string, likeCount: number) => {
+      onLikeUpdatedRef.current?.(itemId, likeCount)
+    })
 
     conn.start()
       .then(() => { if (!cancelled) conn.invoke('JoinInventory', inventoryId) })
