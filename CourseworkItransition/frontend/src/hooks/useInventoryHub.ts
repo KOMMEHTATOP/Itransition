@@ -34,8 +34,12 @@ export function useInventoryHub(
     })
 
     conn.start()
-      .then(() => { if (!cancelled) conn.invoke('JoinInventory', inventoryId) })
-      .catch(err => { if (!cancelled) console.warn('SignalR connect error:', err) })
+      .then(() => {
+        if (!cancelled && conn.state === signalR.HubConnectionState.Connected) {
+          conn.invoke('JoinInventory', inventoryId).catch(() => {})
+        }
+      })
+      .catch(() => {})
 
     return () => {
       cancelled = true
