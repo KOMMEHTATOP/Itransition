@@ -29,7 +29,7 @@ services:
       Authentication__GitHub__ClientSecret: ${GITHUB_CLIENT_SECRET}
       AdminSeed__Email: ${ADMIN_EMAIL}
       AdminSeed__Password: ${ADMIN_PASSWORD}
-      Frontend__Url: https://app.basharov.org
+      Frontend__Url: https://basharov.org
       Frontend__ProdUrl: https://app.basharov.org
 
 volumes:
