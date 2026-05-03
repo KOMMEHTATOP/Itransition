@@ -44,9 +44,12 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
   const [tags, setTags]         = useState<string[]>(inventory.tags)
   const [formVersion, setFormVersion] = useState(inventory.version)
 
+  const [isDirty, setIsDirty]       = useState(false)
   const [uploading, setUploading]   = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
+
+  const markDirty = () => setIsDirty(true)
 
   useEffect(() => {
     setTitle(inventory.title)
@@ -56,6 +59,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
     setImageUrl(inventory.imageUrl)
     setTags(inventory.tags)
     setFormVersion(inventory.version)
+    setIsDirty(false)
   }, [inventory.id])
 
   const editData = useMemo<UpdateInventoryRequest>(() => ({
@@ -72,6 +76,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
     async (data: UpdateInventoryRequest) => {
       const res = await inventoriesApi.update(inventory.id, data)
       setFormVersion(res.data.version)
+      setIsDirty(false)
       onSaved(res.data)
     },
     [inventory.id, onSaved],
@@ -81,7 +86,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
     data: editData,
     saveFn,
     delay: 8000,
-    enabled: true,
+    enabled: isDirty,
   })
 
   const tagifyRef = useRef<{ getCleanValue: () => Array<{ value: string }> } | null>(null)
@@ -105,6 +110,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
       try {
         const url = await uploadToCloudinary(files[0])
         setImageUrl(url)
+        markDirty()
       } catch {
         setUploadError(t('settingsTab.uploadFailed'))
       } finally {
@@ -145,7 +151,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
           type="text"
           className="form-control"
           value={title}
-          onChange={e => setTitle(e.target.value)}
+          onChange={e => { setTitle(e.target.value); markDirty() }}
         />
       </div>
 
@@ -154,7 +160,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
         <div data-color-mode={theme}>
           <MDEditor
               value={description}
-              onChange={v => setDesc(v ?? '')}
+              onChange={v => { setDesc(v ?? ''); markDirty() }}
               height={220}
               preview="edit"
           />
@@ -166,7 +172,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
         <select
           className="form-select"
           value={categoryId ?? ''}
-          onChange={e => setCat(e.target.value === '' ? null : Number(e.target.value))}
+          onChange={e => { setCat(e.target.value === '' ? null : Number(e.target.value)); markDirty() }}
         >
           <option value="">{t('settingsTab.noneCategory')}</option>
           {categories.map(c => (
@@ -181,7 +187,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
           className="form-check-input"
           id="isPublic"
           checked={isPublic}
-          onChange={e => setIsPublic(e.target.checked)}
+          onChange={e => { setIsPublic(e.target.checked); markDirty() }}
         />
         <label className="form-check-label" htmlFor="isPublic">
           {t('settingsTab.publicLabel')}
@@ -216,7 +222,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
                 <button
                   type="button"
                   className="btn btn-outline-danger btn-sm"
-                  onClick={() => setImageUrl(null)}
+                  onClick={() => { setImageUrl(null); markDirty() }}
                 >
                   {t('settingsTab.remove')}
                 </button>
@@ -239,6 +245,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
           onChange={(e: unknown) => {
             const detail = (e as CustomEvent<{ tagify: { getCleanValue: () => Array<{ value: string }> } }>).detail
             setTags(detail.tagify.getCleanValue().map((tag) => tag.value))
+            markDirty()
           }}
           className="form-control"
         />
