@@ -1,60 +1,53 @@
 # Inventory Management App
 
-Web-приложение для управления произвольными инвентарями с кастомными полями.
+A web application for managing arbitrary inventories with custom fields, built with ASP.NET Core + React.
 
-## Требования
+🔗 **Live demo:** [basharov.org](https://basharov.org)
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download)
-- [Node.js 20+](https://nodejs.org/)
-- [PostgreSQL 15+](https://www.postgresql.org/)
+## Tech Stack
 
-## Запуск в dev-режиме
+**Backend:** ASP.NET Core 9, Entity Framework Core, PostgreSQL  
+**Frontend:** React 18, TypeScript, Vite, Bootstrap 5  
+**Auth:** JWT + OAuth (Google, GitHub)  
+**Real-time:** SignalR  
+**Storage:** Cloudinary (images)  
+**Deploy:** Docker, Nginx, Cloudflare Pages, GitHub Actions
 
-### 1. База данных
+## Features
 
-Создайте базу данных PostgreSQL:
-```sql
-CREATE DATABASE inventory_db;
-```
+- Custom inventories with configurable fields (string, number, boolean, multiline, link)
+- Custom item ID formats with drag-and-drop builder (fixed text, sequence, random, GUID, date/time)
+- Full-text search across all inventories and items
+- Role-based access: admin, creator, write-access users, read-only guests
+- Admin panel: user management, blocking, role assignment
+- Real-time comments via SignalR
+- Per-item likes
+- Markdown support in descriptions and comments
+- Tag cloud with autocomplete
+- Auto-save with optimistic locking
+- Dark/light theme, English/Russian UI
+- Responsive design
 
-### 2. Backend
+## Running Locally
 
+### Prerequisites
+- .NET 9 SDK
+- Node.js 20+
+- PostgreSQL 16+
+
+### Backend
 ```bash
-cd backend
-
-# Укажите строку подключения (или отредактируйте appsettings.Development.json)
-# "Host=localhost;Database=inventory_db;Username=postgres;Password=yourpassword"
-
+cd CourseworkItransition/backend
 dotnet restore
 dotnet ef database update
 dotnet run
 ```
 
-API будет доступен на `http://localhost:5000`.  
-Swagger UI: `http://localhost:5000/swagger`
-
-### 3. Frontend
-
+### Frontend
 ```bash
-cd frontend
+cd CourseworkItransition/frontend
 npm install
 npm run dev
 ```
 
-Приложение откроется на `http://localhost:5173`.  
-Все запросы к `/api/*` проксируются на `http://localhost:5000`.
-
-## Структура проекта
-
-```
-/
-├── backend/          # ASP.NET Core Web API
-│   ├── Data/         # ApplicationDbContext
-│   ├── Models/       # EF Core модели
-│   ├── Controllers/  # API контроллеры
-│   └── ...
-└── frontend/         # React + TypeScript (Vite)
-    └── src/
-        ├── App.tsx
-        └── ...
-```
+App runs at `http://localhost:5173`, API at `http://localhost:5000`.
