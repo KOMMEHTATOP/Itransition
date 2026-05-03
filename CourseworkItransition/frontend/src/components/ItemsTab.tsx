@@ -246,59 +246,68 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
                   onClick={() => { setShowCreate(false); setCreateError(null) }}
                 />
               </div>
-              <div className="modal-body">
-                {createError && <div className="alert alert-danger py-2">{createError}</div>}
-                <div className="row mb-2 align-items-center">
-                  <label className="col-sm-4 col-form-label fw-semibold">{t('itemsTab.customIdLabel')}</label>
-                  <div className="col-sm-8">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder={hasCustomIdFormat ? t('itemsTab.placeholderAutoGenerate') : t('itemsTab.placeholderOptional')}
-                      value={newCustomId}
-                      onChange={e => setNewCustomId(e.target.value)}
-                    />
-                  </div>
-                </div>
-                {fields.map(f => (
-                  <div key={f.id} className="row mb-2 align-items-start">
-                    <label className="col-sm-4 col-form-label fw-semibold">
-                      {f.title}
-                      <div className="text-muted fw-normal small">{f.type}{f.description ? ` — ${f.description}` : ''}</div>
-                    </label>
-                    <div className="col-sm-8">
-                      {f.type === 'MultilineText' ? (
-                        <textarea
-                          className="form-control"
-                          rows={3}
-                          value={newFieldValues[f.id] ?? ''}
-                          onChange={e => setNewFieldValues(prev => ({ ...prev, [f.id]: e.target.value }))}
-                        />
-                      ) : f.type === 'Boolean' ? (
-                        <div className="form-check form-switch mt-2">
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            role="switch"
-                            id={`nfv-${f.id}`}
-                            checked={newFieldValues[f.id] === 'true'}
-                            onChange={e => setNewFieldValues(prev => ({ ...prev, [f.id]: e.target.checked ? 'true' : 'false' }))}
-                          />
-                          <label className="form-check-label" htmlFor={`nfv-${f.id}`}>
-                            {newFieldValues[f.id] === 'true' ? t('itemsTab.boolYes') : t('itemsTab.boolNo')}
-                          </label>
-                        </div>
-                      ) : (
+              <div className="modal-body p-0">
+                {createError && <div className="alert alert-danger py-2 mx-3 mt-3">{createError}</div>}
+                <table className="table table-borderless table-sm align-middle mb-0">
+                  <colgroup>
+                    <col style={{ width: '38%' }} />
+                    <col />
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      <td className="ps-4 fw-semibold text-start">{t('itemsTab.customIdLabel')}</td>
+                      <td className="pe-4">
                         <input
-                          type={f.type === 'Number' ? 'number' : f.type === 'Link' ? 'url' : 'text'}
-                          className="form-control"
-                          value={newFieldValues[f.id] ?? ''}
-                          onChange={e => setNewFieldValues(prev => ({ ...prev, [f.id]: e.target.value }))}
+                          type="text"
+                          className="form-control form-control-sm"
+                          placeholder={hasCustomIdFormat ? t('itemsTab.placeholderAutoGenerate') : t('itemsTab.placeholderOptional')}
+                          value={newCustomId}
+                          onChange={e => setNewCustomId(e.target.value)}
                         />
-                      )}
-                    </div>
-                  </div>
-                ))}
+                      </td>
+                    </tr>
+                    {fields.map(f => (
+                      <tr key={f.id}>
+                        <td className="ps-4 text-start">
+                          <span className="fw-semibold">{f.title}</span>
+                          <span className="badge bg-secondary fw-normal ms-2" style={{ fontSize: '0.7em' }}>{f.type}</span>
+                          {f.description && <div className="text-muted small">{f.description}</div>}
+                        </td>
+                        <td className="pe-4">
+                          {f.type === 'MultilineText' ? (
+                            <textarea
+                              className="form-control form-control-sm"
+                              rows={3}
+                              value={newFieldValues[f.id] ?? ''}
+                              onChange={e => setNewFieldValues(prev => ({ ...prev, [f.id]: e.target.value }))}
+                            />
+                          ) : f.type === 'Boolean' ? (
+                            <div className="form-check form-switch mb-0">
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                role="switch"
+                                id={`nfv-${f.id}`}
+                                checked={newFieldValues[f.id] === 'true'}
+                                onChange={e => setNewFieldValues(prev => ({ ...prev, [f.id]: e.target.checked ? 'true' : 'false' }))}
+                              />
+                              <label className="form-check-label small" htmlFor={`nfv-${f.id}`}>
+                                {newFieldValues[f.id] === 'true' ? t('itemsTab.boolYes') : t('itemsTab.boolNo')}
+                              </label>
+                            </div>
+                          ) : (
+                            <input
+                              type={f.type === 'Number' ? 'number' : f.type === 'Link' ? 'url' : 'text'}
+                              className="form-control form-control-sm"
+                              value={newFieldValues[f.id] ?? ''}
+                              onChange={e => setNewFieldValues(prev => ({ ...prev, [f.id]: e.target.value }))}
+                            />
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
               <div className="modal-footer">
                 <button
