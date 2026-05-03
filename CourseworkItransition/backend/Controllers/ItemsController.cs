@@ -137,7 +137,14 @@ public class ItemsController : ControllerBase
             }
         }
 
-        await _db.SaveChangesAsync();
+        try
+        {
+            await _db.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("IX_Items_InventoryId_CustomId") == true)
+        {
+            return Conflict(new { message = "Custom ID conflict. Please try again or enter ID manually." });
+        }
 
         await _db.Entry(item).Reference(i => i.Author).LoadAsync();
         await _db.Entry(item).Reference(i => i.Inventory).LoadAsync();
