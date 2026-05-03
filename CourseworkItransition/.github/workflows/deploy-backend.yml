@@ -6,7 +6,7 @@ on:
     paths:
       - 'CourseworkItransition/backend/**'
       - 'CourseworkItransition/docker-compose.prod.yml'
-      - '.github/workflows/deploy-backend.yml'
+      - 'CourseworkItransition/.github/workflows/deploy-backend.yml'
 
 env:
   REGISTRY: ghcr.io
