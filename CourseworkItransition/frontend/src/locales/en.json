@@ -6,7 +6,9 @@
     "admin": "Admin",
     "signOut": "Sign out",
     "signIn": "Sign in",
-    "register": "Register"
+    "register": "Register",
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode"
   },
   "home": {
     "title": "Inventory Management",
@@ -84,7 +86,8 @@
     "tabFields": "Fields",
     "tabCustomId": "Custom ID",
     "tabSettings": "Settings",
-    "tabAccess": "Access"
+    "tabAccess": "Access",
+    "tabStats": "Statistics"
   },
   "itemDetail": {
     "backToInventory": "← Back to inventory",
@@ -237,6 +240,42 @@
     "failedToPost": "Failed to post comment.",
     "signIn": "Sign in",
     "signInToComment": "to leave a comment."
+  },
+  "statsTab": {
+    "failedToLoad": "Failed to load statistics.",
+    "totalItems": "Total items:",
+    "numericFields": "Numeric fields",
+    "textFields": "Text fields — top 5 values",
+    "colField": "Field",
+    "colCount": "Count",
+    "colMin": "Min",
+    "colMax": "Max",
+    "colAvg": "Avg",
+    "noData": "No items yet — statistics will appear once items are added.",
+    "noFields": "No numeric or text fields defined."
+  },
+  "adminPage": {
+    "title": "Admin Panel",
+    "failedToLoad": "Failed to load users.",
+    "actionFailed": "Action failed.",
+    "block": "Block ({{count}})",
+    "unblock": "Unblock ({{count}})",
+    "promote": "Make Admin ({{count}})",
+    "demote": "Remove Admin ({{count}})",
+    "delete": "Delete ({{count}})",
+    "confirmBlock": "Block {{count}} user(s)?",
+    "confirmDelete": "Delete {{count}} user(s)? This cannot be undone.",
+    "colName": "Name",
+    "colEmail": "Email",
+    "colStatus": "Status",
+    "colRole": "Role",
+    "colInventories": "Inventories",
+    "colRegistered": "Registered",
+    "blocked": "Blocked",
+    "active": "Active",
+    "admin": "Admin",
+    "total_one": "{{count}} user total",
+    "total_other": "{{count}} users total"
   },
   "searchPage": {
     "home": "← Home",

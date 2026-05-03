@@ -225,3 +225,44 @@ export interface UpdateItemRequest {
   fieldValues: ItemFieldValueRequest[]
   version: number
 }
+
+// --- Stats ---
+
+export interface InventoryStats {
+  totalItems: number
+  numericFields: NumericFieldStat[]
+  textFields: TextFieldStat[]
+}
+
+export interface NumericFieldStat {
+  fieldId: string
+  fieldTitle: string
+  count: number
+  min: number
+  max: number
+  avg: number
+}
+
+export interface TextFieldStat {
+  fieldId: string
+  fieldTitle: string
+  topValues: TopValue[]
+}
+
+export interface TopValue {
+  value: string
+  count: number
+}
+
+// --- Admin ---
+
+export interface AdminUser {
+  id: string
+  displayName: string
+  email: string
+  isBlocked: boolean
+  isAdmin: boolean
+  createdAt: string
+  inventoryCount: number
+}
+

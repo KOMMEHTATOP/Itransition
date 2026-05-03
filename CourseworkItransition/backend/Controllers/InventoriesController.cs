@@ -275,6 +275,73 @@ public class InventoriesController : ControllerBase
         return NoContent();
     }
 
+    // GET /api/inventories/{id}/stats
+    [HttpGet("{id:guid}/stats")]
+    public async Task<ActionResult<InventoryStatsDto>> GetStats(Guid id)
+    {
+        var inv = await _db.Inventories.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
+        if (inv is null) return NotFound();
+
+        var userId  = UserId();
+        var isAdmin = User.IsInRole("Admin");
+        var hasAccess = inv.IsPublic
+            || isAdmin
+            || inv.OwnerId == userId
+            || (userId != null && await _db.InventoryAccess.AnyAsync(a => a.InventoryId == id && a.UserId == userId));
+
+        if (!hasAccess) return Forbid();
+
+        var totalItems = await _db.Items.CountAsync(i => i.InventoryId == id);
+
+        var fields = await _db.InventoryFields
+            .Where(f => f.InventoryId == id)
+            .OrderBy(f => f.Order)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var numericStats = new List<NumericFieldStatDto>();
+        var textStats    = new List<TextFieldStatDto>();
+
+        foreach (var field in fields)
+        {
+            if (field.Type == FieldType.Number)
+            {
+                var rawValues = await _db.ItemFieldValues
+                    .Where(fv => fv.FieldId == field.Id && fv.Value != string.Empty)
+                    .Select(fv => fv.Value)
+                    .ToListAsync();
+
+                var parsed = rawValues
+                    .Select(v => double.TryParse(v, System.Globalization.NumberStyles.Any,
+                        System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : (double?)null)
+                    .Where(d => d.HasValue)
+                    .Select(d => d!.Value)
+                    .ToList();
+
+                if (parsed.Count > 0)
+                    numericStats.Add(new NumericFieldStatDto(
+                        field.Id, field.Title, parsed.Count,
+                        parsed.Min(), parsed.Max(),
+                        Math.Round(parsed.Average(), 2)));
+            }
+            else if (field.Type is FieldType.Text or FieldType.MultilineText or FieldType.Link)
+            {
+                var topValues = await _db.ItemFieldValues
+                    .Where(fv => fv.FieldId == field.Id && fv.Value != string.Empty)
+                    .GroupBy(fv => fv.Value)
+                    .OrderByDescending(g => g.Count())
+                    .Take(5)
+                    .Select(g => new TopValueDto(g.Key, g.Count()))
+                    .ToListAsync();
+
+                if (topValues.Count > 0)
+                    textStats.Add(new TextFieldStatDto(field.Id, field.Title, topValues));
+            }
+        }
+
+        return new InventoryStatsDto(totalItems, numericStats, textStats);
+    }
+
     // --- helpers ---
 
     private string? UserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);

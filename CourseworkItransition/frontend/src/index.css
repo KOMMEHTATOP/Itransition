@@ -109,3 +109,18 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* @uiw/react-md-editor: override OS prefers-color-scheme with Bootstrap data-bs-theme */
+[data-bs-theme='light'] .w-md-editor {
+  --color-canvas-default: #ffffff;
+  --color-canvas-subtle: #f6f8fa;
+  --md-editor-background-color: #ffffff;
+  color: #24292f;
+}
+
+[data-bs-theme='dark'] .w-md-editor {
+  --color-canvas-default: #0d1117;
+  --color-canvas-subtle: #161b22;
+  --md-editor-background-color: #0d1117;
+  color: #c9d1d9;
+}

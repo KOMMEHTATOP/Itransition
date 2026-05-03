@@ -6,7 +6,9 @@
     "admin": "Админ",
     "signOut": "Выйти",
     "signIn": "Войти",
-    "register": "Регистрация"
+    "register": "Регистрация",
+    "switchToDark": "Тёмная тема",
+    "switchToLight": "Светлая тема"
   },
   "home": {
     "title": "Управление коллекциями",
@@ -86,7 +88,8 @@
     "tabFields": "Поля",
     "tabCustomId": "Кастомный ID",
     "tabSettings": "Настройки",
-    "tabAccess": "Доступ"
+    "tabAccess": "Доступ",
+    "tabStats": "Статистика"
   },
   "itemDetail": {
     "backToInventory": "← К коллекции",
@@ -243,6 +246,44 @@
     "failedToPost": "Не удалось отправить комментарий.",
     "signIn": "Войти",
     "signInToComment": "чтобы оставить комментарий."
+  },
+  "statsTab": {
+    "failedToLoad": "Не удалось загрузить статистику.",
+    "totalItems": "Всего элементов:",
+    "numericFields": "Числовые поля",
+    "textFields": "Текстовые поля — топ 5 значений",
+    "colField": "Поле",
+    "colCount": "Кол-во",
+    "colMin": "Мин",
+    "colMax": "Макс",
+    "colAvg": "Среднее",
+    "noData": "Элементов пока нет — статистика появится после добавления.",
+    "noFields": "Числовые и текстовые поля не определены."
+  },
+  "adminPage": {
+    "title": "Панель администратора",
+    "failedToLoad": "Не удалось загрузить пользователей.",
+    "actionFailed": "Действие не выполнено.",
+    "block": "Заблокировать ({{count}})",
+    "unblock": "Разблокировать ({{count}})",
+    "promote": "Сделать админом ({{count}})",
+    "demote": "Снять права ({{count}})",
+    "delete": "Удалить ({{count}})",
+    "confirmBlock": "Заблокировать {{count}} пользователя(-ей)?",
+    "confirmDelete": "Удалить {{count}} пользователя(-ей)? Это действие необратимо.",
+    "colName": "Имя",
+    "colEmail": "Email",
+    "colStatus": "Статус",
+    "colRole": "Роль",
+    "colInventories": "Коллекции",
+    "colRegistered": "Регистрация",
+    "blocked": "Заблокирован",
+    "active": "Активен",
+    "admin": "Админ",
+    "total_one": "{{count}} пользователь",
+    "total_few": "{{count}} пользователя",
+    "total_many": "{{count}} пользователей",
+    "total_other": "{{count}} пользователей"
   },
   "searchPage": {
     "home": "← Главная",

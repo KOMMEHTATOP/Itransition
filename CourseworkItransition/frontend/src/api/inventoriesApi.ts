@@ -4,6 +4,7 @@ import type {
   CreateInventoryRequest,
   InventoryDetail,
   InventoryListItem,
+  InventoryStats,
   PagedResult,
   TopInventory,
   UpdateInventoryRequest,
@@ -45,4 +46,7 @@ export const inventoriesApi = {
 
   deleteBatch: (ids: string[]) =>
     api.delete('/inventories', { data: ids }),
+
+  getStats: (id: string) =>
+    api.get<InventoryStats>(`/inventories/${id}/stats`),
 }

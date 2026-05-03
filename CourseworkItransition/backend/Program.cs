@@ -131,7 +131,7 @@ static async Task SeedAsync(IServiceProvider services, IConfiguration config)
             await roleManager.CreateAsync(new IdentityRole(role));
     }
 
-    var adminEmail = config["Admin:Email"] ?? "admin@example.com";
+    var adminEmail = config["AdminSeed:Email"] ?? "admin@example.com";
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
     if (adminUser == null)
     {
@@ -139,12 +139,16 @@ static async Task SeedAsync(IServiceProvider services, IConfiguration config)
         {
             UserName = adminEmail,
             Email = adminEmail,
-            DisplayName = config["Admin:DisplayName"] ?? "Administrator",
+            DisplayName = "Administrator",
             EmailConfirmed = true,
         };
-        var password = config["Admin:Password"] ?? "Admin123!";
+        var password = config["AdminSeed:Password"] ?? "Admin123!";
         await userManager.CreateAsync(adminUser, password);
         await userManager.AddToRoleAsync(adminUser, "Admin");
         await userManager.AddToRoleAsync(adminUser, "User");
+    }
+    else if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+    {
+        await userManager.AddToRoleAsync(adminUser, "Admin");
     }
 }

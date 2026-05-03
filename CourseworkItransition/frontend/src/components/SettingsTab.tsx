@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import MDEditor from '@uiw/react-md-editor'
 import { useDropzone } from 'react-dropzone'
 import Tags from '@yaireo/tagify/dist/react.tagify'
 import '@yaireo/tagify/dist/tagify.css'
 import { useTranslation } from 'react-i18next'
+import { useTheme } from '../contexts/ThemeContext'
 import { inventoriesApi } from '../api/inventoriesApi'
 import { tagsApi } from '../api/tagsApi'
 import { useAutosave } from '../hooks/useAutosave'
@@ -34,6 +35,7 @@ interface Props {
 
 export default function SettingsTab({ inventory, categories, onSaved }: Props) {
   const { t } = useTranslation()
+  const { theme } = useTheme()
   const [title, setTitle]       = useState(inventory.title)
   const [description, setDesc]  = useState(inventory.description)
   const [isPublic, setIsPublic] = useState(inventory.isPublic)
@@ -56,7 +58,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
     setFormVersion(inventory.version)
   }, [inventory.id])
 
-  const editData: UpdateInventoryRequest = {
+  const editData = useMemo<UpdateInventoryRequest>(() => ({
     title,
     description,
     isPublic,
@@ -64,7 +66,7 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
     version: formVersion,
     imageUrl,
     tags,
-  }
+  }), [title, description, isPublic, categoryId, formVersion, imageUrl, tags])
 
   const saveFn = useCallback(
     async (data: UpdateInventoryRequest) => {
@@ -149,14 +151,13 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
 
       <div className="mb-3">
         <label className="form-label fw-semibold">{t('settingsTab.descriptionLabel')}</label>
-        <div data-color-mode="light">
-          <MDEditor
-            value={description}
-            onChange={v => setDesc(v ?? '')}
-            height={220}
-            preview="edit"
-          />
-        </div>
+        <MDEditor
+          data-color-mode={theme}
+          value={description}
+          onChange={v => setDesc(v ?? '')}
+          height={220}
+          preview="edit"
+        />
       </div>
 
       <div className="mb-3">

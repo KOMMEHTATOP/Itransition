@@ -201,3 +201,28 @@ public record TopInventoryDto(
     string OwnerDisplayName,
     int ItemCount
 );
+
+// --- Stats ---
+
+public record InventoryStatsDto(
+    int TotalItems,
+    List<NumericFieldStatDto> NumericFields,
+    List<TextFieldStatDto> TextFields
+);
+
+public record NumericFieldStatDto(
+    Guid FieldId,
+    string FieldTitle,
+    int Count,
+    double Min,
+    double Max,
+    double Avg
+);
+
+public record TextFieldStatDto(
+    Guid FieldId,
+    string FieldTitle,
+    List<TopValueDto> TopValues
+);
+
+public record TopValueDto(string Value, int Count);

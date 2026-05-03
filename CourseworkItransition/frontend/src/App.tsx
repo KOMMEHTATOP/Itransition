@@ -4,6 +4,7 @@ import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import { TagCloud } from 'react-tagcloud'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './contexts/AuthContext'
+import { useTheme } from './contexts/ThemeContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -13,6 +14,7 @@ import InventoryDetailPage from './pages/InventoryDetailPage'
 import ItemDetailPage from './pages/ItemDetailPage'
 import ProfilePage from './pages/ProfilePage'
 import SearchPage from './pages/SearchPage'
+import AdminPage from './pages/AdminPage'
 import { tagsApi } from './api/tagsApi'
 import { inventoriesApi } from './api/inventoriesApi'
 import type { InventoryListItem, TagCloudItem, TopInventory } from './types/inventory'
@@ -21,6 +23,7 @@ function Navbar() {
   const { user, logout, isAuthenticated, isAdmin } = useAuth()
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
+  const { theme, toggleTheme } = useTheme()
   const [q, setQ] = useState('')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -55,7 +58,7 @@ function Navbar() {
   }
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+    <nav className={`navbar navbar-expand-lg px-3 ${theme === 'dark' ? 'navbar-dark bg-dark' : 'navbar-light bg-light border-bottom'}`}>
       <Link className="navbar-brand" to="/">
         {t('nav.brand')}
       </Link>
@@ -86,6 +89,14 @@ function Navbar() {
           />
         </form>
         <div className="d-flex align-items-center gap-2">
+          <button
+            className="btn btn-outline-secondary btn-sm"
+            onClick={toggleTheme}
+            title={theme === 'light' ? t('nav.switchToDark') : t('nav.switchToLight')}
+            aria-label={theme === 'light' ? t('nav.switchToDark') : t('nav.switchToLight')}
+          >
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
           <button
             className="btn btn-outline-secondary btn-sm"
             onClick={switchLang}
@@ -274,6 +285,14 @@ export default function App() {
           }
         />
         <Route path="/search" element={<SearchPage />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requireAdmin>
+              <AdminPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   )

@@ -1,12 +1,16 @@
 # TODO
 
+## Фаза 9 — Незакрытые баги
+
+- [ ] **MDEditor тулбар чёрный в светлой теме** — библиотека читает `prefers-color-scheme` ОС и игнорирует Bootstrap `data-bs-theme`.
+      CSS overrides через `[data-bs-theme] .w-md-editor` не дали результата. Нужно найти через DevTools точный CSS-селектор, который задаёт фон тулбара, и перебить его явно.
+
 ## Фаза 3 — Инвентари (технические долги)
 
 - [x] Bootstrap JS не подключён — кнопка-бургер в navbar не работает на мобильных.
       Добавь в `frontend/src/main.tsx`: `import 'bootstrap/dist/js/bootstrap.bundle.min.js'`
-- [ ] `useAutosave` сравнивает `data` по ссылке — таймер сбрасывается при каждом рендере.
-      Не критично (данные сохранятся), но может слегка задерживать сохранение.
-      Исправить в Phase 9 (финальная полировка): обернуть `editData` в `useMemo` в `InventoryDetailPage`.
+- [x] `useAutosave` сравнивает `data` по ссылке — таймер сбрасывался при каждом рендере.
+      Исправлено: `editData` обёрнут в `useMemo` в `SettingsTab.tsx`.
 - [x] "Accessible to Me" на `/profile` пока показывает только публичные инвентари других пользователей.
       Полноценный список (включая инвентари с явным доступом) будет реализован в Фазе 6.
 
@@ -21,4 +25,4 @@
 - [x] GitHub может не вернуть email — генерируется placeholder `github_{id}@noemail.placeholder`
 - [x] `useEffect` в `AuthCallbackPage` — пустой массив зависимостей, добавлен eslint-disable комментарий
 - [x] CORS разрешён только `localhost:5173` — добавлен `https://app.basharov.org` через `Frontend:ProdUrl`
-- [ ] Блокировка: поле `IsBlocked` проверяется при логине, но нет UI для admin чтобы блокировать пользователей (будет в Фазе 9)
+- [x] Блокировка: добавлен `AdminController` (бэкенд) и `AdminPage` (фронтенд) с block/unblock/delete/promote/demote.

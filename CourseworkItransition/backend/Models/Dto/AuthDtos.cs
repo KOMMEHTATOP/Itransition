@@ -19,3 +19,12 @@ public record UserDto(
     string DisplayName,
     string? AvatarUrl,
     IList<string> Roles);
+
+public record AdminUserDto(
+    string Id,
+    string DisplayName,
+    string Email,
+    bool IsBlocked,
+    bool IsAdmin,
+    DateTime CreatedAt,
+    int InventoryCount);
