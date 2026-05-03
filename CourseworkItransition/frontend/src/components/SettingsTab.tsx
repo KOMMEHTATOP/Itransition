@@ -151,13 +151,14 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
 
       <div className="mb-3">
         <label className="form-label fw-semibold">{t('settingsTab.descriptionLabel')}</label>
-        <MDEditor
-          data-color-mode={theme}
-          value={description}
-          onChange={v => setDesc(v ?? '')}
-          height={220}
-          preview="edit"
-        />
+        <div data-color-mode={theme}>
+          <MDEditor
+              value={description}
+              onChange={v => setDesc(v ?? '')}
+              height={220}
+              preview="edit"
+          />
+        </div>
       </div>
 
       <div className="mb-3">
@@ -235,8 +236,8 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
             dropdown: { enabled: 1, maxItems: 10 },
           }}
           onInput={loadSuggestions as unknown as (e: CustomEvent) => void}
-          onChange={(e: CustomEvent) => {
-            const detail = e.detail as { tagify: { getCleanValue: () => Array<{ value: string }> } }
+          onChange={(e: unknown) => {
+            const detail = (e as CustomEvent<{ tagify: { getCleanValue: () => Array<{ value: string }> } }>).detail
             setTags(detail.tagify.getCleanValue().map((tag) => tag.value))
           }}
           className="form-control"

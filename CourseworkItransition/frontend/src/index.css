@@ -111,16 +111,22 @@ code {
 }
 
 /* @uiw/react-md-editor: override OS prefers-color-scheme with Bootstrap data-bs-theme */
-[data-bs-theme='light'] .w-md-editor {
-  --color-canvas-default: #ffffff;
-  --color-canvas-subtle: #f6f8fa;
-  --md-editor-background-color: #ffffff;
-  color: #24292f;
+.w-md-editor {
+  --color-canvas-default: var(--bs-body-bg, #ffffff) !important;
+  --md-editor-background-color: var(--bs-body-bg, #ffffff) !important;
+  background-color: var(--bs-body-bg, #ffffff) !important;
+  color: var(--bs-body-color, #212529) !important;
 }
 
 [data-bs-theme='dark'] .w-md-editor {
-  --color-canvas-default: #0d1117;
-  --color-canvas-subtle: #161b22;
-  --md-editor-background-color: #0d1117;
-  color: #c9d1d9;
+  --color-canvas-default: #1e1e2e !important;
+  --md-editor-background-color: #1e1e2e !important;
+  background-color: #1e1e2e !important;
+  color: #cdd6f4 !important;
+}
+
+.w-md-editor-text-pre > code,
+.w-md-editor-text-input {
+  background-color: transparent !important;
+  color: inherit !important;
 }
