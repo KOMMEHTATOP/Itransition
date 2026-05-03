@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { inventoriesApi } from '../api/inventoriesApi'
 import { searchApi } from '../api/searchApi'
+import { stripMarkdown } from '../utils/stripMarkdown'
 import type { InventoryListItem, SearchResult } from '../types/inventory'
 
 export default function SearchPage() {
@@ -124,7 +125,7 @@ export default function SearchPage() {
                       </td>
                       <td className="text-muted" style={{ maxWidth: 260 }}>
                         <span className="text-truncate d-block" style={{ maxWidth: 240 }}>
-                          {inv.description || '—'}
+                          {inv.description ? stripMarkdown(inv.description) : '—'}
                         </span>
                       </td>
                       <td className="text-muted small">{inv.ownerDisplayName}</td>
@@ -224,7 +225,7 @@ export default function SearchPage() {
                       </td>
                       <td className="text-muted" style={{ maxWidth: 300 }}>
                         <span className="text-truncate d-block" style={{ maxWidth: 280 }}>
-                          {inv.description || '—'}
+                          {inv.description ? stripMarkdown(inv.description) : '—'}
                         </span>
                       </td>
                       <td className="text-muted small">{inv.ownerDisplayName}</td>

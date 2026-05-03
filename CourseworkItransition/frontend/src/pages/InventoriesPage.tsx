@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { inventoriesApi } from '../api/inventoriesApi'
 import { useAuth } from '../contexts/AuthContext'
+import { stripMarkdown } from '../utils/stripMarkdown'
 import type { InventoryListItem } from '../types/inventory'
 
 type SortKey = 'newest' | 'oldest' | 'title'
@@ -188,7 +189,7 @@ export default function InventoriesPage() {
                     </td>
                     <td className="text-muted" style={{ maxWidth: 300 }}>
                       <span className="text-truncate d-block" style={{ maxWidth: 280 }}>
-                        {inv.description || '—'}
+                        {inv.description ? stripMarkdown(inv.description) : '—'}
                       </span>
                     </td>
                     <td className="text-muted small">{inv.ownerDisplayName}</td>

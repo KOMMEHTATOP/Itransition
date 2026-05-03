@@ -210,7 +210,7 @@ export default function ItemDetailPage() {
 
   return (
     <div className="container mt-4" style={{ maxWidth: 720 }}>
-      <button className="btn btn-link ps-0 text-muted mb-3" onClick={() => navigate(`/inventories/${item.inventoryId}`)}>
+      <button className="btn btn-link ps-0 text-muted mb-3 d-block text-start" onClick={() => navigate(`/inventories/${item.inventoryId}`)}>
         {t('itemDetail.backToInventory')}
       </button>
 

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { inventoriesApi } from '../api/inventoriesApi'
 import { useAuth } from '../contexts/AuthContext'
+import { stripMarkdown } from '../utils/stripMarkdown'
 import type { InventoryListItem } from '../types/inventory'
 
 type SortKey = 'newest' | 'oldest' | 'title'
@@ -48,6 +49,26 @@ function InventoryTable({
 }: InventoryTableProps) {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const [filter, setFilter] = useState('')
+  const [ownerSortAsc, setOwnerSortAsc] = useState<boolean | null>(null)
+
+  let displayed = filter
+    ? items.filter(i => i.title.toLowerCase().includes(filter.toLowerCase()))
+    : items
+
+  if (ownerSortAsc !== null) {
+    displayed = [...displayed].sort((a, b) =>
+      ownerSortAsc
+        ? a.ownerDisplayName.localeCompare(b.ownerDisplayName)
+        : b.ownerDisplayName.localeCompare(a.ownerDisplayName)
+    )
+  }
+
+  const handleOwnerSort = () => {
+    setOwnerSortAsc(prev => prev === null ? true : prev ? false : null)
+  }
+
+  const ownerSortIndicator = ownerSortAsc === true ? ' ▲' : ownerSortAsc === false ? ' ▼' : ''
 
   return (
     <div className="mb-5">
@@ -65,13 +86,22 @@ function InventoryTable({
         )}
       </div>
 
+      <input
+        type="text"
+        className="form-control form-control-sm mb-2"
+        placeholder={t('inventoriesList.colName') + '...'}
+        value={filter}
+        onChange={e => setFilter(e.target.value)}
+        style={{ maxWidth: 260 }}
+      />
+
       {error && <div className="alert alert-danger py-2">{error}</div>}
 
       {loading ? (
         <div className="text-center py-3">
           <div className="spinner-border spinner-border-sm" role="status" />
         </div>
-      ) : items.length === 0 ? (
+      ) : displayed.length === 0 ? (
         <p className="text-muted small">{t('inventoriesList.noInventoriesHere')}</p>
       ) : (
         <>
@@ -83,30 +113,36 @@ function InventoryTable({
                     <input
                       type="checkbox"
                       className="form-check-input"
-                      checked={selected.size === items.length && items.length > 0}
+                      checked={selected.size === displayed.length && displayed.length > 0}
                       onChange={e => onToggleAll(e.target.checked)}
                     />
                   </th>
                   <th
                     style={{ cursor: 'pointer' }}
                     className="user-select-none"
-                    onClick={() => onSortChange('title')}
+                    onClick={() => { onSortChange('title'); setOwnerSortAsc(null) }}
                   >
                     {t('inventoriesList.colName')}{sort === 'title' ? ' ▲' : ''}
                   </th>
                   <th>{t('inventoriesList.colDescription')}</th>
-                  <th>{t('inventoriesList.colOwner')}</th>
                   <th
                     style={{ cursor: 'pointer' }}
                     className="user-select-none"
-                    onClick={() => onSortChange(sort === 'newest' ? 'oldest' : 'newest')}
+                    onClick={handleOwnerSort}
                   >
-                    {t('inventoriesList.colDate')}{sort === 'newest' ? ' ▼' : sort === 'oldest' ? ' ▲' : ''}
+                    {t('inventoriesList.colOwner')}{ownerSortIndicator}
+                  </th>
+                  <th
+                    style={{ cursor: 'pointer' }}
+                    className="user-select-none"
+                    onClick={() => { onSortChange(sort === 'newest' ? 'oldest' : 'newest'); setOwnerSortAsc(null) }}
+                  >
+                    {t('inventoriesList.colDate')}{ownerSortAsc === null && (sort === 'newest' ? ' ▼' : sort === 'oldest' ? ' ▲' : '')}
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {items.map(inv => (
+                {displayed.map(inv => (
                   <tr
                     key={inv.id}
                     style={{ cursor: 'pointer' }}
@@ -134,7 +170,7 @@ function InventoryTable({
                     </td>
                     <td className="text-muted">
                       <span className="d-block text-truncate" style={{ maxWidth: 220 }}>
-                        {inv.description || '—'}
+                        {inv.description ? stripMarkdown(inv.description) : '—'}
                       </span>
                     </td>
                     <td className="text-muted small">{inv.ownerDisplayName}</td>

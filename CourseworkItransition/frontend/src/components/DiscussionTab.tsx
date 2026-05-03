@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { commentsApi } from '../api/commentsApi'
 import { useInventoryHub } from '../hooks/useInventoryHub'
@@ -77,10 +78,12 @@ export default function DiscussionTab({ inventoryId, isAuthenticated, active }: 
           {comments.map(c => (
             <div key={c.id} className="mb-3 p-3 border rounded">
               <div className="d-flex align-items-center gap-2 mb-1">
-                <span className="fw-semibold">{c.authorDisplayName}</span>
+                <Link to={`/profile/${c.authorId}`} className="fw-semibold text-decoration-none">
+                  {c.authorDisplayName}
+                </Link>
                 <small className="text-muted">{new Date(c.createdAt).toLocaleString()}</small>
               </div>
-              <div className="prose">
+              <div className="prose text-start">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{c.text}</ReactMarkdown>
               </div>
             </div>

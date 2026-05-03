@@ -120,7 +120,7 @@ export default function InventoryDetailPage() {
 
   return (
     <div className="container mt-4">
-      <button className="btn btn-link ps-0 text-muted mb-2" onClick={() => navigate('/inventories')}>
+      <button className="btn btn-link ps-0 text-muted mb-2 d-block text-start" onClick={() => navigate('/inventories')}>
         {t('inventory.back')}
       </button>
 
