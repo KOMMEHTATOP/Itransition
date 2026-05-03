@@ -228,6 +228,7 @@ export default function InventoryDetailPage() {
           inventory={inventory}
           categories={categories}
           onSaved={(updated) => setInventory(updated)}
+          onReload={load}
         />
       )}
 

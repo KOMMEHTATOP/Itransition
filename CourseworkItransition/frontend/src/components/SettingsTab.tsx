@@ -31,9 +31,10 @@ interface Props {
   inventory: InventoryDetail
   categories: Category[]
   onSaved: (updated: InventoryDetail) => void
+  onReload: () => void
 }
 
-export default function SettingsTab({ inventory, categories, onSaved }: Props) {
+export default function SettingsTab({ inventory, categories, onSaved, onReload }: Props) {
   const { t } = useTranslation()
   const { theme } = useTheme()
   const [title, setTitle]       = useState(inventory.title)
@@ -140,8 +141,11 @@ export default function SettingsTab({ inventory, categories, onSaved }: Props) {
       </div>
 
       {saveStatus === 'conflict' && (
-        <div className="alert alert-warning py-2">
-          {t('settingsTab.saveConflict')}
+        <div className="alert alert-warning py-2 d-flex align-items-center gap-2">
+          <span>{t('settingsTab.saveConflict')}</span>
+          <button className="btn btn-sm btn-warning ms-auto" onClick={onReload}>
+            {t('settingsTab.reload')}
+          </button>
         </div>
       )}
 
