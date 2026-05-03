@@ -54,6 +54,12 @@ export interface UserSearchResult {
   email: string
 }
 
+export interface UserPublicProfile {
+  id: string
+  displayName: string
+  inventories: InventoryListItem[]
+}
+
 export interface PagedResult<T> {
   items: T[]
   total: number

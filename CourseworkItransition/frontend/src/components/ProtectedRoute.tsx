@@ -8,10 +8,18 @@ interface Props {
 }
 
 export default function ProtectedRoute({ children, requireAdmin = false }: Props) {
-  const { isAuthenticated, isAdmin, user } = useAuth()
+  const { isAuthenticated, isAdmin, isLoading } = useAuth()
   const location = useLocation()
 
-  if (!isAuthenticated || user === null) {
+  if (isLoading) {
+    return (
+      <div className="container mt-5 text-center">
+        <div className="spinner-border" role="status" />
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 

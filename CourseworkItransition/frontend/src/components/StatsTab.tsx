@@ -40,7 +40,7 @@ export default function StatsTab({ inventoryId, active }: Props) {
   const hasText    = stats.textFields.length > 0
 
   return (
-    <div style={{ maxWidth: 720 }}>
+    <div>
       <div className="mb-4">
         <span className="text-muted small">{t('statsTab.totalItems')}</span>
         <span className="fs-4 fw-semibold ms-2">{stats.totalItems}</span>

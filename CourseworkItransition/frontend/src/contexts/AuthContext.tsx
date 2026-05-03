@@ -22,6 +22,7 @@ interface AuthContextValue {
   logout: () => void
   isAdmin: boolean
   isAuthenticated: boolean
+  isLoading: boolean
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -31,12 +32,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.getItem('token')
   )
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(() => !!localStorage.getItem('token'))
 
   useEffect(() => {
     if (!token) {
       setUser(null)
+      setIsLoading(false)
       return
     }
+    setIsLoading(true)
     api
       .get<AuthUser>('/auth/me')
       .then((res) => setUser(res.data))
@@ -46,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(null)
         setUser(null)
       })
+      .finally(() => setIsLoading(false))
   }, [token])
 
   const login = (newToken: string, newUser: AuthUser) => {
@@ -69,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         isAdmin: user?.roles.includes('Admin') ?? false,
         isAuthenticated: !!user,
+        isLoading,
       }}
     >
       {children}

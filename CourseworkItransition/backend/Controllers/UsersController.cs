@@ -8,15 +8,40 @@ namespace InventoryApi.Controllers;
 
 [ApiController]
 [Route("api/users")]
-[Authorize]
 public class UsersController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
 
     public UsersController(ApplicationDbContext db) => _db = db;
 
+    // GET /api/users/{id}/profile — public, no auth required
+    [HttpGet("{id}/profile")]
+    [AllowAnonymous]
+    public async Task<ActionResult<UserPublicProfileDto>> GetProfile(string id)
+    {
+        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
+        if (user is null || user.IsBlocked) return NotFound();
+
+        var inventories = await _db.Inventories
+            .Include(i => i.Category)
+            .Include(i => i.Tags)
+            .Where(i => i.OwnerId == id && i.IsPublic)
+            .OrderByDescending(i => i.CreatedAt)
+            .Take(50)
+            .AsNoTracking()
+            .Select(i => new InventoryListItemDto(
+                i.Id, i.Title, i.Description ?? string.Empty, i.ImageUrl,
+                i.IsPublic, i.OwnerId, user.DisplayName, i.CreatedAt, i.UpdatedAt,
+                i.Version, i.CategoryId, i.Category != null ? i.Category.Name : null,
+                i.Tags.Select(t => t.TagName).ToList()))
+            .ToListAsync();
+
+        return new UserPublicProfileDto(user.Id, user.DisplayName, inventories);
+    }
+
     // GET /api/users/search?q=john&limit=10
     [HttpGet("search")]
+    [Authorize]
     public async Task<ActionResult<List<UserSearchResultDto>>> Search(string q = "", int limit = 10)
     {
         if (string.IsNullOrWhiteSpace(q)) return new List<UserSearchResultDto>();

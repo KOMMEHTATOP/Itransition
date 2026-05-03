@@ -303,5 +303,15 @@
     "colInventory": "Inventory",
     "colAuthor": "Author",
     "noTagInventories": "No public inventories with this tag."
+  },
+  "publicProfile": {
+    "back": "← Back",
+    "notFound": "User not found.",
+    "publicInventoriesCount_one": "{{count}} public inventory",
+    "publicInventoriesCount_other": "{{count}} public inventories",
+    "noInventories": "This user has no public inventories.",
+    "colName": "Name",
+    "colDescription": "Description",
+    "colDate": "Date"
   }
 }

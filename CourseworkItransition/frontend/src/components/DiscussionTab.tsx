@@ -70,7 +70,7 @@ export default function DiscussionTab({ inventoryId, isAuthenticated, active }: 
   }
 
   return (
-    <div style={{ maxWidth: 720 }}>
+    <div>
       {comments.length === 0 ? (
         <p className="text-muted">{t('discussionTab.noComments')}</p>
       ) : (

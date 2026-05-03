@@ -132,7 +132,7 @@ export default function SettingsTab({ inventory, categories, onSaved, onReload }
   const sl = saveLabel()
 
   return (
-    <div style={{ maxWidth: 640 }}>
+    <div>
       <div className="d-flex align-items-center gap-2 mb-3">
         {sl && <small className={sl.cls}>{sl.text}</small>}
         <button className="btn btn-outline-primary btn-sm ms-auto" onClick={saveNow}>

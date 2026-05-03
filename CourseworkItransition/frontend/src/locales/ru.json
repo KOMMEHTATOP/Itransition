@@ -317,5 +317,15 @@
     "colInventory": "Коллекция",
     "colAuthor": "Автор",
     "noTagInventories": "Публичных коллекций с этим тегом нет."
+  },
+  "publicProfile": {
+    "back": "← Назад",
+    "notFound": "Пользователь не найден.",
+    "publicInventoriesCount_one": "{{count}} публичная коллекция",
+    "publicInventoriesCount_other": "{{count}} публичных коллекций",
+    "noInventories": "У этого пользователя нет публичных коллекций.",
+    "colName": "Название",
+    "colDescription": "Описание",
+    "colDate": "Дата"
   }
 }

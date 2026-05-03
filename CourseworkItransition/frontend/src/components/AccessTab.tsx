@@ -103,7 +103,7 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
   }
 
   return (
-    <div style={{ maxWidth: 640 }}>
+    <div>
       {isPublic && (
         <div className="alert alert-info py-2 mb-3">
           {t('accessTab.publicInfo')}

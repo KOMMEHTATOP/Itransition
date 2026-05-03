@@ -13,6 +13,7 @@ import InventoriesPage from './pages/InventoriesPage'
 import InventoryDetailPage from './pages/InventoryDetailPage'
 import ItemDetailPage from './pages/ItemDetailPage'
 import ProfilePage from './pages/ProfilePage'
+import PublicProfilePage from './pages/PublicProfilePage'
 import SearchPage from './pages/SearchPage'
 import AdminPage from './pages/AdminPage'
 import { tagsApi } from './api/tagsApi'
@@ -284,6 +285,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/profile/:userId" element={<PublicProfilePage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route
           path="/admin"
