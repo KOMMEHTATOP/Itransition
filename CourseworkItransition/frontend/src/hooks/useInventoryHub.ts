@@ -18,12 +18,12 @@ export function useInventoryHub(
     let cancelled = false
 
     const conn = new signalR.HubConnectionBuilder()
-      .withUrl(`${HUB_BASE}/hubs/inventory`, {
-        accessTokenFactory: () => localStorage.getItem('token'),
-      })
-      .withAutomaticReconnect()
-      .configureLogging(signalR.LogLevel.None)
-      .build()
+        .withUrl(`${HUB_BASE}/hubs/inventory`, {
+          accessTokenFactory: () => localStorage.getItem('token') ?? '',
+        })
+        .withAutomaticReconnect()
+        .configureLogging(signalR.LogLevel.None)
+        .build()
 
     conn.on('NewComment', (comment: Comment) => onCommentRef.current(comment))
 
