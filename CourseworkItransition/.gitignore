@@ -83,3 +83,6 @@ backend/appsettings.json
 ## IDE HTTP client files
 *.http
 *.rest
+
+## Local dev notes
+backend/refactorPlan.md
