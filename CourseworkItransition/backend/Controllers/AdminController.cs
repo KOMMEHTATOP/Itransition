@@ -112,5 +112,3 @@ public class AdminController : ControllerBase
         return NoContent();
     }
 }
-
-public record BatchIdsRequest(List<string> Ids);
