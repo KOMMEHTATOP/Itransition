@@ -17,6 +17,20 @@ namespace InventoryApi.Controllers
         {
             return User.IsInRole("Admin");
         }
+        
+        protected IActionResult FromResult(Result result)
+        {
+            return result.Status switch
+            {
+                ResultStatus.Ok => NoContent(),
+                ResultStatus.NotFound => NotFound(result.Error),
+                ResultStatus.Unauthorized => Unauthorized(result.Error),
+                ResultStatus.Forbidden => Forbid(),
+                ResultStatus.Conflict => Conflict(result.Error),
+                ResultStatus.Invalid => BadRequest(result.Error),
+                _ => StatusCode(500, result.Error)
+            };
+        }
 
         protected IActionResult FromResult<T>(Result<T> result)
         {

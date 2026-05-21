@@ -1,33 +1,24 @@
 using System.Security.Claims;
-using InventoryApi.Models;
 using InventoryApi.Models.Dto;
-using InventoryApi.Services;
-using Microsoft.AspNetCore.Authentication;
+using InventoryApi.Services.Interfaces;
 using AspNet.Security.OAuth.GitHub;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventoryApi.Controllers;
 
-[ApiController]
 [Route("api/auth")]
-public class AuthController : ControllerBase
+public class AuthController : ApiControllerBase
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly JwtService _jwt;
+    private readonly IAuthService _authService;
     private readonly IConfiguration _config;
     private readonly IWebHostEnvironment _env;
 
-    public AuthController(
-        UserManager<ApplicationUser> userManager,
-        JwtService jwt,
-        IConfiguration config,
-        IWebHostEnvironment env)
+    public AuthController(IAuthService authService, IConfiguration config, IWebHostEnvironment env)
     {
-        _userManager = userManager;
-        _jwt = jwt;
+        _authService = authService;
         _config = config;
         _env = env;
     }
@@ -35,40 +26,20 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest req)
     {
-        var existing = await _userManager.FindByEmailAsync(req.Email);
-        if (existing != null)
-            return Conflict(new { message = "Email already in use" });
-
-        var user = new ApplicationUser
-        {
-            UserName = req.Email,
-            Email = req.Email,
-            DisplayName = req.DisplayName,
-            EmailConfirmed = true,
-        };
-
-        var result = await _userManager.CreateAsync(user, req.Password);
-        if (!result.Succeeded)
-            return BadRequest(result.Errors);
-
-        await _userManager.AddToRoleAsync(user, "User");
-
-        var token = await _jwt.GenerateTokenAsync(user);
-        return Ok(new AuthResponse(token, await MapUserAsync(user)));
+        return FromResult(await _authService.Register(req));
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest req)
     {
-        var user = await _userManager.FindByEmailAsync(req.Email);
-        if (user == null || !await _userManager.CheckPasswordAsync(user, req.Password))
-            return Unauthorized(new { message = "Invalid credentials" });
+        return FromResult(await _authService.Login(req));
+    }
 
-        if (user.IsBlocked)
-            return StatusCode(403, new { message = "Account is blocked" });
-
-        var token = await _jwt.GenerateTokenAsync(user);
-        return Ok(new AuthResponse(token, await MapUserAsync(user)));
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> Me()
+    {
+        return FromResult(await _authService.Me(UserId()!));
     }
 
     [HttpGet("google")]
@@ -80,8 +51,10 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("google/callback")]
-    public async Task<IActionResult> GoogleCallback() =>
-        await HandleOAuthCallbackAsync();
+    public async Task<IActionResult> GoogleCallback()
+    {
+        return await HandleOAuthCallbackAsync();
+    }
 
     [HttpGet("github")]
     public IActionResult GitHubLogin()
@@ -92,17 +65,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("github/callback")]
-    public async Task<IActionResult> GitHubCallback() =>
-        await HandleOAuthCallbackAsync();
-
-    [HttpGet("me")]
-    [Authorize]
-    public async Task<IActionResult> Me()
+    public async Task<IActionResult> GitHubCallback()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var user = await _userManager.FindByIdAsync(userId!);
-        if (user == null) return NotFound();
-        return Ok(await MapUserAsync(user));
+        return await HandleOAuthCallbackAsync();
     }
 
     private async Task<IActionResult> HandleOAuthCallbackAsync()
@@ -114,45 +79,22 @@ public class AuthController : ControllerBase
         var email = result.Principal!.FindFirstValue(ClaimTypes.Email);
         var name = result.Principal.FindFirstValue(ClaimTypes.Name);
 
-        // GitHub may not expose email if user keeps it private — generate a placeholder
         if (string.IsNullOrEmpty(email))
         {
-            var login = result.Principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? Guid.NewGuid().ToString("N");
+            var login = result.Principal.FindFirstValue(ClaimTypes.NameIdentifier)
+                        ?? Guid.NewGuid().ToString("N");
             email = $"github_{login}@noemail.placeholder";
         }
 
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user == null)
-        {
-            user = new ApplicationUser
-            {
-                UserName = email,
-                Email = email,
-                DisplayName = name ?? email,
-                EmailConfirmed = true,
-            };
-            var createResult = await _userManager.CreateAsync(user);
-            if (!createResult.Succeeded)
-                return Redirect($"{FrontendUrl}/login?error=create_failed");
+        var oauthResult = await _authService.HandleOAuthAsync(email, name);
+        if (!oauthResult.IsSuccess)
+            return Redirect($"{FrontendUrl}/login?error=oauth_failed");
 
-            await _userManager.AddToRoleAsync(user, "User");
-        }
-
-        if (user.IsBlocked)
-            return Redirect($"{FrontendUrl}/login?error=blocked");
-
-        var token = await _jwt.GenerateTokenAsync(user);
-        return Redirect($"{FrontendUrl}/auth/callback?token={Uri.EscapeDataString(token)}");
+        return Redirect($"{FrontendUrl}/auth/callback?token={Uri.EscapeDataString(oauthResult.Value!)}");
     }
 
     private string FrontendUrl =>
         _env.IsProduction()
             ? _config.GetValue<string>("Frontend:ProdUrl") ?? "https://app.basharov.org"
             : _config.GetValue<string>("Frontend:Url") ?? "http://localhost:5173";
-
-    private async Task<UserDto> MapUserAsync(ApplicationUser user)
-    {
-        var roles = await _userManager.GetRolesAsync(user);
-        return new UserDto(user.Id, user.Email!, user.DisplayName, user.AvatarUrl, roles);
-    }
 }

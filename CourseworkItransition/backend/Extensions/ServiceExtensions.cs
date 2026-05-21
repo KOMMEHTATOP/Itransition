@@ -16,6 +16,10 @@ public static class ServiceExtensions
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<ITagService, TagService>();
+        services.AddScoped<IAccessService, AccessService>();
+        services.AddScoped<IInventoryFieldService, InventoryFieldService>();
+        services.AddScoped<ICustomIdService, CustomIdService>();
         
         return services;
     }

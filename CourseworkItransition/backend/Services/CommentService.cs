@@ -53,7 +53,7 @@ public class CommentService : ICommentService
     {
         if (string.IsNullOrWhiteSpace(req.Text))
         {
-            return  Result<CommentDto>.Failure(ResultStatus.Conflict, "Comment text is required");
+            return  Result<CommentDto>.Failure(ResultStatus.Invalid, "Comment text is required");
         }
 
         var inv = await _db.Inventories.AsNoTracking().FirstOrDefaultAsync(i => i.Id == inventoryId);

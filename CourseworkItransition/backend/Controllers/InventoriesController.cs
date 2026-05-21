@@ -1,407 +1,94 @@
-using System.Security.Claims;
-using InventoryApi.Data;
-using InventoryApi.Models;
 using InventoryApi.Models.Dto;
+using InventoryApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace InventoryApi.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class InventoriesController : ControllerBase
+[Route("api/inventories")]
+public class InventoriesController : ApiControllerBase
 {
-    private readonly ApplicationDbContext _db;
+    private readonly IInventoryService _inventoryService;
 
-    public InventoriesController(ApplicationDbContext db) => _db = db;
-
-    // GET /api/inventories?page=1&pageSize=20&sort=newest&tag=optional
-    [HttpGet]
-    public async Task<ActionResult<PagedResult<InventoryListItemDto>>> GetAll(
-        int page = 1, int pageSize = 20, string sort = "newest", string? tag = null)
+    public InventoriesController(IInventoryService inventoryService)
     {
-        var isAdmin = User.IsInRole("Admin");
-        var query = _db.Inventories
-            .Include(i => i.Owner)
-            .Include(i => i.Category)
-            .Include(i => i.Tags)
-            .Where(i => isAdmin || i.IsPublic)
-            .AsNoTracking();
-
-        if (!string.IsNullOrWhiteSpace(tag))
-        {
-            var t = tag.Trim().ToLowerInvariant();
-            query = query.Where(i => i.Tags.Any(tt => tt.TagName == t));
-        }
-
-        query = sort switch
-        {
-            "oldest" => query.OrderBy(i => i.CreatedAt),
-            "title"  => query.OrderBy(i => i.Title),
-            _        => query.OrderByDescending(i => i.CreatedAt),
-        };
-
-        return await ToPagedResult(query, page, pageSize);
+        _inventoryService = inventoryService;
     }
 
-    // GET /api/inventories/my?page=1&pageSize=20
+    [HttpGet]
+    public async Task<IActionResult> GetAll(int page = 1, int pageSize = 20, string sort = "newest", string? tag = null)
+    {
+        return FromResult(await _inventoryService.GetAll(IsAdmin(), page, pageSize, sort, tag));
+    }
+
     [HttpGet("my")]
     [Authorize]
-    public async Task<ActionResult<PagedResult<InventoryListItemDto>>> GetMy(
-        int page = 1, int pageSize = 20, string sort = "newest")
+    public async Task<IActionResult> GetMy(int page = 1, int pageSize = 20, string sort = "newest")
     {
-        var userId = UserId();
-        var query = _db.Inventories
-            .Include(i => i.Owner)
-            .Include(i => i.Category)
-            .Include(i => i.Tags)
-            .Where(i => i.OwnerId == userId)
-            .AsNoTracking();
-
-        query = sort switch
-        {
-            "oldest" => query.OrderBy(i => i.CreatedAt),
-            "title"  => query.OrderBy(i => i.Title),
-            _        => query.OrderByDescending(i => i.CreatedAt),
-        };
-
-        return await ToPagedResult(query, page, pageSize);
+        return FromResult(await _inventoryService.GetMy(UserId()!, page, pageSize, sort));
     }
 
-    // GET /api/inventories/accessible?page=1&pageSize=20
-    // Returns public inventories + inventories where user has explicit access (excluding own)
     [HttpGet("accessible")]
     [Authorize]
-    public async Task<ActionResult<PagedResult<InventoryListItemDto>>> GetAccessible(
-        int page = 1, int pageSize = 20, string sort = "newest")
+    public async Task<IActionResult> GetAccessible(int page = 1, int pageSize = 20, string sort = "newest")
     {
-        var userId = UserId()!;
-        var isAdmin = User.IsInRole("Admin");
-        var query = _db.Inventories
-            .Include(i => i.Owner)
-            .Include(i => i.Category)
-            .Include(i => i.Tags)
-            .Where(i => i.OwnerId != userId &&
-                        (isAdmin || i.IsPublic || i.AccessGrants.Any(a => a.UserId == userId)))
-            .AsNoTracking();
-
-        query = sort switch
-        {
-            "oldest" => query.OrderBy(i => i.CreatedAt),
-            "title"  => query.OrderBy(i => i.Title),
-            _        => query.OrderByDescending(i => i.CreatedAt),
-        };
-
-        return await ToPagedResult(query, page, pageSize);
+        return FromResult(await _inventoryService.GetAccessible(UserId()!, IsAdmin(), page, pageSize, sort));
     }
 
-    // GET /api/inventories/{id}
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<InventoryDetailDto>> GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id)
     {
-        var inv = await _db.Inventories
-            .Include(i => i.Owner)
-            .Include(i => i.Category)
-            .Include(i => i.Tags)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(i => i.Id == id);
-
-        if (inv is null) return NotFound();
-
-        var userId = UserId();
-        var isAdmin = User.IsInRole("Admin");
-
-        var hasAccess = inv.IsPublic
-            || isAdmin
-            || inv.OwnerId == userId
-            || await _db.InventoryAccess.AnyAsync(a => a.InventoryId == id && a.UserId == userId);
-
-        if (!hasAccess) return Forbid();
-
-        return ToDetailDto(inv, userId, isAdmin);
+        return FromResult(await _inventoryService.GetById(id, UserId(), IsAdmin()));
     }
 
-    // GET /api/inventories/top?limit=5
     [HttpGet("top")]
-    public async Task<ActionResult<List<TopInventoryDto>>> GetTop(int limit = 5)
+    public async Task<IActionResult> GetTop(int limit = 5)
     {
-        limit = Math.Clamp(limit, 1, 20);
-
-        var top = await _db.Inventories
-            .Where(i => i.IsPublic)
-            .Include(i => i.Owner)
-            .OrderByDescending(i => i.Items.Count())
-            .Take(limit)
-            .AsNoTracking()
-            .Select(i => new TopInventoryDto(
-                i.Id,
-                i.Title,
-                i.Owner.DisplayName,
-                i.Items.Count()))
-            .ToListAsync();
-
-        return top;
+        return FromResult(await _inventoryService.GetTop(limit));
     }
 
-    // GET /api/inventories/categories
     [HttpGet("categories")]
-    public async Task<ActionResult<List<CategoryDto>>> GetCategories()
+    public async Task<IActionResult> GetCategories()
     {
-        var cats = await _db.Categories
-            .AsNoTracking()
-            .OrderBy(c => c.Name)
-            .Select(c => new CategoryDto(c.Id, c.Name))
-            .ToListAsync();
-        return cats;
+        return FromResult(await _inventoryService.GetCategories());
     }
 
-    // POST /api/inventories
     [HttpPost]
     [Authorize]
-    public async Task<ActionResult<InventoryDetailDto>> Create(CreateInventoryRequest req)
+    public async Task<IActionResult> Create([FromBody] CreateInventoryRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Title))
-            return BadRequest(new { message = "Title is required." });
-
-        var userId = UserId()!;
-        var inventory = new Inventory
+        var result = await _inventoryService.Create(UserId()!, req);
+        if (!result.IsSuccess)
         {
-            Title       = req.Title.Trim(),
-            Description = req.Description?.Trim() ?? string.Empty,
-            IsPublic    = req.IsPublic,
-            CategoryId  = req.CategoryId,
-            OwnerId     = userId,
-        };
-
-        _db.Inventories.Add(inventory);
-        await _db.SaveChangesAsync();
-
-        await _db.Entry(inventory).Reference(i => i.Owner).LoadAsync();
-        await _db.Entry(inventory).Reference(i => i.Category).LoadAsync();
-
-        return CreatedAtAction(nameof(GetById), new { id = inventory.Id },
-            ToDetailDto(inventory, userId, User.IsInRole("Admin")));
+            return FromResult(result);
+        }
+        return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
     }
 
-    // PUT /api/inventories/{id}
     [HttpPut("{id:guid}")]
     [Authorize]
-    public async Task<IActionResult> Update(Guid id, UpdateInventoryRequest req)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateInventoryRequest req)
     {
-        var inventory = await _db.Inventories
-            .Include(i => i.Owner)
-            .Include(i => i.Category)
-            .Include(i => i.Tags)
-            .FirstOrDefaultAsync(i => i.Id == id);
-
-        if (inventory is null) return NotFound();
-
-        var userId = UserId()!;
-        var isAdmin = User.IsInRole("Admin");
-        if (!CanModify(inventory, userId, isAdmin)) return Forbid();
-
-        if (inventory.Version != req.Version)
-            return Conflict(new { message = "Save conflict: the inventory was modified by someone else. Please reload." });
-
-        inventory.Title       = req.Title.Trim();
-        inventory.Description = req.Description?.Trim() ?? string.Empty;
-        inventory.IsPublic    = req.IsPublic;
-        inventory.CategoryId  = req.CategoryId;
-        inventory.ImageUrl    = req.ImageUrl;
-        inventory.UpdatedAt   = DateTime.UtcNow;
-        inventory.Version    += 1;
-
-        if (req.Tags is not null)
-        {
-            _db.InventoryTags.RemoveRange(inventory.Tags);
-            var newTags = req.Tags
-                .Select(t => t.Trim().ToLowerInvariant())
-                .Where(t => t.Length > 0)
-                .Distinct()
-                .Select(t => new InventoryTag { InventoryId = id, TagName = t });
-            _db.InventoryTags.AddRange(newTags);
-        }
-
-        try
-        {
-            await _db.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            return Conflict(new { message = "Save conflict: the inventory was modified by someone else. Please reload." });
-        }
-
-        await _db.Entry(inventory).Collection(i => i.Tags).LoadAsync();
-        return Ok(ToDetailDto(inventory, userId, isAdmin));
+        return FromResult(await _inventoryService.Update(id, UserId()!, IsAdmin(), req));
     }
 
-    // DELETE /api/inventories/{id}
     [HttpDelete("{id:guid}")]
     [Authorize]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var inventory = await _db.Inventories.FindAsync(id);
-        if (inventory is null) return NotFound();
-
-        var userId = UserId()!;
-        if (!CanModify(inventory, userId, User.IsInRole("Admin"))) return Forbid();
-
-        _db.Inventories.Remove(inventory);
-        await _db.SaveChangesAsync();
-        return NoContent();
+        return FromResult(await _inventoryService.Delete(id, UserId()!, IsAdmin()));
     }
 
-    // DELETE /api/inventories  (batch)
     [HttpDelete]
     [Authorize]
     public async Task<IActionResult> DeleteBatch([FromBody] List<Guid> ids)
     {
-        if (ids is null || ids.Count == 0) return BadRequest();
-
-        var userId = UserId()!;
-        var isAdmin = User.IsInRole("Admin");
-
-        var inventories = await _db.Inventories
-            .Where(i => ids.Contains(i.Id))
-            .ToListAsync();
-
-        foreach (var inv in inventories)
-        {
-            if (!CanModify(inv, userId, isAdmin))
-                return Forbid();
-        }
-
-        _db.Inventories.RemoveRange(inventories);
-        await _db.SaveChangesAsync();
-        return NoContent();
+        return FromResult(await _inventoryService.DeleteBatch(ids, UserId()!, IsAdmin()));
     }
 
-    // GET /api/inventories/{id}/stats
     [HttpGet("{id:guid}/stats")]
-    public async Task<ActionResult<InventoryStatsDto>> GetStats(Guid id)
+    public async Task<IActionResult> GetStats(Guid id)
     {
-        var inv = await _db.Inventories.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
-        if (inv is null) return NotFound();
-
-        var userId  = UserId();
-        var isAdmin = User.IsInRole("Admin");
-        var hasAccess = inv.IsPublic
-            || isAdmin
-            || inv.OwnerId == userId
-            || (userId != null && await _db.InventoryAccess.AnyAsync(a => a.InventoryId == id && a.UserId == userId));
-
-        if (!hasAccess) return Forbid();
-
-        var totalItems = await _db.Items.CountAsync(i => i.InventoryId == id);
-
-        var fields = await _db.InventoryFields
-            .Where(f => f.InventoryId == id)
-            .OrderBy(f => f.Order)
-            .AsNoTracking()
-            .ToListAsync();
-
-        var numericStats = new List<NumericFieldStatDto>();
-        var textStats    = new List<TextFieldStatDto>();
-
-        foreach (var field in fields)
-        {
-            if (field.Type == FieldType.Number)
-            {
-                var rawValues = await _db.ItemFieldValues
-                    .Where(fv => fv.FieldId == field.Id && fv.Value != string.Empty)
-                    .Select(fv => fv.Value)
-                    .ToListAsync();
-
-                var parsed = rawValues
-                    .Select(v => double.TryParse(v, System.Globalization.NumberStyles.Any,
-                        System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : (double?)null)
-                    .Where(d => d.HasValue)
-                    .Select(d => d!.Value)
-                    .ToList();
-
-                if (parsed.Count > 0)
-                    numericStats.Add(new NumericFieldStatDto(
-                        field.Id, field.Title, parsed.Count,
-                        parsed.Min(), parsed.Max(),
-                        Math.Round(parsed.Average(), 2)));
-            }
-            else if (field.Type is FieldType.Text or FieldType.MultilineText or FieldType.Link)
-            {
-                var topValues = await _db.ItemFieldValues
-                    .Where(fv => fv.FieldId == field.Id && fv.Value != string.Empty)
-                    .GroupBy(fv => fv.Value)
-                    .OrderByDescending(g => g.Count())
-                    .Take(5)
-                    .Select(g => new TopValueDto(g.Key, g.Count()))
-                    .ToListAsync();
-
-                if (topValues.Count > 0)
-                    textStats.Add(new TextFieldStatDto(field.Id, field.Title, topValues));
-            }
-        }
-
-        return new InventoryStatsDto(totalItems, numericStats, textStats);
-    }
-
-    // --- helpers ---
-
-    private string? UserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-    private static bool CanModify(Inventory inv, string userId, bool isAdmin) =>
-        isAdmin || inv.OwnerId == userId;
-
-    private static InventoryDetailDto ToDetailDto(Inventory inv, string? userId, bool isAdmin) =>
-        new(
-            inv.Id,
-            inv.Title,
-            inv.Description,
-            inv.ImageUrl,
-            inv.IsPublic,
-            inv.OwnerId,
-            inv.Owner.DisplayName,
-            inv.CreatedAt,
-            inv.UpdatedAt,
-            inv.Version,
-            inv.CategoryId,
-            inv.Category?.Name,
-            CanEdit: isAdmin || inv.OwnerId == userId,
-            Tags: inv.Tags.Select(t => t.TagName).OrderBy(t => t).ToList()
-        );
-
-    private static InventoryListItemDto ToListDto(Inventory inv) =>
-        new(
-            inv.Id,
-            inv.Title,
-            inv.Description,
-            inv.ImageUrl,
-            inv.IsPublic,
-            inv.OwnerId,
-            inv.Owner.DisplayName,
-            inv.CreatedAt,
-            inv.UpdatedAt,
-            inv.Version,
-            inv.CategoryId,
-            inv.Category?.Name,
-            Tags: inv.Tags.Select(t => t.TagName).OrderBy(t => t).ToList()
-        );
-
-    private static async Task<PagedResult<InventoryListItemDto>> ToPagedResult(
-        IQueryable<Inventory> query, int page, int pageSize)
-    {
-        pageSize = Math.Clamp(pageSize, 1, 100);
-        page     = Math.Max(1, page);
-
-        var total      = await query.CountAsync();
-        var totalPages = (int)Math.Ceiling(total / (double)pageSize);
-        var items      = await query
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-
-        return new PagedResult<InventoryListItemDto>(
-            items.Select(ToListDto).ToList(),
-            total, page, pageSize, totalPages
-        );
+        return FromResult(await _inventoryService.GetStats(id, UserId(), IsAdmin()));
     }
 }

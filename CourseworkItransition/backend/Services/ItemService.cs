@@ -187,23 +187,23 @@ public class ItemService : IItemService
         return Result<ItemDetailDto>.Success(ToDetailDto(item, userId, isAdmin, likeCount, isLikedByMe));
     }
 
-    public async Task<Result> LikeItem(Guid id, string userId, bool isAdmin)
+    public async Task<Result<LikeResultDto>> LikeItem(Guid id, string userId, bool isAdmin)
     {
         var item = await _db.Items.Include(i => i.Inventory).AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
         if (item is null)
         {
-            return Result.Failure(ResultStatus.NotFound, "Item not found");
+            return Result<LikeResultDto>.Failure(ResultStatus.NotFound, "Item not found");
         }
 
         if (!item.Inventory.IsPublic && !isAdmin && item.Inventory.OwnerId != userId)
         {
-            return Result.Failure(ResultStatus.Forbidden, "You do not have permission");
+            return Result<LikeResultDto>.Failure(ResultStatus.Forbidden, "You do not have permission");
         }
 
         var exists = await _db.ItemLikes.AnyAsync(l => l.ItemId == id && l.UserId == userId);
         if (exists)
         {
-            return Result.Failure(ResultStatus.Conflict, "Item already liked");
+            return Result<LikeResultDto>.Failure(ResultStatus.Conflict, "Item already liked");
         }
 
         _db.ItemLikes.Add(new ItemLike { ItemId = id, UserId = userId });
@@ -211,21 +211,22 @@ public class ItemService : IItemService
 
         var count = await _db.ItemLikes.CountAsync(l => l.ItemId == id);
         await _hub.Clients.Group($"inv-{item.InventoryId}").SendAsync("LikeUpdated", id, count);
-        return Result.Success();
+    
+        return Result<LikeResultDto>.Success(new LikeResultDto(count, true));
     }
 
-    public async Task<Result> UnlikeItem(Guid id, string userId)
+    public async Task<Result<LikeResultDto>> UnlikeItem(Guid id, string userId)
     {
         var item = await _db.Items.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
         if (item is null)
         {
-            return Result.Failure(ResultStatus.NotFound, "Item not found");
+            return Result<LikeResultDto>.Failure(ResultStatus.NotFound, "Item not found");
         }
 
-        var like   = await _db.ItemLikes.FirstOrDefaultAsync(l => l.ItemId == id && l.UserId == userId);
+        var like = await _db.ItemLikes.FirstOrDefaultAsync(l => l.ItemId == id && l.UserId == userId);
         if (like is null)
         {
-            return Result.Failure(ResultStatus.NotFound, "Item not found");
+            return Result<LikeResultDto>.Failure(ResultStatus.NotFound, "Like not found");
         }
 
         _db.ItemLikes.Remove(like);
@@ -233,7 +234,8 @@ public class ItemService : IItemService
 
         var count = await _db.ItemLikes.CountAsync(l => l.ItemId == id);
         await _hub.Clients.Group($"inv-{item.InventoryId}").SendAsync("LikeUpdated", id, count);
-        return Result.Success();
+    
+        return Result<LikeResultDto>.Success(new LikeResultDto(count, false));
     }
 
     public async Task<Result<ItemDetailDto>> UpdateItem(Guid id, string userId, bool isAdmin, UpdateItemRequest req)

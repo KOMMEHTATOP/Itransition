@@ -1,168 +1,56 @@
-using System.Security.Claims;
-using InventoryApi.Data;
-using InventoryApi.Models;
 using InventoryApi.Models.Dto;
+using InventoryApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace InventoryApi.Controllers;
 
-[ApiController]
 [Route("api/inventories/{inventoryId:guid}/fields")]
-public class InventoryFieldsController : ControllerBase
+public class InventoryFieldsController : ApiControllerBase
 {
-    private readonly ApplicationDbContext _db;
+    private readonly IInventoryFieldService _fieldService;
 
-    public InventoryFieldsController(ApplicationDbContext db) => _db = db;
-
-    // GET /api/inventories/{inventoryId}/fields
-    [HttpGet]
-    public async Task<ActionResult<List<InventoryFieldDto>>> GetFields(Guid inventoryId)
+    public InventoryFieldsController(IInventoryFieldService fieldService)
     {
-        var inv = await _db.Inventories.AsNoTracking()
-            .FirstOrDefaultAsync(i => i.Id == inventoryId);
-        if (inv is null) return NotFound();
-
-        var userId = UserId();
-        var isAdmin = User.IsInRole("Admin");
-        if (!inv.IsPublic && !isAdmin && inv.OwnerId != userId)
-            return Forbid();
-
-        var fields = await _db.InventoryFields
-            .AsNoTracking()
-            .Where(f => f.InventoryId == inventoryId)
-            .OrderBy(f => f.Order)
-            .Select(f => new InventoryFieldDto(f.Id, f.Title, f.Description, f.Type.ToString(), f.Order, f.ShowInTable))
-            .ToListAsync();
-
-        return fields;
+        _fieldService = fieldService;
     }
 
-    // POST /api/inventories/{inventoryId}/fields
+    [HttpGet]
+    public async Task<IActionResult> GetFields(Guid inventoryId)
+    {
+        return FromResult(await _fieldService.GetFields(inventoryId, UserId(), IsAdmin()));
+    }
+
     [HttpPost]
     [Authorize]
-    public async Task<ActionResult<InventoryFieldDto>> CreateField(Guid inventoryId, CreateFieldRequest req)
+    public async Task<IActionResult> CreateField(Guid inventoryId, [FromBody] CreateFieldRequest req)
     {
-        var inv = await _db.Inventories.FirstOrDefaultAsync(i => i.Id == inventoryId);
-        if (inv is null) return NotFound();
-
-        var userId = UserId()!;
-        var isAdmin = User.IsInRole("Admin");
-        if (!CanModify(inv, userId, isAdmin)) return Forbid();
-
-        if (string.IsNullOrWhiteSpace(req.Title))
-            return BadRequest(new { message = "Title is required." });
-
-        if (!Enum.TryParse<FieldType>(req.Type, out var fieldType))
-            return BadRequest(new { message = $"Invalid field type: {req.Type}." });
-
-        // Max 3 fields of the same type per inventory
-        var typeCount = await _db.InventoryFields
-            .CountAsync(f => f.InventoryId == inventoryId && f.Type == fieldType);
-        if (typeCount >= 3)
-            return BadRequest(new { message = $"Maximum 3 fields of type '{req.Type}' allowed per inventory." });
-
-        var maxOrder = await _db.InventoryFields
-            .Where(f => f.InventoryId == inventoryId)
-            .MaxAsync(f => (int?)f.Order) ?? -1;
-
-        var field = new InventoryField
+        var result = await _fieldService.CreateField(inventoryId, UserId()!, IsAdmin(), req);
+        if (!result.IsSuccess)
         {
-            Title       = req.Title.Trim(),
-            Description = req.Description?.Trim() ?? string.Empty,
-            Type        = fieldType,
-            ShowInTable = req.ShowInTable,
-            Order       = maxOrder + 1,
-            InventoryId = inventoryId,
-        };
-
-        _db.InventoryFields.Add(field);
-        await _db.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetFields), new { inventoryId },
-            new InventoryFieldDto(field.Id, field.Title, field.Description, field.Type.ToString(), field.Order, field.ShowInTable));
+            return FromResult(result);
+        }
+        return CreatedAtAction(nameof(GetFields), new { inventoryId }, result.Value);
     }
 
-    // PUT /api/inventories/{inventoryId}/fields/{fieldId}
     [HttpPut("{fieldId:guid}")]
     [Authorize]
-    public async Task<ActionResult<InventoryFieldDto>> UpdateField(Guid inventoryId, Guid fieldId, UpdateFieldRequest req)
+    public async Task<IActionResult> UpdateField(Guid inventoryId, Guid fieldId, [FromBody] UpdateFieldRequest req)
     {
-        var inv = await _db.Inventories.FirstOrDefaultAsync(i => i.Id == inventoryId);
-        if (inv is null) return NotFound();
-
-        var userId = UserId()!;
-        var isAdmin = User.IsInRole("Admin");
-        if (!CanModify(inv, userId, isAdmin)) return Forbid();
-
-        var field = await _db.InventoryFields
-            .FirstOrDefaultAsync(f => f.Id == fieldId && f.InventoryId == inventoryId);
-        if (field is null) return NotFound();
-
-        if (string.IsNullOrWhiteSpace(req.Title))
-            return BadRequest(new { message = "Title is required." });
-
-        field.Title       = req.Title.Trim();
-        field.Description = req.Description?.Trim() ?? string.Empty;
-        field.ShowInTable = req.ShowInTable;
-        field.Order       = req.Order;
-
-        await _db.SaveChangesAsync();
-
-        return Ok(new InventoryFieldDto(field.Id, field.Title, field.Description, field.Type.ToString(), field.Order, field.ShowInTable));
+        return FromResult(await _fieldService.UpdateField(inventoryId, fieldId, UserId()!, IsAdmin(), req));
     }
 
-    // DELETE /api/inventories/{inventoryId}/fields/{fieldId}
     [HttpDelete("{fieldId:guid}")]
     [Authorize]
     public async Task<IActionResult> DeleteField(Guid inventoryId, Guid fieldId)
     {
-        var inv = await _db.Inventories.FirstOrDefaultAsync(i => i.Id == inventoryId);
-        if (inv is null) return NotFound();
-
-        var userId = UserId()!;
-        var isAdmin = User.IsInRole("Admin");
-        if (!CanModify(inv, userId, isAdmin)) return Forbid();
-
-        var field = await _db.InventoryFields
-            .FirstOrDefaultAsync(f => f.Id == fieldId && f.InventoryId == inventoryId);
-        if (field is null) return NotFound();
-
-        _db.InventoryFields.Remove(field);
-        await _db.SaveChangesAsync();
-
-        return NoContent();
+        return FromResult(await _fieldService.DeleteField(inventoryId, fieldId, UserId()!, IsAdmin()));
     }
 
-    // PUT /api/inventories/{inventoryId}/fields/reorder
     [HttpPut("reorder")]
     [Authorize]
     public async Task<IActionResult> ReorderFields(Guid inventoryId, [FromBody] List<Guid> orderedIds)
     {
-        var inv = await _db.Inventories.FirstOrDefaultAsync(i => i.Id == inventoryId);
-        if (inv is null) return NotFound();
-
-        var userId = UserId()!;
-        var isAdmin = User.IsInRole("Admin");
-        if (!CanModify(inv, userId, isAdmin)) return Forbid();
-
-        var fields = await _db.InventoryFields
-            .Where(f => f.InventoryId == inventoryId)
-            .ToListAsync();
-
-        for (int i = 0; i < orderedIds.Count; i++)
-        {
-            var f = fields.FirstOrDefault(x => x.Id == orderedIds[i]);
-            if (f is not null) f.Order = i;
-        }
-
-        await _db.SaveChangesAsync();
-        return NoContent();
+        return FromResult(await _fieldService.ReorderFields(inventoryId, UserId()!, IsAdmin(), orderedIds));
     }
-
-    private string? UserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-    private static bool CanModify(Inventory inv, string userId, bool isAdmin) =>
-        isAdmin || inv.OwnerId == userId;
 }

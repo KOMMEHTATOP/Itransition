@@ -78,4 +78,30 @@ public class AuthService : IAuthService
         var roles = await _userManager.GetRolesAsync(user);
         return new UserDto(user.Id, user.Email!, user.DisplayName, user.AvatarUrl, roles);
     }
+    
+    public async Task<Result<string>> HandleOAuthAsync(string email, string? name)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null)
+        {
+            user = new ApplicationUser
+            {
+                UserName = email,
+                Email = email,
+                DisplayName = name ?? email,
+                EmailConfirmed = true,
+            };
+            var createResult = await _userManager.CreateAsync(user);
+            if (!createResult.Succeeded)
+                return Result<string>.Failure(ResultStatus.Error, "Failed to create user");
+
+            await _userManager.AddToRoleAsync(user, "User");
+        }
+
+        if (user.IsBlocked)
+            return Result<string>.Failure(ResultStatus.Forbidden, "Account is blocked");
+
+        var token = await _jwt.GenerateTokenAsync(user);
+        return Result<string>.Success(token);
+    }
 }
