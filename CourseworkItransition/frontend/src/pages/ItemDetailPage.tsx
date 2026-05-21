@@ -6,6 +6,7 @@ import { likesApi } from '../api/likesApi'
 import { useAutosave } from '../hooks/useAutosave'
 import { useInventoryHub } from '../hooks/useInventoryHub'
 import type { ItemDetail, UpdateItemRequest } from '../types/inventory'
+import { AUTOSAVE_DELAY_MS } from '../constants'
 
 export default function ItemDetailPage() {
   const { id }   = useParams<{ id: string }>()
@@ -42,7 +43,7 @@ export default function ItemDetailPage() {
   const { saveStatus, saveNow } = useAutosave({
     data: editData,
     saveFn,
-    delay: 8000,
+    delay: AUTOSAVE_DELAY_MS,
     enabled: !!item?.canEdit,
   })
 

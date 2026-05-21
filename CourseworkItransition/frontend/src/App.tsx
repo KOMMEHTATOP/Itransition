@@ -19,6 +19,7 @@ import AdminPage from './pages/AdminPage'
 import { tagsApi } from './api/tagsApi'
 import { inventoriesApi } from './api/inventoriesApi'
 import type { InventoryListItem, TagCloudItem, TopInventory } from './types/inventory'
+import { DEBOUNCE_MS } from './constants'
 
 function Navbar() {
   const { user, logout, isAuthenticated, isAdmin } = useAuth()
@@ -36,7 +37,7 @@ function Navbar() {
       if (val.trim().length >= 2) {
         navigate(`/search?q=${encodeURIComponent(val.trim())}`)
       }
-    }, 300)
+    }, DEBOUNCE_MS)
   }
 
   const handleSearchSubmit = (e: React.FormEvent) => {

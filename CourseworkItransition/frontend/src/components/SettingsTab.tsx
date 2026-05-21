@@ -9,6 +9,7 @@ import { inventoriesApi } from '../api/inventoriesApi'
 import { tagsApi } from '../api/tagsApi'
 import { useAutosave } from '../hooks/useAutosave'
 import type { Category, InventoryDetail, UpdateInventoryRequest } from '../types/inventory'
+import { AUTOSAVE_DELAY_MS } from '../constants'
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string | undefined
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string | undefined
@@ -86,7 +87,7 @@ export default function SettingsTab({ inventory, categories, onSaved, onReload }
   const { saveStatus, saveNow } = useAutosave({
     data: editData,
     saveFn,
-    delay: 8000,
+    delay: AUTOSAVE_DELAY_MS,
     enabled: isDirty,
   })
 

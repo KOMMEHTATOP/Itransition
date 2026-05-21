@@ -8,6 +8,8 @@ import type {
   PagedResult,
   CreateItemRequest,
 } from '../types/inventory'
+import { PAGE_SIZE_ITEMS } from '../constants'
+import { getApiError } from '../utils/apiError'
 
 interface Props {
   inventoryId: string
@@ -41,7 +43,7 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
     setLoading(true)
     setError(null)
     try {
-      const res = await itemsApi.getAll(inventoryId, page, 20, sort)
+      const res = await itemsApi.getAll(inventoryId, page, PAGE_SIZE_ITEMS, sort)
       setItems(res.data.items)
     } catch {
       setError(t('itemsTab.failedToLoad'))
@@ -100,8 +102,7 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
       setNewFieldValues({})
       await load()
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setCreateError(msg ?? t('itemsTab.failedToCreate'))
+      setCreateError(getApiError(err, t('itemsTab.failedToCreate')))
     } finally {
       setCreating(false)
     }

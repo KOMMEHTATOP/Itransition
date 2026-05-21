@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { accessApi } from '../api/accessApi'
 import { usersApi } from '../api/usersApi'
 import type { AccessUser, UserSearchResult } from '../types/inventory'
+import { DEBOUNCE_MS } from '../constants'
 
 interface Props {
   inventoryId: string
@@ -50,7 +51,7 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
       } catch { /* ignore */ } finally {
         setSearchLoading(false)
       }
-    }, 300)
+    }, DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [query])
 

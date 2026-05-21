@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import api from '../api/axios'
 import type { AuthUser } from '../contexts/AuthContext'
+import { OAUTH_BASE_URL } from '../constants'
+import { getApiError } from '../utils/apiError'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -31,10 +33,7 @@ export default function LoginPage() {
       login(res.data.token, res.data.user)
       navigate(from, { replace: true })
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? t('auth.loginFailed')
-      setError(msg)
+      setError(getApiError(err, t('auth.loginFailed')))
     } finally {
       setLoading(false)
     }
@@ -93,10 +92,10 @@ export default function LoginPage() {
           <hr />
 
           <div className="d-grid gap-2">
-            <a href="https://api.basharov.org/api/auth/google" className="btn btn-outline-danger">
+            <a href={`${OAUTH_BASE_URL}/auth/google`} className="btn btn-outline-danger">
               {t('auth.continueWithGoogle')}
             </a>
-            <a href="https://api.basharov.org/api/auth/github" className="btn btn-outline-secondary">
+            <a href={`${OAUTH_BASE_URL}/auth/github`} className="btn btn-outline-secondary">
               {t('auth.continueWithGithub')}
             </a>
           </div>

@@ -5,10 +5,9 @@ import { inventoriesApi } from '../api/inventoriesApi'
 import { useAuth } from '../contexts/AuthContext'
 import { stripMarkdown } from '../utils/stripMarkdown'
 import type { InventoryListItem } from '../types/inventory'
+import { PAGE_SIZE_PROFILE } from '../constants'
 
 type SortKey = 'newest' | 'oldest' | 'title'
-
-const PAGE_SIZE = 10
 
 interface InventoryTableProps {
   title: string
@@ -240,7 +239,7 @@ export default function ProfilePage() {
     setMyLoading(true)
     setMyError(null)
     try {
-      const res = await inventoriesApi.getMy(myPage, PAGE_SIZE, mySort)
+      const res = await inventoriesApi.getMy(myPage, PAGE_SIZE_PROFILE, mySort)
       setMyItems(res.data.items)
       setMyTotal(res.data.total)
       setMyTotalPages(res.data.totalPages)
@@ -256,7 +255,7 @@ export default function ProfilePage() {
     setAccLoading(true)
     setAccError(null)
     try {
-      const res = await inventoriesApi.getAccessible(accPage, PAGE_SIZE, accSort)
+      const res = await inventoriesApi.getAccessible(accPage, PAGE_SIZE_PROFILE, accSort)
       setAccItems(res.data.items)
       setAccTotal(res.data.total)
       setAccTotalPages(res.data.totalPages)

@@ -5,10 +5,9 @@ import { inventoriesApi } from '../api/inventoriesApi'
 import { useAuth } from '../contexts/AuthContext'
 import { stripMarkdown } from '../utils/stripMarkdown'
 import type { InventoryListItem } from '../types/inventory'
+import { PAGE_SIZE_INVENTORIES } from '../constants'
 
 type SortKey = 'newest' | 'oldest' | 'title'
-
-const PAGE_SIZE = 20
 
 export default function InventoriesPage() {
   const { isAuthenticated } = useAuth()
@@ -35,7 +34,7 @@ export default function InventoriesPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await inventoriesApi.getAll(page, PAGE_SIZE, sort)
+      const res = await inventoriesApi.getAll(page, PAGE_SIZE_INVENTORIES, sort)
       setItems(res.data.items)
       setTotal(res.data.total)
       setTotalPages(res.data.totalPages)
