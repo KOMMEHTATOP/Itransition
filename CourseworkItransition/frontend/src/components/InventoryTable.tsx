@@ -1,0 +1,200 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { stripMarkdown } from '../utils/stripMarkdown'
+import type { InventoryListItem } from '../types/inventory'
+
+interface Props {
+  items: InventoryListItem[]
+  loading: boolean
+  error: string | null
+
+  total: number
+  page: number
+  totalPages: number
+  onPageChange: (p: number) => void
+
+  sort: string
+  onSortChange: (sort: string) => void
+
+  selected: Set<string>
+  onToggleOne: (id: string, checked: boolean) => void
+  onToggleAll: (checked: boolean) => void
+  onDeleteSelected?: () => void
+
+  title?: string
+  showCreate?: boolean
+  onCreateClick?: () => void
+  showFilter?: boolean
+}
+
+export default function InventoryTable({
+  items, loading, error,
+  total, page, totalPages, onPageChange,
+  sort, onSortChange,
+  selected, onToggleOne, onToggleAll, onDeleteSelected,
+  title, showCreate, onCreateClick, showFilter = false,
+}: Props) {
+  const navigate = useNavigate()
+  const { t } = useTranslation()
+  const [filter, setFilter] = useState('')
+  const [ownerSortAsc, setOwnerSortAsc] = useState<boolean | null>(null)
+
+  const filtered = showFilter && filter
+    ? items.filter(i => i.title.toLowerCase().includes(filter.toLowerCase()))
+    : items
+
+  const displayed = ownerSortAsc !== null
+    ? [...filtered].sort((a, b) =>
+        ownerSortAsc
+          ? a.ownerDisplayName.localeCompare(b.ownerDisplayName)
+          : b.ownerDisplayName.localeCompare(a.ownerDisplayName)
+      )
+    : filtered
+
+  const handleOwnerSort = () => setOwnerSortAsc(prev => prev === null ? true : prev ? false : null)
+  const ownerSortIndicator = ownerSortAsc === true ? ' ▲' : ownerSortAsc === false ? ' ▼' : ''
+
+  const hasToolbar = title || showCreate || (onDeleteSelected && selected.size > 0)
+
+  return (
+    <div className="mb-5">
+      {hasToolbar && (
+        <div className="d-flex align-items-center mb-2 gap-2">
+          {title && <h5 className="mb-0 me-auto">{title}</h5>}
+          {!title && <span className="me-auto" />}
+          {showCreate && (
+            <button className="btn btn-primary btn-sm" onClick={onCreateClick}>
+              {t('inventoriesList.createButton')}
+            </button>
+          )}
+          {onDeleteSelected && selected.size > 0 && (
+            <button className="btn btn-danger btn-sm" onClick={onDeleteSelected}>
+              {t('inventoriesList.deleteSelected', { count: selected.size })}
+            </button>
+          )}
+        </div>
+      )}
+
+      {showFilter && (
+        <input
+          type="text"
+          className="form-control form-control-sm mb-2"
+          placeholder={t('inventoriesList.colName') + '...'}
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          style={{ maxWidth: 260 }}
+        />
+      )}
+
+      {error && <div className="alert alert-danger py-2">{error}</div>}
+
+      {loading ? (
+        <div className="text-center py-3">
+          <div className="spinner-border spinner-border-sm" role="status" />
+        </div>
+      ) : displayed.length === 0 ? (
+        <p className="text-muted small">{t('inventoriesList.noInventoriesHere')}</p>
+      ) : (
+        <>
+          <div className="table-responsive">
+            <table className="table table-hover table-sm align-middle">
+              <thead className="table-light">
+                <tr>
+                  <th style={{ width: 36 }}>
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={selected.size === displayed.length && displayed.length > 0}
+                      onChange={e => onToggleAll(e.target.checked)}
+                    />
+                  </th>
+                  <th
+                    style={{ cursor: 'pointer' }}
+                    className="user-select-none"
+                    onClick={() => { onSortChange('title'); setOwnerSortAsc(null) }}
+                  >
+                    {t('inventoriesList.colName')}{sort === 'title' ? ' ▲' : ''}
+                  </th>
+                  <th>{t('inventoriesList.colDescription')}</th>
+                  <th
+                    style={{ cursor: 'pointer' }}
+                    className="user-select-none"
+                    onClick={handleOwnerSort}
+                  >
+                    {t('inventoriesList.colOwner')}{ownerSortIndicator}
+                  </th>
+                  <th
+                    style={{ cursor: 'pointer' }}
+                    className="user-select-none"
+                    onClick={() => { onSortChange(sort === 'newest' ? 'oldest' : 'newest'); setOwnerSortAsc(null) }}
+                  >
+                    {t('inventoriesList.colDate')}{ownerSortAsc === null && (sort === 'newest' ? ' ▼' : sort === 'oldest' ? ' ▲' : '')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayed.map(inv => (
+                  <tr
+                    key={inv.id}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/inventories/${inv.id}`)}
+                  >
+                    <td onClick={e => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={selected.has(inv.id)}
+                        onChange={e => onToggleOne(inv.id, e.target.checked)}
+                      />
+                    </td>
+                    <td>
+                      <Link
+                        to={`/inventories/${inv.id}`}
+                        className="text-decoration-none fw-semibold"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        {inv.title}
+                      </Link>
+                      {!inv.isPublic && (
+                        <span className="badge bg-secondary ms-1 small">{t('inventoriesList.private')}</span>
+                      )}
+                    </td>
+                    <td className="text-muted">
+                      <span className="d-block text-truncate" style={{ maxWidth: 220 }}>
+                        {inv.description ? stripMarkdown(inv.description) : '—'}
+                      </span>
+                    </td>
+                    <td className="text-muted small">{inv.ownerDisplayName}</td>
+                    <td className="text-muted small text-nowrap">
+                      {new Date(inv.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="d-flex justify-content-between align-items-center">
+            <small className="text-muted">{total} total</small>
+            <nav>
+              <ul className="pagination pagination-sm mb-0">
+                <li className={`page-item ${page <= 1 ? 'disabled' : ''}`}>
+                  <button className="page-link" onClick={() => onPageChange(page - 1)}>‹</button>
+                </li>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <li key={p} className={`page-item ${p === page ? 'active' : ''}`}>
+                    <button className="page-link" onClick={() => onPageChange(p)}>{p}</button>
+                  </li>
+                ))}
+                <li className={`page-item ${page >= totalPages ? 'disabled' : ''}`}>
+                  <button className="page-link" onClick={() => onPageChange(page + 1)}>›</button>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}

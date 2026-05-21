@@ -11,6 +11,7 @@ import type {
 import { PAGE_SIZE_ITEMS } from '../constants'
 import { getApiError } from '../utils/apiError'
 import { useSelection } from '../hooks/useSelection'
+import Pagination from './Pagination'
 
 interface Props {
   inventoryId: string
@@ -208,16 +209,8 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
             </table>
           </div>
 
-          {items && items.totalPages > 1 && (
-            <nav>
-              <ul className="pagination pagination-sm justify-content-center">
-                {Array.from({ length: items.totalPages }, (_, i) => i + 1).map(p => (
-                  <li key={p} className={`page-item ${p === page ? 'active' : ''}`}>
-                    <button className="page-link" onClick={() => setPage(p)}>{p}</button>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+          {items && (
+            <Pagination page={page} totalPages={items.totalPages} onPageChange={setPage} />
           )}
         </>
       )}
