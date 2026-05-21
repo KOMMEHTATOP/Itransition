@@ -2,12 +2,13 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using InventoryApi.Models;
+using InventoryApi.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 
 namespace InventoryApi.Services;
 
-public class JwtService
+public class JwtService :IJwtService
 {
     private readonly IConfiguration _config;
     private readonly UserManager<ApplicationUser> _userManager;

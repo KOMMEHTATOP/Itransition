@@ -1,4 +1,5 @@
-﻿using InventoryApi.Common;
+﻿using System.Security.Claims;
+using InventoryApi.Common;
 using InventoryApi.Data;
 using InventoryApi.Models;
 using InventoryApi.Models.Dto;
@@ -48,28 +49,75 @@ public class AdminService : IAdminService
         return Result<List<AdminUserDto>>.Success(result);
     }
 
-    public async Task<Result> Block(BatchIdsRequest req)
+    public async Task<Result> Block(BatchIdsRequest req,  string currentUserId)
     {
-        throw new NotImplementedException();
+        var users = await _context.Users.Where(u => req.Ids.Contains(u.Id) && u.Id != currentUserId).ToListAsync();
+        foreach (var u in users)
+        {
+            u.IsBlocked = true;
+        }
+        
+        await _context.SaveChangesAsync();
+        return Result.Success();
     }
 
     public async Task<Result> Unblock(BatchIdsRequest req)
     {
-        throw new NotImplementedException();
+        var users = await _context.Users.Where(u => req.Ids.Contains(u.Id)).ToListAsync();
+        foreach (var u in users) u.IsBlocked = false;
+        await _context.SaveChangesAsync();
+        return Result.Success();
     }
 
-    public async Task<Result> Delete(BatchIdsRequest req)
+    public async Task<Result> Delete(BatchIdsRequest req, string currentUserId)
     {
-        throw new NotImplementedException();
+        var users = await _context.Users.Where(u => req.Ids.Contains(u.Id) && u.Id != currentUserId).ToListAsync();
+        if (!users.Any())
+        {
+            return Result.Failure(ResultStatus.NotFound, "User not found");
+        }
+        _context.Users.RemoveRange(users);
+        await _context.SaveChangesAsync();
+        return Result.Success();
     }
 
     public async Task<Result> Promote(BatchIdsRequest req)
     {
-        throw new NotImplementedException();
+        foreach (var id in req.Ids)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return Result.Failure(ResultStatus.NotFound, "User not found");
+            }
+
+            if (!await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                await _userManager.AddToRoleAsync(user, "Admin");
+            }
+            
+        }
+
+        return Result.Success();
     }
 
     public async Task<Result> Demote(BatchIdsRequest req)
     {
-        throw new NotImplementedException();
+        foreach (var id in req.Ids)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return Result.Failure(ResultStatus.NotFound, "User not found");
+            }
+
+            if (await _userManager.IsInRoleAsync(user, "Admin"))
+            {
+                await _userManager.RemoveFromRoleAsync(user, "Admin");
+            }
+            
+        }
+
+        return Result.Success();
     }
 }

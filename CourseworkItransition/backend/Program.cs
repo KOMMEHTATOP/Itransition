@@ -16,12 +16,13 @@ builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddIdentityServices();
 // Authentication: JWT + External cookie (for OAuth flow) + Google + Facebook
 builder.Services.AddJwtAuthentication(builder.Configuration);
-builder.Services.AddScoped<JwtService>();
-builder.Services.AddScoped<CustomIdGeneratorService>();
 builder.Services.AddSignalR();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddCorsPolicy(builder.Configuration);
+builder.Services.AddApplicationServices();
+
+
 
 var app = builder.Build();
 await app.MigrateAndSeedAsync();
