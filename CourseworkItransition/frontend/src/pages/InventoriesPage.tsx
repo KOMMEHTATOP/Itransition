@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { inventoriesApi } from '../api/inventoriesApi'
@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { stripMarkdown } from '../utils/stripMarkdown'
 import type { InventoryListItem } from '../types/inventory'
 import { PAGE_SIZE_INVENTORIES } from '../constants'
+import { usePaginatedList } from '../hooks/usePaginatedList'
+import { useSelection } from '../hooks/useSelection'
 
 type SortKey = 'newest' | 'oldest' | 'title'
 
@@ -14,65 +16,30 @@ export default function InventoriesPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
 
-  const [items, setItems]       = useState<InventoryListItem[]>([])
-  const [total, setTotal]       = useState(0)
-  const [totalPages, setTotalPages] = useState(1)
-  const [page, setPage]         = useState(1)
-  const [sort, setSort]         = useState<SortKey>('newest')
-  const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState<string | null>(null)
+  const { items, total, totalPages, page, setPage, sort, setSort, loading, error, reload } =
+    usePaginatedList<InventoryListItem>(
+      (p, s) => inventoriesApi.getAll(p, PAGE_SIZE_INVENTORIES, s).then(r => r.data),
+      [],
+      { errorMessage: t('inventoriesList.failedToLoad') }
+    )
+  const { selected, toggleOne, toggleAll, clearSelection } = useSelection(items.map(i => i.id))
 
   const [showCreate, setShowCreate] = useState(false)
   const [newTitle, setNewTitle]     = useState('')
   const [newDesc, setNewDesc]       = useState('')
   const [newPublic, setNewPublic]   = useState(true)
   const [creating, setCreating]     = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await inventoriesApi.getAll(page, PAGE_SIZE_INVENTORIES, sort)
-      setItems(res.data.items)
-      setTotal(res.data.total)
-      setTotalPages(res.data.totalPages)
-      setSelected(new Set())
-    } catch {
-      setError(t('inventoriesList.failedToLoad'))
-    } finally {
-      setLoading(false)
-    }
-  }, [page, sort, t])
-
-  useEffect(() => { load() }, [load])
-
-  const toggleSort = (key: SortKey) => {
-    setSort(key)
-    setPage(1)
-  }
-
-  const toggleAll = (checked: boolean) => {
-    setSelected(checked ? new Set(items.map(i => i.id)) : new Set())
-  }
-
-  const toggleOne = (id: string, checked: boolean) => {
-    setSelected(prev => {
-      const next = new Set(prev)
-      checked ? next.add(id) : next.delete(id)
-      return next
-    })
-  }
+  const [actionError, setActionError] = useState<string | null>(null)
 
   const handleDeleteSelected = async () => {
     if (selected.size === 0) return
     if (!confirm(t('inventoriesList.confirmDelete', { count: selected.size }))) return
     try {
       await inventoriesApi.deleteBatch([...selected])
-      await load()
+      clearSelection()
+      reload()
     } catch {
-      setError(t('inventoriesList.failedToDelete'))
+      setActionError(t('inventoriesList.failedToDelete'))
     }
   }
 
@@ -80,7 +47,7 @@ export default function InventoriesPage() {
     e.preventDefault()
     if (!newTitle.trim()) return
     setCreating(true)
-    setCreateError(null)
+    setActionError(null)
     try {
       const res = await inventoriesApi.create({
         title: newTitle.trim(),
@@ -94,7 +61,7 @@ export default function InventoriesPage() {
       setNewPublic(true)
       navigate(`/inventories/${res.data.id}`)
     } catch {
-      setCreateError(t('inventoriesList.failedToCreate'))
+      setActionError(t('inventoriesList.failedToCreate'))
     } finally {
       setCreating(false)
     }
@@ -119,7 +86,9 @@ export default function InventoriesPage() {
         )}
       </div>
 
-      {error && <div className="alert alert-danger">{error}</div>}
+      {(error || actionError) && (
+        <div className="alert alert-danger">{error || actionError}</div>
+      )}
 
       {loading ? (
         <div className="text-center py-5">
@@ -144,7 +113,7 @@ export default function InventoriesPage() {
                   <th
                     className="user-select-none"
                     style={{ cursor: 'pointer' }}
-                    onClick={() => toggleSort('title')}
+                    onClick={() => setSort('title')}
                   >
                     {t('inventoriesList.colName')}{sortIndicator('title')}
                   </th>
@@ -153,7 +122,7 @@ export default function InventoriesPage() {
                   <th
                     className="user-select-none"
                     style={{ cursor: 'pointer' }}
-                    onClick={() => toggleSort(sort === 'newest' ? 'oldest' : 'newest')}
+                    onClick={() => setSort(sort === 'newest' ? 'oldest' : 'newest')}
                   >
                     {t('inventoriesList.colDate')}{sort === 'newest' ? ' ▼' : sort === 'oldest' ? ' ▲' : ''}
                   </th>
@@ -208,7 +177,7 @@ export default function InventoriesPage() {
             <nav>
               <ul className="pagination pagination-sm mb-0">
                 <li className={`page-item ${page <= 1 ? 'disabled' : ''}`}>
-                  <button className="page-link" onClick={() => setPage(p => p - 1)}>‹</button>
+                  <button className="page-link" onClick={() => setPage(page - 1)}>‹</button>
                 </li>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
                   <li key={p} className={`page-item ${p === page ? 'active' : ''}`}>
@@ -216,7 +185,7 @@ export default function InventoriesPage() {
                   </li>
                 ))}
                 <li className={`page-item ${page >= totalPages ? 'disabled' : ''}`}>
-                  <button className="page-link" onClick={() => setPage(p => p + 1)}>›</button>
+                  <button className="page-link" onClick={() => setPage(page + 1)}>›</button>
                 </li>
               </ul>
             </nav>
@@ -241,8 +210,8 @@ export default function InventoriesPage() {
                   <button type="button" className="btn-close" onClick={() => setShowCreate(false)} />
                 </div>
                 <div className="modal-body">
-                  {createError && (
-                    <div className="alert alert-danger py-2">{createError}</div>
+                  {actionError && (
+                    <div className="alert alert-danger py-2">{actionError}</div>
                   )}
                   <div className="mb-3">
                     <label className="form-label">{t('inventoriesList.titleLabel')}</label>

@@ -1,28 +1,20 @@
-import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { usersApi } from '../api/usersApi'
 import { stripMarkdown } from '../utils/stripMarkdown'
 import type { UserPublicProfile } from '../types/inventory'
+import { useFetch } from '../hooks/useFetch'
 
 export default function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>()
   const navigate = useNavigate()
   const { t } = useTranslation()
 
-  const [profile, setProfile] = useState<UserPublicProfile | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!userId) return
-    setLoading(true)
-    usersApi
-      .getProfile(userId)
-      .then(res => setProfile(res.data))
-      .catch(() => setError(t('publicProfile.notFound')))
-      .finally(() => setLoading(false))
-  }, [userId, t])
+  const { data: profile, loading, error } = useFetch<UserPublicProfile>(
+    () => usersApi.getProfile(userId!).then(r => r.data),
+    [userId],
+    t('publicProfile.notFound')
+  )
 
   if (loading) {
     return (

@@ -10,6 +10,7 @@ import type {
 } from '../types/inventory'
 import { PAGE_SIZE_ITEMS } from '../constants'
 import { getApiError } from '../utils/apiError'
+import { useSelection } from '../hooks/useSelection'
 
 interface Props {
   inventoryId: string
@@ -26,7 +27,6 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
   const [items, setItems]           = useState<PagedResult<ItemListItem> | null>(null)
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState<string | null>(null)
-  const [selected, setSelected]     = useState<Set<string>>(new Set())
   const [page, setPage]             = useState(1)
   const [sort, setSort]             = useState('newest')
   const [deleting, setDeleting]     = useState(false)
@@ -36,6 +36,10 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
   const [newFieldValues, setNewFieldValues] = useState<Record<string, string>>({})
   const [createError, setCreateError] = useState<string | null>(null)
   const [creating, setCreating]       = useState(false)
+
+  const { selected, toggleOne, toggleAll, clearSelection } = useSelection(
+    items?.items.map(i => i.id) ?? []
+  )
 
   const tableFields = fields.filter(f => f.showInTable)
 
@@ -54,30 +58,12 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
 
   useEffect(() => { load() }, [load])
 
-  const toggleSelect = (id: string) => {
-    setSelected(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  const toggleSelectAll = () => {
-    if (!items) return
-    if (selected.size === items.items.length) {
-      setSelected(new Set())
-    } else {
-      setSelected(new Set(items.items.map(i => i.id)))
-    }
-  }
-
   const handleDeleteSelected = async () => {
     if (!confirm(t('itemsTab.confirmDelete', { count: selected.size }))) return
     setDeleting(true)
     try {
       await itemsApi.deleteBatch(inventoryId, [...selected])
-      setSelected(new Set())
+      clearSelection()
       await load()
     } catch {
       setError(t('itemsTab.failedToLoad'))
@@ -181,7 +167,7 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
                         type="checkbox"
                         className="form-check-input"
                         checked={!!items && selected.size === items.items.length && items.items.length > 0}
-                        onChange={toggleSelectAll}
+                        onChange={e => toggleAll(e.target.checked)}
                       />
                     </th>
                   )}
@@ -204,7 +190,7 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
                           type="checkbox"
                           className="form-check-input"
                           checked={selected.has(item.id)}
-                          onChange={() => toggleSelect(item.id)}
+                          onChange={e => toggleOne(item.id, e.target.checked)}
                         />
                       </td>
                     )}

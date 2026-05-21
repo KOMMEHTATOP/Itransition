@@ -1,50 +1,35 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import { adminApi } from '../api/adminApi'
 import type { AdminUser } from '../types/inventory'
+import { useFetch } from '../hooks/useFetch'
+import { useSelection } from '../hooks/useSelection'
 
 export default function AdminPage() {
   const { t } = useTranslation()
   const { user: currentUser } = useAuth()
+  const [busy, setBusy] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
-  const [users, setUsers]       = useState<AdminUser[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState<string | null>(null)
-  const [selected, setSelected] = useState<Set<string>>(new Set())
-  const [busy, setBusy]         = useState(false)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await adminApi.getUsers()
-      setUsers(res.data)
-    } catch {
-      setError(t('adminPage.failedToLoad'))
-    } finally {
-      setLoading(false)
-    }
-  }, [t])
-
-  useEffect(() => { load() }, [load])
-
-  const toggleSelect = (id: string) =>
-    setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })
-
-  const toggleAll = () =>
-    setSelected(prev => prev.size === users.length ? new Set() : new Set(users.map(u => u.id)))
+  const { data, loading, error, reload } = useFetch(
+    () => adminApi.getUsers().then(r => r.data),
+    [],
+    t('adminPage.failedToLoad')
+  )
+  const users = data ?? []
+  const { selected, toggleOne, toggleAll, clearSelection } = useSelection(users.map((u: AdminUser) => u.id))
 
   const run = async (fn: () => Promise<unknown>, confirmMsg?: string) => {
     if (confirmMsg && !confirm(confirmMsg)) return
     setBusy(true)
-    setError(null)
+    setActionError(null)
     try {
       await fn()
-      setSelected(new Set())
-      await load()
+      clearSelection()
+      reload()
     } catch {
-      setError(t('adminPage.actionFailed'))
+      setActionError(t('adminPage.actionFailed'))
     } finally {
       setBusy(false)
     }
@@ -64,7 +49,9 @@ export default function AdminPage() {
     <div className="container mt-4" style={{ maxWidth: 900 }}>
       <h2 className="mb-4">{t('adminPage.title')}</h2>
 
-      {error && <div className="alert alert-danger py-2">{error}</div>}
+      {(error || actionError) && (
+        <div className="alert alert-danger py-2">{error || actionError}</div>
+      )}
 
       <div className="d-flex gap-2 mb-3 flex-wrap">
         <button
@@ -113,7 +100,7 @@ export default function AdminPage() {
                   type="checkbox"
                   className="form-check-input"
                   checked={selected.size === users.length && users.length > 0}
-                  onChange={toggleAll}
+                  onChange={e => toggleAll(e.target.checked)}
                 />
               </th>
               <th>{t('adminPage.colName')}</th>
@@ -125,14 +112,14 @@ export default function AdminPage() {
             </tr>
           </thead>
           <tbody>
-            {users.map(u => (
+            {users.map((u: AdminUser) => (
               <tr key={u.id} className={u.id === currentUser?.id ? 'table-active' : ''}>
                 <td>
                   <input
                     type="checkbox"
                     className="form-check-input"
                     checked={selected.has(u.id)}
-                    onChange={() => toggleSelect(u.id)}
+                    onChange={e => toggleOne(u.id, e.target.checked)}
                   />
                 </td>
                 <td className="fw-semibold">{u.displayName}</td>

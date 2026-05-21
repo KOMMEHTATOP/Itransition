@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { inventoriesApi } from '../api/inventoriesApi'
@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { stripMarkdown } from '../utils/stripMarkdown'
 import type { InventoryListItem } from '../types/inventory'
 import { PAGE_SIZE_PROFILE } from '../constants'
+import { usePaginatedList } from '../hooks/usePaginatedList'
+import { useSelection } from '../hooks/useSelection'
 
 type SortKey = 'newest' | 'oldest' | 'title'
 
@@ -211,72 +213,46 @@ export default function ProfilePage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
 
-  const [myItems, setMyItems]           = useState<InventoryListItem[]>([])
-  const [myTotal, setMyTotal]           = useState(0)
-  const [myTotalPages, setMyTotalPages] = useState(1)
-  const [myPage, setMyPage]             = useState(1)
-  const [mySort, setMySort]             = useState<SortKey>('newest')
-  const [mySelected, setMySelected]     = useState<Set<string>>(new Set())
-  const [myLoading, setMyLoading]       = useState(true)
-  const [myError, setMyError]           = useState<string | null>(null)
+  const {
+    items: myItems, total: myTotal, totalPages: myTotalPages,
+    page: myPage, setPage: setMyPage, sort: mySort, setSort: setMySort,
+    loading: myLoading, error: myError, reload: reloadMy,
+  } = usePaginatedList<InventoryListItem>(
+    (p, s) => inventoriesApi.getMy(p, PAGE_SIZE_PROFILE, s).then(r => r.data),
+    [],
+    { errorMessage: t('profile.failedToLoadMy') }
+  )
 
-  const [accItems, setAccItems]           = useState<InventoryListItem[]>([])
-  const [accTotal, setAccTotal]           = useState(0)
-  const [accTotalPages, setAccTotalPages] = useState(1)
-  const [accPage, setAccPage]             = useState(1)
-  const [accSort, setAccSort]             = useState<SortKey>('newest')
-  const [accLoading, setAccLoading]       = useState(true)
-  const [accError, setAccError]           = useState<string | null>(null)
+  const {
+    items: accItems, total: accTotal, totalPages: accTotalPages,
+    page: accPage, setPage: setAccPage, sort: accSort, setSort: setAccSort,
+    loading: accLoading, error: accError,
+  } = usePaginatedList<InventoryListItem>(
+    (p, s) => inventoriesApi.getAccessible(p, PAGE_SIZE_PROFILE, s).then(r => r.data),
+    [],
+    { errorMessage: t('profile.failedToLoadAccessible') }
+  )
 
-  const [showCreate, setShowCreate]     = useState(false)
-  const [newTitle, setNewTitle]         = useState('')
-  const [newDesc, setNewDesc]           = useState('')
-  const [newPublic, setNewPublic]       = useState(true)
-  const [creating, setCreating]         = useState(false)
-  const [createError, setCreateError]   = useState<string | null>(null)
+  const { selected: mySelected, toggleOne: toggleMyOne, toggleAll: toggleMyAll, clearSelection: clearMySelection } =
+    useSelection(myItems.map(i => i.id))
 
-  const loadMy = useCallback(async () => {
-    setMyLoading(true)
-    setMyError(null)
-    try {
-      const res = await inventoriesApi.getMy(myPage, PAGE_SIZE_PROFILE, mySort)
-      setMyItems(res.data.items)
-      setMyTotal(res.data.total)
-      setMyTotalPages(res.data.totalPages)
-      setMySelected(new Set())
-    } catch {
-      setMyError(t('profile.failedToLoadMy'))
-    } finally {
-      setMyLoading(false)
-    }
-  }, [myPage, mySort, t])
-
-  const loadAcc = useCallback(async () => {
-    setAccLoading(true)
-    setAccError(null)
-    try {
-      const res = await inventoriesApi.getAccessible(accPage, PAGE_SIZE_PROFILE, accSort)
-      setAccItems(res.data.items)
-      setAccTotal(res.data.total)
-      setAccTotalPages(res.data.totalPages)
-    } catch {
-      setAccError(t('profile.failedToLoadAccessible'))
-    } finally {
-      setAccLoading(false)
-    }
-  }, [accPage, accSort, t])
-
-  useEffect(() => { loadMy() }, [loadMy])
-  useEffect(() => { loadAcc() }, [loadAcc])
+  const [showCreate, setShowCreate]   = useState(false)
+  const [newTitle, setNewTitle]       = useState('')
+  const [newDesc, setNewDesc]         = useState('')
+  const [newPublic, setNewPublic]     = useState(true)
+  const [creating, setCreating]       = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const handleDeleteMySelected = async () => {
     if (mySelected.size === 0) return
     if (!confirm(t('profile.confirmDelete', { count: mySelected.size }))) return
     try {
       await inventoriesApi.deleteBatch([...mySelected])
-      await loadMy()
+      clearMySelection()
+      reloadMy()
     } catch {
-      setMyError(t('profile.failedToDeleteSelected'))
+      setDeleteError(t('profile.failedToDeleteSelected'))
     }
   }
 
@@ -309,28 +285,22 @@ export default function ProfilePage() {
       <h2 className="mb-1">{user?.displayName}</h2>
       <p className="text-muted mb-4">{user?.email}</p>
 
+      {deleteError && <div className="alert alert-danger py-2">{deleteError}</div>}
+
       <InventoryTable
         title={t('profile.myInventories')}
         items={myItems}
         total={myTotal}
         page={myPage}
         totalPages={myTotalPages}
-        sort={mySort}
+        sort={mySort as SortKey}
         loading={myLoading}
         error={myError}
         selected={mySelected}
         onPageChange={setMyPage}
-        onSortChange={s => { setMySort(s); setMyPage(1) }}
-        onToggleAll={checked =>
-          setMySelected(checked ? new Set(myItems.map(i => i.id)) : new Set())
-        }
-        onToggleOne={(id, checked) =>
-          setMySelected(prev => {
-            const next = new Set(prev)
-            checked ? next.add(id) : next.delete(id)
-            return next
-          })
-        }
+        onSortChange={s => setMySort(s)}
+        onToggleAll={checked => toggleMyAll(checked)}
+        onToggleOne={(id, checked) => toggleMyOne(id, checked)}
         onDeleteSelected={handleDeleteMySelected}
         showCreate
         onCreateClick={() => setShowCreate(true)}
@@ -342,12 +312,12 @@ export default function ProfilePage() {
         total={accTotal}
         page={accPage}
         totalPages={accTotalPages}
-        sort={accSort}
+        sort={accSort as SortKey}
         loading={accLoading}
         error={accError}
         selected={new Set()}
         onPageChange={setAccPage}
-        onSortChange={s => { setAccSort(s); setAccPage(1) }}
+        onSortChange={s => setAccSort(s)}
         onToggleAll={() => {}}
         onToggleOne={() => {}}
         onDeleteSelected={() => {}}
