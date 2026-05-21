@@ -53,9 +53,8 @@ export default function ItemDetailPage() {
 
   useInventoryHub(
     item?.inventoryId ?? '',
-    () => {},
+    { onLikeUpdated: handleLikeUpdated },
     !!item,
-    handleLikeUpdated,
   )
 
   const load = useCallback(async () => {

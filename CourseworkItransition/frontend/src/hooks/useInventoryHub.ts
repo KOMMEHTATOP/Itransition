@@ -4,16 +4,18 @@ import type { Comment } from '../types/inventory'
 
 const HUB_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? ''
 
+export interface InventoryHubHandlers {
+  onComment?: (comment: Comment) => void
+  onLikeUpdated?: (itemId: string, likeCount: number) => void
+}
+
 export function useInventoryHub(
   inventoryId: string,
-  onComment: (comment: Comment) => void,
+  handlers: InventoryHubHandlers,
   enabled: boolean,
-  onLikeUpdated?: (itemId: string, likeCount: number) => void,
 ) {
-  const onCommentRef     = useRef(onComment)
-  const onLikeUpdatedRef = useRef(onLikeUpdated)
-  onCommentRef.current     = onComment
-  onLikeUpdatedRef.current = onLikeUpdated
+  const handlersRef = useRef(handlers)
+  handlersRef.current = handlers
 
   useEffect(() => {
     if (!enabled) return
@@ -28,9 +30,9 @@ export function useInventoryHub(
         .configureLogging(signalR.LogLevel.None)
         .build()
 
-    conn.on('NewComment', (comment: Comment) => onCommentRef.current(comment))
+    conn.on('NewComment', (comment: Comment) => handlersRef.current.onComment?.(comment))
     conn.on('LikeUpdated', (itemId: string, likeCount: number) => {
-      onLikeUpdatedRef.current?.(itemId, likeCount)
+      handlersRef.current.onLikeUpdated?.(itemId, likeCount)
     })
 
     conn.start()

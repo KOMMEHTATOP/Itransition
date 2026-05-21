@@ -44,7 +44,7 @@ export default function DiscussionTab({ inventoryId, isAuthenticated, active }: 
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
   }, [])
 
-  useInventoryHub(inventoryId, handleNewComment, active)
+  useInventoryHub(inventoryId, { onComment: handleNewComment }, active)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -114,7 +114,7 @@ export default function DiscussionTab({ inventoryId, isAuthenticated, active }: 
         </form>
       ) : (
         <p className="text-muted small">
-          <a href="/login">{t('discussionTab.signIn')}</a>{' '}
+          <Link to="/login">{t('discussionTab.signIn')}</Link>{' '}
           {t('discussionTab.signInToComment')}
         </p>
       )}
