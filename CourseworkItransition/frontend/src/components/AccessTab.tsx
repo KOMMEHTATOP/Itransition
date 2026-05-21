@@ -4,6 +4,7 @@ import { accessApi } from '../api/accessApi'
 import { usersApi } from '../api/usersApi'
 import type { AccessUser, UserSearchResult } from '../types/inventory'
 import { DEBOUNCE_MS } from '../constants'
+import { getApiError } from '../utils/apiError'
 
 interface Props {
   inventoryId: string
@@ -59,14 +60,14 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
     setAddError(null)
     setShowDropdown(false)
     setQuery('')
-    const res = await accessApi.grant(inventoryId, user.id)
-    if (res.status === 409) { setAddError(t('accessTab.alreadyHasAccess')); return }
-    if (res.status === 400) {
-      const body = res.data as unknown as { message?: string }
-      setAddError(body.message ?? t('accessTab.cannotAdd'))
-      return
+    try {
+      await accessApi.grant(inventoryId, user.id)
+      await load()
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status
+      if (status === 409) setAddError(t('accessTab.alreadyHasAccess'))
+      else setAddError(getApiError(err, t('accessTab.cannotAdd')))
     }
-    await load()
   }
 
   const handleRemoveSelected = async () => {

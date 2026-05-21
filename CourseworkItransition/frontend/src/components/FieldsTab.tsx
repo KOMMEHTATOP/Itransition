@@ -19,6 +19,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { fieldsApi } from '../api/fieldsApi'
 import type { InventoryField, FieldType, CreateFieldRequest, UpdateFieldRequest } from '../types/inventory'
+import { getApiError } from '../utils/apiError'
 
 const FIELD_TYPES: FieldType[] = ['Text', 'MultilineText', 'Number', 'Link', 'Boolean']
 
@@ -180,19 +181,14 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
         showInTable: newShow,
       }
       const res = await fieldsApi.create(inventoryId, data)
-      if (res.status === 400) {
-        const body = res.data as unknown as { message?: string }
-        setError(body.message ?? t('fieldsTab.maxTypeError'))
-        return
-      }
       onChange([...fields, res.data])
       setAdding(false)
       setNewTitle('')
       setNewDesc('')
       setNewType('Text')
       setNewShow(true)
-    } catch {
-      setError(t('fieldsTab.failedToAdd'))
+    } catch (err: unknown) {
+      setError(getApiError(err, t('fieldsTab.maxTypeError')))
     }
   }
 

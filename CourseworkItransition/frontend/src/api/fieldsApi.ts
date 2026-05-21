@@ -6,9 +6,7 @@ export const fieldsApi = {
     api.get<InventoryField[]>(`/inventories/${inventoryId}/fields`),
 
   create: (inventoryId: string, data: CreateFieldRequest) =>
-    api.post<InventoryField>(`/inventories/${inventoryId}/fields`, data, {
-      validateStatus: s => s < 500,
-    }),
+    api.post<InventoryField>(`/inventories/${inventoryId}/fields`, data),
 
   update: (inventoryId: string, fieldId: string, data: UpdateFieldRequest) =>
     api.put<InventoryField>(`/inventories/${inventoryId}/fields/${fieldId}`, data),

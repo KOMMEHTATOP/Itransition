@@ -6,9 +6,7 @@ export const customIdApi = {
     api.get<CustomIdElement[]>(`/inventories/${inventoryId}/customid`),
 
   add: (inventoryId: string, data: CreateCustomIdElementRequest) =>
-    api.post<CustomIdElement>(`/inventories/${inventoryId}/customid`, data, {
-      validateStatus: s => s < 500,
-    }),
+    api.post<CustomIdElement>(`/inventories/${inventoryId}/customid`, data),
 
   update: (inventoryId: string, elementId: string, data: UpdateCustomIdElementRequest) =>
     api.put<CustomIdElement>(`/inventories/${inventoryId}/customid/${elementId}`, data),

@@ -6,9 +6,7 @@ export const accessApi = {
     api.get<AccessUser[]>(`/inventories/${inventoryId}/access`),
 
   grant: (inventoryId: string, userId: string) =>
-    api.post(`/inventories/${inventoryId}/access/${userId}`, null, {
-      validateStatus: s => s < 500,
-    }),
+    api.post(`/inventories/${inventoryId}/access/${userId}`, null),
 
   revokeBatch: (inventoryId: string, userIds: string[]) =>
     api.delete(`/inventories/${inventoryId}/access`, { data: userIds }),

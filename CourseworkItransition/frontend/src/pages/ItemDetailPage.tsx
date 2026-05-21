@@ -93,11 +93,10 @@ export default function ItemDetailPage() {
         setIsLiked(false)
       } else {
         const res = await likesApi.like(id)
-        if (res.status === 409) return
         setLikeCount(res.data.likeCount)
         setIsLiked(true)
       }
-    } catch { /* ignore */ } finally {
+    } catch { /* ignore: race-condition 409 or network error */ } finally {
       setLiking(false)
     }
   }

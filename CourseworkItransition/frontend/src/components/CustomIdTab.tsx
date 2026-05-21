@@ -20,6 +20,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { customIdApi } from '../api/customIdApi'
 import type { CustomIdElement, CustomIdElementType } from '../types/inventory'
+import { getApiError } from '../utils/apiError'
 
 const ELEMENT_TYPES: CustomIdElementType[] = [
   'Fixed', 'Random20bit', 'Random32bit', 'Random6digit', 'Random9digit', 'GUID', 'DateTime', 'Sequence',
@@ -208,16 +209,15 @@ export default function CustomIdTab({ inventoryId, elements, onChange }: Props) 
   const handleAdd = async () => {
     setError(null)
     const defaultType: CustomIdElementType = 'Fixed'
-    const res = await customIdApi.add(inventoryId, {
-      type: defaultType,
-      formatString: DEFAULT_FORMAT[defaultType],
-    })
-    if (res.status === 400) {
-      const body = res.data as unknown as { message?: string }
-      setError(body.message ?? t('customIdTab.failedToAdd'))
-      return
+    try {
+      const res = await customIdApi.add(inventoryId, {
+        type: defaultType,
+        formatString: DEFAULT_FORMAT[defaultType],
+      })
+      onChange([...elements, res.data])
+    } catch (err: unknown) {
+      setError(getApiError(err, t('customIdTab.failedToAdd')))
     }
-    onChange([...elements, res.data])
   }
 
   const handleUpdate = async (id: string, type: CustomIdElementType, formatString: string) => {
