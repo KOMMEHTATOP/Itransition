@@ -323,6 +323,7 @@
   "common": {
     "confirmTitle": "Are you sure?",
     "cancel": "Cancel",
+    "close": "Close",
     "delete": "Delete",
     "confirm": "Confirm"
   },

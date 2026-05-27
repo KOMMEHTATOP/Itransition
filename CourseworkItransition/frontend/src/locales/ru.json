@@ -337,6 +337,7 @@
   "common": {
     "confirmTitle": "Вы уверены?",
     "cancel": "Отмена",
+    "close": "Закрыть",
     "delete": "Удалить",
     "confirm": "Подтвердить"
   },

@@ -58,7 +58,7 @@ export default function SalesforceModal({ onClose, onSubmit }: Props) {
                 </p>
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={onClose}>{t('common.cancel')}</button>
+                <button className="btn btn-secondary" onClick={onClose}>{t('common.close')}</button>
               </div>
             </>
           ) : (
