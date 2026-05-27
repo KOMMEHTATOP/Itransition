@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
 interface Props {
@@ -11,7 +13,14 @@ interface Props {
 
 export default function ConfirmModal({ message, title, confirmLabel, variant = 'danger', onConfirm, onClose }: Props) {
   const { t } = useTranslation()
-  return (
+
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
+  return createPortal(
     <div
       className="modal show d-block"
       style={{ background: 'rgba(0,0,0,0.45)' }}
@@ -36,6 +45,7 @@ export default function ConfirmModal({ message, title, confirmLabel, variant = '
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
