@@ -339,5 +339,19 @@
     "cancel": "Отмена",
     "delete": "Удалить",
     "confirm": "Подтвердить"
+  },
+  "salesforce": {
+    "buttonLabel": "Добавить в Salesforce CRM",
+    "title": "Добавить в Salesforce CRM",
+    "hint": "Ваше имя и email будут взяты из аккаунта. Заполните дополнительные данные.",
+    "company": "Компания",
+    "jobTitle": "Должность",
+    "phone": "Телефон",
+    "submit": "Отправить в Salesforce",
+    "sending": "Отправка...",
+    "success": "Успешно создано в Salesforce!",
+    "account": "Account",
+    "contact": "Contact",
+    "error": "Не удалось отправить данные в Salesforce. Попробуйте ещё раз."
   }
 }

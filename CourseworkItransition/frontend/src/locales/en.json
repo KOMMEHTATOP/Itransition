@@ -325,5 +325,19 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "confirm": "Confirm"
+  },
+  "salesforce": {
+    "buttonLabel": "Add to Salesforce CRM",
+    "title": "Add to Salesforce CRM",
+    "hint": "Your name and email will be taken from your account. Please fill in the additional information.",
+    "company": "Company",
+    "jobTitle": "Job Title",
+    "phone": "Phone",
+    "submit": "Send to Salesforce",
+    "sending": "Sending...",
+    "success": "Successfully created in Salesforce!",
+    "account": "Account",
+    "contact": "Contact",
+    "error": "Failed to send data to Salesforce. Please try again."
   }
 }

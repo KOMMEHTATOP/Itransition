@@ -9,6 +9,8 @@ import { usePaginatedList } from '../hooks/usePaginatedList'
 import { useSelection } from '../hooks/useSelection'
 import InventoryTable from '../components/InventoryTable'
 import CreateInventoryModal from '../components/CreateInventoryModal'
+import SalesforceModal from '../components/SalesforceModal'
+import { salesforceApi } from '../api/salesforceApi'
 import { useConfirmModal } from '../hooks/useConfirmModal'
 
 export default function ProfilePage() {
@@ -39,8 +41,9 @@ export default function ProfilePage() {
   const { selected: mySelected, toggleOne: toggleMyOne, toggleAll: toggleMyAll, clearSelection: clearMySelection } =
     useSelection(myItems.map(i => i.id))
 
-  const [showCreate, setShowCreate] = useState(false)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [showCreate, setShowCreate]           = useState(false)
+  const [showSalesforce, setShowSalesforce]   = useState(false)
+  const [deleteError, setDeleteError]         = useState<string | null>(null)
   const { confirm, confirmModal } = useConfirmModal()
 
   const handleDeleteMySelected = async () => {
@@ -57,8 +60,19 @@ export default function ProfilePage() {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-1">{user?.displayName}</h2>
-      <p className="text-muted mb-4">{user?.email}</p>
+      <div className="d-flex align-items-start justify-content-between mb-1 flex-wrap gap-2">
+        <div>
+          <h2 className="mb-0">{user?.displayName}</h2>
+          <p className="text-muted mb-0">{user?.email}</p>
+        </div>
+        <button
+          className="btn btn-outline-primary btn-sm mt-1"
+          onClick={() => setShowSalesforce(true)}
+        >
+          {t('salesforce.buttonLabel')}
+        </button>
+      </div>
+      <div className="mb-4" />
 
       {deleteError && <div className="alert alert-danger py-2">{deleteError}</div>}
 
@@ -100,6 +114,15 @@ export default function ProfilePage() {
       />
 
       {confirmModal}
+      {showSalesforce && (
+        <SalesforceModal
+          onClose={() => setShowSalesforce(false)}
+          onSubmit={async (data) => {
+            const res = await salesforceApi.push(data)
+            return res.data
+          }}
+        />
+      )}
       {showCreate && (
         <CreateInventoryModal
           onClose={() => setShowCreate(false)}

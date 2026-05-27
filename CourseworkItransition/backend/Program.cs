@@ -13,7 +13,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddIdentityServices();
-// Authentication: JWT + External cookie (for OAuth flow) + Google + Facebook
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddSignalR();
 builder.Services.AddControllers();
