@@ -33,9 +33,7 @@ services:
       Frontend__ProdUrl: https://app.basharov.org
       Salesforce__ClientId: ${SALESFORCE_CLIENT_ID}
       Salesforce__ClientSecret: ${SALESFORCE_CLIENT_SECRET}
-      Salesforce__Username: ${SALESFORCE_USERNAME}
-      Salesforce__Password: ${SALESFORCE_PASSWORD}
-      Salesforce__SecurityToken: ${SALESFORCE_SECURITY_TOKEN}
+      Salesforce__LoginUrl: ${SALESFORCE_LOGIN_URL}
 
 volumes:
   pgdata:

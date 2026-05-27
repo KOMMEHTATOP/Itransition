@@ -75,23 +75,18 @@ public class SalesforceService : ISalesforceService
     {
         var clientId     = _config["Salesforce:ClientId"]     ?? throw new InvalidOperationException("Salesforce:ClientId not configured");
         var clientSecret = _config["Salesforce:ClientSecret"] ?? throw new InvalidOperationException("Salesforce:ClientSecret not configured");
-        var username     = _config["Salesforce:Username"]     ?? throw new InvalidOperationException("Salesforce:Username not configured");
-        var password     = _config["Salesforce:Password"]     ?? throw new InvalidOperationException("Salesforce:Password not configured");
-        var token        = _config["Salesforce:SecurityToken"] ?? string.Empty;
+        var loginUrl     = _config["Salesforce:LoginUrl"]     ?? throw new InvalidOperationException("Salesforce:LoginUrl not configured");
 
         var client = _httpClientFactory.CreateClient();
 
         var body = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["grant_type"]    = "password",
+            ["grant_type"]    = "client_credentials",
             ["client_id"]     = clientId,
             ["client_secret"] = clientSecret,
-            ["username"]      = username,
-            ["password"]      = password + token,
         });
 
-        var response = await client.PostAsync(
-            "https://login.salesforce.com/services/oauth2/token", body);
+        var response = await client.PostAsync($"{loginUrl}/services/oauth2/token", body);
 
         response.EnsureSuccessStatusCode();
 
