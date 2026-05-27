@@ -7,6 +7,7 @@ import { useAutosave } from '../hooks/useAutosave'
 import { useInventoryHub } from '../hooks/useInventoryHub'
 import type { ItemDetail, UpdateItemRequest } from '../types/inventory'
 import { AUTOSAVE_DELAY_MS } from '../constants'
+import { useConfirmModal } from '../hooks/useConfirmModal'
 
 export default function ItemDetailPage() {
   const { id }   = useParams<{ id: string }>()
@@ -19,6 +20,8 @@ export default function ItemDetailPage() {
   const [likeCount, setLikeCount]   = useState(0)
   const [isLikedByMe, setIsLiked]   = useState(false)
   const [liking, setLiking]         = useState(false)
+
+  const { confirm, confirmModal } = useConfirmModal()
 
   const [customId, setCustomId]   = useState('')
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
@@ -101,7 +104,7 @@ export default function ItemDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!id || !confirm(t('itemDetail.confirmDelete'))) return
+    if (!id || !await confirm(t('itemDetail.confirmDelete'))) return
     try {
       await itemsApi.delete(id)
       navigate(-1)
@@ -333,6 +336,8 @@ export default function ItemDetailPage() {
           )}
         </>
       )}
+
+      {confirmModal}
     </div>
   )
 }

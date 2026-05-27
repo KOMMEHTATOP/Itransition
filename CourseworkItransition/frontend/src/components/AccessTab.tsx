@@ -5,6 +5,7 @@ import { usersApi } from '../api/usersApi'
 import type { AccessUser, UserSearchResult } from '../types/inventory'
 import { DEBOUNCE_MS } from '../constants'
 import { getApiError } from '../utils/apiError'
+import { useConfirmModal } from '../hooks/useConfirmModal'
 
 interface Props {
   inventoryId: string
@@ -13,6 +14,7 @@ interface Props {
 
 export default function AccessTab({ inventoryId, isPublic }: Props) {
   const { t } = useTranslation()
+  const { confirm, confirmModal } = useConfirmModal()
   const [users, setUsers]       = useState<AccessUser[]>([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState<string | null>(null)
@@ -71,7 +73,7 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
   }
 
   const handleRemoveSelected = async () => {
-    if (!confirm(t('accessTab.confirmRemove', { count: selected.size }))) return
+    if (!await confirm(t('accessTab.confirmRemove', { count: selected.size }))) return
     setRemoving(true)
     try {
       await accessApi.revokeBatch(inventoryId, [...selected])
@@ -224,6 +226,8 @@ export default function AccessTab({ inventoryId, isPublic }: Props) {
           </tbody>
         </table>
       )}
+
+      {confirmModal}
     </div>
   )
 }

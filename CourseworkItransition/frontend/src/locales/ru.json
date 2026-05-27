@@ -333,5 +333,11 @@
     "colName": "Название",
     "colDescription": "Описание",
     "colDate": "Дата"
+  },
+  "common": {
+    "confirmTitle": "Вы уверены?",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "confirm": "Подтвердить"
   }
 }

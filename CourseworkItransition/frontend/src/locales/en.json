@@ -319,5 +319,11 @@
     "colName": "Name",
     "colDescription": "Description",
     "colDate": "Date"
+  },
+  "common": {
+    "confirmTitle": "Are you sure?",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm"
   }
 }

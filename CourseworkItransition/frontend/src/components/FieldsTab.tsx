@@ -20,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { fieldsApi } from '../api/fieldsApi'
 import type { InventoryField, FieldType, CreateFieldRequest, UpdateFieldRequest } from '../types/inventory'
 import { getApiError } from '../utils/apiError'
+import { useConfirmModal } from '../hooks/useConfirmModal'
 
 const FIELD_TYPES: FieldType[] = ['Text', 'MultilineText', 'Number', 'Link', 'Boolean']
 
@@ -142,6 +143,7 @@ function SortableRow({ field, onSave, onDelete }: SortableRowProps) {
 
 export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
   const { t } = useTranslation()
+  const { confirm, confirmModal } = useConfirmModal()
   const [error, setError]       = useState<string | null>(null)
   const [adding, setAdding]     = useState(false)
   const [newTitle, setNewTitle] = useState('')
@@ -203,7 +205,7 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('fieldsTab.confirmDelete'))) return
+    if (!await confirm(t('fieldsTab.confirmDelete'))) return
     setError(null)
     try {
       await fieldsApi.delete(inventoryId, id)
@@ -318,6 +320,8 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
           </table>
         </div>
       )}
+
+      {confirmModal}
     </div>
   )
 }

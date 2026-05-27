@@ -9,6 +9,7 @@ import { usePaginatedList } from '../hooks/usePaginatedList'
 import { useSelection } from '../hooks/useSelection'
 import InventoryTable from '../components/InventoryTable'
 import CreateInventoryModal from '../components/CreateInventoryModal'
+import { useConfirmModal } from '../hooks/useConfirmModal'
 
 export default function InventoriesPage() {
   const { isAuthenticated } = useAuth()
@@ -25,10 +26,11 @@ export default function InventoriesPage() {
 
   const [showCreate, setShowCreate] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const { confirm, confirmModal } = useConfirmModal()
 
   const handleDeleteSelected = async () => {
     if (selected.size === 0) return
-    if (!confirm(t('inventoriesList.confirmDelete', { count: selected.size }))) return
+    if (!await confirm(t('inventoriesList.confirmDelete', { count: selected.size }))) return
     try {
       await inventoriesApi.deleteBatch([...selected])
       clearSelection()
@@ -71,6 +73,7 @@ export default function InventoriesPage() {
         onToggleAll={toggleAll}
       />
 
+      {confirmModal}
       {showCreate && (
         <CreateInventoryModal
           onClose={() => setShowCreate(false)}

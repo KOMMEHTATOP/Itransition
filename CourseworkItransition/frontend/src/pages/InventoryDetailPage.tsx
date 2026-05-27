@@ -13,6 +13,7 @@ import DiscussionTab from '../components/DiscussionTab'
 import StatsTab from '../components/StatsTab'
 import { customIdApi } from '../api/customIdApi'
 import type { Category, InventoryDetail, InventoryField, CustomIdElement } from '../types/inventory'
+import { useConfirmModal } from '../hooks/useConfirmModal'
 
 type Tab = 'items' | 'discussion' | 'stats' | 'fields' | 'customid' | 'settings' | 'access'
 
@@ -44,6 +45,8 @@ export default function InventoryDetailPage() {
 
   const [customIdElements, setCustomIdElements] = useState<CustomIdElement[]>([])
   const [customIdLoading, setCustomIdLoading]   = useState(false)
+
+  const { confirm, confirmModal } = useConfirmModal()
 
   const load = useCallback(async () => {
     if (!id) return
@@ -90,7 +93,7 @@ export default function InventoryDetailPage() {
   useEffect(() => { loadCustomIdElements() }, [loadCustomIdElements])
 
   const handleDelete = async () => {
-    if (!id || !confirm(t('inventory.confirmDelete'))) return
+    if (!id || !await confirm(t('inventory.confirmDelete'))) return
     try {
       await inventoriesApi.delete(id)
       navigate('/inventories')
@@ -235,6 +238,8 @@ export default function InventoryDetailPage() {
       {activeTab === 'access' && inventory.canEdit && (
         <AccessTab inventoryId={inventory.id} isPublic={inventory.isPublic} />
       )}
+
+      {confirmModal}
     </div>
   )
 }

@@ -5,6 +5,8 @@ import { adminApi } from '../api/adminApi'
 import type { AdminUser } from '../types/inventory'
 import { useFetch } from '../hooks/useFetch'
 import { useSelection } from '../hooks/useSelection'
+import { useConfirmModal } from '../hooks/useConfirmModal'
+import type { ConfirmOptions } from '../hooks/useConfirmModal'
 
 export default function AdminPage() {
   const { t } = useTranslation()
@@ -19,9 +21,10 @@ export default function AdminPage() {
   )
   const users = data ?? []
   const { selected, toggleOne, toggleAll, clearSelection } = useSelection(users.map((u: AdminUser) => u.id))
+  const { confirm, confirmModal } = useConfirmModal()
 
-  const run = async (fn: () => Promise<unknown>, confirmMsg?: string) => {
-    if (confirmMsg && !confirm(confirmMsg)) return
+  const run = async (fn: () => Promise<unknown>, confirmMsg?: string, confirmOptions?: ConfirmOptions) => {
+    if (confirmMsg && !await confirm(confirmMsg, confirmOptions)) return
     setBusy(true)
     setActionError(null)
     try {
@@ -57,7 +60,7 @@ export default function AdminPage() {
         <button
           className="btn btn-outline-warning btn-sm"
           disabled={busy || selected.size === 0}
-          onClick={() => run(() => adminApi.block(ids), t('adminPage.confirmBlock', { count: selected.size }))}
+          onClick={() => run(() => adminApi.block(ids), t('adminPage.confirmBlock', { count: selected.size }), { variant: 'warning', confirmLabel: t('common.confirm') })}
         >
           {t('adminPage.block', { count: selected.size })}
         </button>
@@ -141,6 +144,8 @@ export default function AdminPage() {
       </div>
 
       <small className="text-muted">{t('adminPage.total', { count: users.length })}</small>
+
+      {confirmModal}
     </div>
   )
 }

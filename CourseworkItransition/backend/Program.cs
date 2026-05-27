@@ -1,6 +1,5 @@
 using InventoryApi.Extensions;
 using InventoryApi.Hubs;
-using InventoryApi.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);

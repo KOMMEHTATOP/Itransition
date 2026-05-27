@@ -8,6 +8,7 @@ import { useSelection } from '../hooks/useSelection'
 import Pagination from './Pagination'
 import FieldValueCell from './FieldValueCell'
 import CreateItemModal from './CreateItemModal'
+import { useConfirmModal } from '../hooks/useConfirmModal'
 
 interface Props {
   inventoryId: string
@@ -28,6 +29,7 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
   const [sort, setSort]         = useState('newest')
   const [deleting, setDeleting] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
+  const { confirm, confirmModal } = useConfirmModal()
 
   const { selected, toggleOne, toggleAll, clearSelection } = useSelection(
     items?.items.map(i => i.id) ?? []
@@ -51,7 +53,7 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
   useEffect(() => { load() }, [load])
 
   const handleDeleteSelected = async () => {
-    if (!confirm(t('itemsTab.confirmDelete', { count: selected.size }))) return
+    if (!await confirm(t('itemsTab.confirmDelete', { count: selected.size }))) return
     setDeleting(true)
     try {
       await itemsApi.deleteBatch(inventoryId, [...selected])
@@ -168,6 +170,7 @@ export default function ItemsTab({ inventoryId, fields, canEdit, isAuthenticated
         </>
       )}
 
+      {confirmModal}
       {showCreate && (
         <CreateItemModal
           fields={fields}
