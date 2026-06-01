@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { inventoriesApi } from '../api/inventoriesApi'
 import { fieldsApi } from '../api/fieldsApi'
 import { useAuth } from '../contexts/AuthContext'
+import { useSupport } from '../contexts/SupportContext'
 import FieldsTab from '../components/FieldsTab'
 import ItemsTab from '../components/ItemsTab'
 import CustomIdTab from '../components/CustomIdTab'
@@ -23,6 +24,7 @@ export default function InventoryDetailPage() {
   const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
   const { isAuthenticated } = useAuth()
+  const { setInventoryName } = useSupport()
 
   const [inventory, setInventory] = useState<InventoryDetail | null>(null)
   const [loading, setLoading]     = useState(true)
@@ -91,6 +93,12 @@ export default function InventoryDetailPage() {
   useEffect(() => { load() }, [load])
   useEffect(() => { loadFields() }, [loadFields])
   useEffect(() => { loadCustomIdElements() }, [loadCustomIdElements])
+
+  // Expose current inventory title to the support ticket form (Help button)
+  useEffect(() => {
+    setInventoryName(inventory?.title ?? null)
+    return () => setInventoryName(null)
+  }, [inventory?.title, setInventoryName])
 
   const handleDelete = async () => {
     if (!id || !await confirm(t('inventory.confirmDelete'))) return

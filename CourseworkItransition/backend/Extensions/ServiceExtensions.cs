@@ -9,6 +9,7 @@ public static class ServiceExtensions
     {
         services.AddHttpClient();
         services.AddScoped<ISalesforceService, SalesforceService>();
+        services.AddScoped<ISupportTicketService, SupportTicketService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<CustomIdGeneratorService>();

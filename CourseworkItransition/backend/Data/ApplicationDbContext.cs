@@ -19,6 +19,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<InventoryAccess> InventoryAccess => Set<InventoryAccess>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<ItemLike> ItemLikes => Set<ItemLike>();
+    public DbSet<AppSetting> AppSettings => Set<AppSetting>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

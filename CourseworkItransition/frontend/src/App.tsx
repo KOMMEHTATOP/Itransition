@@ -1,6 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import HelpButton from './components/HelpButton'
 import ProtectedRoute from './components/ProtectedRoute'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
@@ -18,6 +19,7 @@ export default function App() {
   return (
     <>
       <Navbar />
+      <HelpButton />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />

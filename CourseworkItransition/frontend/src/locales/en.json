@@ -340,5 +340,20 @@
     "account": "Account",
     "contact": "Contact",
     "error": "Failed to send data to Salesforce. Please try again."
+  },
+  "support": {
+    "buttonLabel": "Help / Create support ticket",
+    "title": "Create support ticket",
+    "hint": "Describe your problem. Your name, the page link and admin recipients are filled in automatically.",
+    "summary": "Summary",
+    "priority": "Priority",
+    "priorityHigh": "High",
+    "priorityAverage": "Average",
+    "priorityLow": "Low",
+    "submit": "Submit ticket",
+    "sending": "Sending...",
+    "success": "Support ticket created!",
+    "ticketId": "Ticket number",
+    "error": "Failed to create the ticket. Please try again."
   }
 }
