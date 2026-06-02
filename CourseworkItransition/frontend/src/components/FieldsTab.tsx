@@ -293,19 +293,19 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
         <p className="text-muted">{t('fieldsTab.noFields')}</p>
       ) : (
         <div className="table-responsive">
-          <table className="table table-sm align-middle mb-0">
-            <thead className="table-light">
-              <tr>
-                <th style={{ width: 32 }} />
-                <th>{t('fieldsTab.colTitle')}</th>
-                <th style={{ width: 110 }}>{t('fieldsTab.colType')}</th>
-                <th style={{ width: 90 }} className="text-center">{t('fieldsTab.colTable')}</th>
-                <th style={{ width: 100 }} />
-              </tr>
-            </thead>
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
-                <tbody>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <table className="table table-sm align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th style={{ width: 32 }} />
+                  <th>{t('fieldsTab.colTitle')}</th>
+                  <th style={{ width: 110 }}>{t('fieldsTab.colType')}</th>
+                  <th style={{ width: 90 }} className="text-center">{t('fieldsTab.colTable')}</th>
+                  <th style={{ width: 100 }} />
+                </tr>
+              </thead>
+              <tbody>
+                <SortableContext items={fields.map(f => f.id)} strategy={verticalListSortingStrategy}>
                   {fields.map(field => (
                     <SortableRow
                       key={field.id}
@@ -314,10 +314,10 @@ export default function FieldsTab({ inventoryId, fields, onChange }: Props) {
                       onDelete={handleDelete}
                     />
                   ))}
-                </tbody>
-              </SortableContext>
-            </DndContext>
-          </table>
+                </SortableContext>
+              </tbody>
+            </table>
+          </DndContext>
         </div>
       )}
 

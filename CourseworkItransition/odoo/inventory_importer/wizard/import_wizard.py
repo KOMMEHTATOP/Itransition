@@ -30,7 +30,12 @@ class InventoryImportWizard(models.TransientModel):
         )
 
         try:
-            request = urllib.request.Request(url, headers={"Accept": "application/json"})
+            request = urllib.request.Request(url, headers={
+                "Accept": "application/json",
+                # A non-default User-Agent is required: Cloudflare (in front of the prod API)
+                # blocks the default "Python-urllib/..." agent with HTTP 403.
+                "User-Agent": "Mozilla/5.0 (compatible; OdooInventoryImporter/1.0)",
+            })
             with urllib.request.urlopen(request, timeout=20) as response:
                 payload = json.loads(response.read().decode("utf-8"))
         except Exception as error:
@@ -48,6 +53,7 @@ class InventoryImportWizard(models.TransientModel):
         values = {
             "name": payload.get("title") or _("Untitled"),
             "api_token": token,
+            "base_url": self.base_url.rstrip("/"),
             "item_count": payload.get("itemCount", 0),
             "imported_at": fields.Datetime.now(),
             "field_ids": field_commands,

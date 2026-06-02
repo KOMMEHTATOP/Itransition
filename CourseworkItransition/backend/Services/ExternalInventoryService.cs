@@ -2,6 +2,7 @@ using System.Globalization;
 using InventoryApi.Common;
 using InventoryApi.Data;
 using InventoryApi.Models;
+using InventoryApi.Models.Dto;
 using InventoryApi.Models.Dto.External;
 using InventoryApi.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,67 @@ public class ExternalInventoryService : IExternalInventoryService
     private const int PopularValuesLimit = 5;
 
     private readonly ApplicationDbContext _context;
+    private readonly IItemService _itemService;
 
-    public ExternalInventoryService(ApplicationDbContext context)
+    public ExternalInventoryService(ApplicationDbContext context, IItemService itemService)
     {
         _context = context;
+        _itemService = itemService;
+    }
+
+    public async Task<Result<ExternalCreateItemsResultDto>> CreateItemsByTokenAsync(
+        string token,
+        ExternalCreateItemsRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return Result<ExternalCreateItemsResultDto>.Failure(ResultStatus.NotFound, "Invalid token");
+
+        var inventory = await _context.Inventories
+            .AsNoTracking()
+            .Include(i => i.Fields)
+            .FirstOrDefaultAsync(i => i.ApiToken == token);
+
+        if (inventory is null)
+            return Result<ExternalCreateItemsResultDto>.Failure(ResultStatus.NotFound, "Invalid token");
+
+        if (request.Items is null || request.Items.Count == 0)
+            return Result<ExternalCreateItemsResultDto>.Failure(ResultStatus.Invalid, "No items provided");
+
+        var fieldIdByTitle = inventory.Fields
+            .GroupBy(f => f.Title)
+            .ToDictionary(g => g.Key, g => g.First().Id);
+
+        var created = 0;
+        var results = new List<ExternalItemResultDto>();
+
+        foreach (var input in request.Items)
+        {
+            var fieldValues = new List<ItemFieldValueRequest>();
+            if (input.Fields is not null)
+            {
+                foreach (var (title, value) in input.Fields)
+                {
+                    if (fieldIdByTitle.TryGetValue(title, out var fieldId))
+                        fieldValues.Add(new ItemFieldValueRequest(fieldId, value));
+                }
+            }
+
+            var createRequest = new CreateItemRequest(input.CustomId ?? string.Empty, fieldValues);
+            var result = await _itemService.CreateItem(inventory.Id, inventory.OwnerId, false, createRequest);
+
+            if (result.IsSuccess)
+            {
+                created++;
+                results.Add(new ExternalItemResultDto(true, result.Value!.CustomId, null));
+            }
+            else
+            {
+                results.Add(new ExternalItemResultDto(false, null, result.Error ?? "Failed to create item"));
+            }
+        }
+
+        return Result<ExternalCreateItemsResultDto>.Success(
+            new ExternalCreateItemsResultDto(created, results));
     }
 
     public async Task<Result<InventoryAggregateDto>> GetAggregateByTokenAsync(string token)

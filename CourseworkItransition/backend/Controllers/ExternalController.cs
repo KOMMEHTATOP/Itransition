@@ -1,3 +1,4 @@
+using InventoryApi.Models.Dto.External;
 using InventoryApi.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,5 +18,13 @@ public class ExternalController : ApiControllerBase
     public async Task<IActionResult> GetInventory([FromQuery] string token)
     {
         return FromResult(await _externalInventoryService.GetAggregateByTokenAsync(token));
+    }
+
+    [HttpPost("inventory/items")]
+    public async Task<IActionResult> CreateItems(
+        [FromQuery] string token,
+        [FromBody] ExternalCreateItemsRequest request)
+    {
+        return FromResult(await _externalInventoryService.CreateItemsByTokenAsync(token, request));
     }
 }
