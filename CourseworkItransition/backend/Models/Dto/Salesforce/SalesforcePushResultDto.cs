@@ -4,5 +4,6 @@ public record SalesforcePushResultDto(
     string AccountId,
     string ContactId,
     string AccountUrl,
-    string ContactUrl
+    string ContactUrl,
+    bool Updated
 );

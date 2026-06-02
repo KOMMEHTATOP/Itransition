@@ -47,7 +47,9 @@ export default function SalesforceModal({ onClose, onSubmit }: Props) {
           {result ? (
             <>
               <div className="modal-body">
-                <div className="alert alert-success mb-3">{t('salesforce.success')}</div>
+                <div className="alert alert-success mb-3">
+                  {result.updated ? t('salesforce.successUpdated') : t('salesforce.success')}
+                </div>
                 <p className="mb-1">
                   <strong>{t('salesforce.account')}:</strong>{' '}
                   <a href={result.accountUrl} target="_blank" rel="noreferrer">{result.accountId}</a>

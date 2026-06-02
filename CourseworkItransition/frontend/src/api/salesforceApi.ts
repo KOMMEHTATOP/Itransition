@@ -11,6 +11,7 @@ export interface SalesforcePushResult {
   contactId: string
   accountUrl: string
   contactUrl: string
+  updated: boolean
 }
 
 export const salesforceApi = {

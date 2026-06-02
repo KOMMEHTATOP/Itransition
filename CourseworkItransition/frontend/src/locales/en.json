@@ -344,6 +344,7 @@
     "submit": "Send to Salesforce",
     "sending": "Sending...",
     "success": "Successfully created in Salesforce!",
+    "successUpdated": "Contact already existed — updated in Salesforce!",
     "account": "Account",
     "contact": "Contact",
     "error": "Failed to send data to Salesforce. Please try again."

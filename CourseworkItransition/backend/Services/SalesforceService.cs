@@ -12,6 +12,8 @@ namespace InventoryApi.Services;
 
 public class SalesforceService : ISalesforceService
 {
+    private const string ApiVersion = "v59.0";
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _config;
     private readonly ILogger<SalesforceService> _logger;
@@ -52,16 +54,33 @@ public class SalesforceService : ISalesforceService
         {
             var (accessToken, instanceUrl) = await GetAccessTokenAsync();
 
-            var accountId = await CreateAccountAsync(accessToken, instanceUrl, request.Company);
+            // Upsert by email: update the existing Contact if one already exists, otherwise create.
+            var existing = await FindContactByEmailAsync(accessToken, instanceUrl, email);
 
-            var contactId = await CreateContactAsync(
-                accessToken, instanceUrl, accountId, displayName, email, request);
+            string accountId;
+            string contactId;
+            bool   updated;
+
+            if (existing is not null)
+            {
+                contactId = existing.Value.ContactId;
+                accountId = await UpdateContactAndAccountAsync(
+                    accessToken, instanceUrl, contactId, existing.Value.AccountId, displayName, request);
+                updated = true;
+            }
+            else
+            {
+                accountId = await CreateAccountAsync(accessToken, instanceUrl, request.Company);
+                contactId = await CreateContactAsync(
+                    accessToken, instanceUrl, accountId, displayName, email, request);
+                updated = false;
+            }
 
             var accountUrl = $"{instanceUrl}/lightning/r/Account/{accountId}/view";
             var contactUrl = $"{instanceUrl}/lightning/r/Contact/{contactId}/view";
 
             return Result<SalesforcePushResultDto>.Success(
-                new SalesforcePushResultDto(accountId, contactId, accountUrl, contactUrl));
+                new SalesforcePushResultDto(accountId, contactId, accountUrl, contactUrl, updated));
         }
         catch (Exception ex)
         {
@@ -70,7 +89,76 @@ public class SalesforceService : ISalesforceService
                 ResultStatus.Error, "Failed to push data to Salesforce");
         }
     }
-    
+
+    private async Task<(string ContactId, string? AccountId)?> FindContactByEmailAsync(
+        string accessToken, string instanceUrl, string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return null;
+
+        var soql = $"SELECT Id, AccountId FROM Contact WHERE Email = '{email.Replace("'", "\\'")}' LIMIT 1";
+        var client = BuildAuthorizedClient(accessToken);
+
+        var response = await client.GetAsync(
+            $"{instanceUrl}/services/data/{ApiVersion}/query?q={Uri.EscapeDataString(soql)}");
+
+        response.EnsureSuccessStatusCode();
+
+        var json    = await response.Content.ReadAsStringAsync();
+        var root    = JsonDocument.Parse(json).RootElement;
+        var records = root.GetProperty("records");
+
+        if (records.GetArrayLength() == 0)
+            return null;
+
+        var record    = records[0];
+        var contactId = record.GetProperty("Id").GetString()!;
+        var accountId = record.TryGetProperty("AccountId", out var acc) && acc.ValueKind != JsonValueKind.Null
+            ? acc.GetString()
+            : null;
+
+        return (contactId, accountId);
+    }
+
+    private async Task<string> UpdateContactAndAccountAsync(
+        string accessToken, string instanceUrl,
+        string contactId, string? accountId, string displayName, SalesforcePushRequest request)
+    {
+        var (firstName, lastName) = SplitName(displayName);
+
+        await PatchAsync(accessToken, instanceUrl, "Contact", contactId, new
+        {
+            FirstName = firstName,
+            LastName  = lastName,
+            Phone     = request.Phone,
+            Title     = request.JobTitle,
+        });
+
+        if (accountId is not null)
+        {
+            await PatchAsync(accessToken, instanceUrl, "Account", accountId, new { Name = request.Company });
+            return accountId;
+        }
+
+        // Existing contact had no linked account — create one and link it.
+        var newAccountId = await CreateAccountAsync(accessToken, instanceUrl, request.Company);
+        await PatchAsync(accessToken, instanceUrl, "Contact", contactId, new { AccountId = newAccountId });
+        return newAccountId;
+    }
+
+    private async Task PatchAsync(
+        string accessToken, string instanceUrl, string sObject, string id, object body)
+    {
+        var client  = BuildAuthorizedClient(accessToken);
+        var payload = JsonSerializer.Serialize(body, JsonOptions);
+        var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+        var response = await client.PatchAsync(
+            $"{instanceUrl}/services/data/{ApiVersion}/sobjects/{sObject}/{id}", content);
+
+        response.EnsureSuccessStatusCode();
+    }
+
     private async Task<(string accessToken, string instanceUrl)> GetAccessTokenAsync()
     {
         var clientId     = _config["Salesforce:ClientId"]     ?? throw new InvalidOperationException("Salesforce:ClientId not configured");
@@ -99,7 +187,7 @@ public class SalesforceService : ISalesforceService
             root.GetProperty("instance_url").GetString()!
         );
     }
-    
+
     private async Task<string> CreateAccountAsync(
         string accessToken, string instanceUrl, string company)
     {
@@ -109,7 +197,7 @@ public class SalesforceService : ISalesforceService
         var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
         var response = await client.PostAsync(
-            $"{instanceUrl}/services/data/v59.0/sobjects/Account", content);
+            $"{instanceUrl}/services/data/{ApiVersion}/sobjects/Account", content);
 
         response.EnsureSuccessStatusCode();
 
@@ -117,7 +205,7 @@ public class SalesforceService : ISalesforceService
         var doc  = JsonDocument.Parse(json);
         return doc.RootElement.GetProperty("id").GetString()!;
     }
-    
+
     private async Task<string> CreateContactAsync(
         string accessToken, string instanceUrl,
         string accountId, string displayName, string email,
@@ -125,10 +213,7 @@ public class SalesforceService : ISalesforceService
     {
         var client = BuildAuthorizedClient(accessToken);
 
-        // Split displayName into first/last (last word = LastName)
-        var parts     = displayName.Trim().Split(' ', 2);
-        var firstName = parts.Length > 1 ? parts[0] : null;
-        var lastName  = parts.Length > 1 ? parts[1] : parts[0];
+        var (firstName, lastName) = SplitName(displayName);
 
         var payload = JsonSerializer.Serialize(new
         {
@@ -142,7 +227,7 @@ public class SalesforceService : ISalesforceService
 
         var content  = new StringContent(payload, Encoding.UTF8, "application/json");
         var response = await client.PostAsync(
-            $"{instanceUrl}/services/data/v59.0/sobjects/Contact", content);
+            $"{instanceUrl}/services/data/{ApiVersion}/sobjects/Contact", content);
 
         response.EnsureSuccessStatusCode();
 
@@ -150,12 +235,23 @@ public class SalesforceService : ISalesforceService
         var doc  = JsonDocument.Parse(json);
         return doc.RootElement.GetProperty("id").GetString()!;
     }
-    
+
+    private static (string? firstName, string lastName) SplitName(string displayName)
+    {
+        var parts     = displayName.Trim().Split(' ', 2);
+        var firstName = parts.Length > 1 ? parts[0] : null;
+        var lastName  = parts.Length > 1 ? parts[1] : parts[0];
+        return (firstName, lastName);
+    }
+
     private HttpClient BuildAuthorizedClient(string accessToken)
     {
         var client = _httpClientFactory.CreateClient();
         client.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", accessToken);
+        // Bypass Salesforce "Alert" duplicate rules (allowSave=true) so the create path
+        // does not fail with DUPLICATES_DETECTED (400) on fuzzy name matches.
+        client.DefaultRequestHeaders.Add("Sforce-Duplicate-Rule-Header", "allowSave=true");
         return client;
     }
 }
