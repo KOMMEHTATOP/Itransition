@@ -16,6 +16,7 @@ public record ItemDetailDto(
     DateTime UpdatedAt,
     int Version,
     Guid InventoryId,
+    string InventoryTitle,
     bool CanEdit,
     List<ItemFieldValueDto> FieldValues,
     int LikeCount,

@@ -379,6 +379,7 @@ public class ItemService : IItemService
             item.UpdatedAt,
             item.Version,
             item.InventoryId,
+            item.Inventory?.Title ?? string.Empty,
             CanEdit: isAdmin || item.Inventory?.OwnerId == userId || item.AuthorId == userId,
             item.FieldValues
                 .OrderBy(v => v.Field.Order)

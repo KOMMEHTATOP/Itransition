@@ -5,6 +5,7 @@ import { itemsApi } from '../api/itemsApi'
 import { likesApi } from '../api/likesApi'
 import { useAutosave } from '../hooks/useAutosave'
 import { useInventoryHub } from '../hooks/useInventoryHub'
+import { useSupport } from '../contexts/SupportContext'
 import type { ItemDetail, UpdateItemRequest } from '../types/inventory'
 import { AUTOSAVE_DELAY_MS } from '../constants'
 import { useConfirmModal } from '../hooks/useConfirmModal'
@@ -22,6 +23,7 @@ export default function ItemDetailPage() {
   const [liking, setLiking]         = useState(false)
 
   const { confirm, confirmModal } = useConfirmModal()
+  const { setInventoryName } = useSupport()
 
   const [customId, setCustomId]   = useState('')
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
@@ -84,6 +86,12 @@ export default function ItemDetailPage() {
   }, [id, t])
 
   useEffect(() => { load() }, [load])
+
+  // Expose the item's inventory title to the support ticket form (Help button)
+  useEffect(() => {
+    setInventoryName(item?.inventoryTitle ?? null)
+    return () => setInventoryName(null)
+  }, [item?.inventoryTitle, setInventoryName])
 
   const handleLike = async () => {
     if (!id || liking) return

@@ -122,6 +122,7 @@ export interface ItemDetail {
   updatedAt: string
   version: number
   inventoryId: string
+  inventoryTitle: string
   canEdit: boolean
   fieldValues: ItemFieldValue[]
   likeCount: number
