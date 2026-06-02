@@ -216,7 +216,14 @@
     "uploadFailed": "Upload failed. Check Cloudinary configuration.",
     "remove": "Remove",
     "tagsLabel": "Tags",
-    "tagsHelp": "Press Enter or comma to add a tag."
+    "tagsHelp": "Press Enter or comma to add a tag.",
+    "apiTokenLabel": "API token (for Odoo import)",
+    "apiTokenHelp": "Use this token in the Odoo importer to pull this inventory's aggregated data. Keep it secret.",
+    "getApiToken": "Get API token",
+    "apiTokenLoading": "Generating…",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "apiTokenError": "Failed to get the API token. Please try again."
   },
   "accessTab": {
     "publicInfo": "This inventory is public — all authenticated users already have write access. You can still grant explicit access to users for when the inventory is made private.",

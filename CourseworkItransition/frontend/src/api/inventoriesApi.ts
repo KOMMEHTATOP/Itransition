@@ -49,4 +49,7 @@ export const inventoriesApi = {
 
   getStats: (id: string) =>
     api.get<InventoryStats>(`/inventories/${id}/stats`),
+
+  getApiToken: (id: string) =>
+    api.post<{ token: string }>(`/inventories/${id}/api-token`),
 }

@@ -51,6 +51,33 @@ export default function SettingsTab({ inventory, categories, onSaved, onReload }
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
 
+  const [apiToken, setApiToken]       = useState<string | null>(null)
+  const [tokenLoading, setTokenLoading] = useState(false)
+  const [tokenError, setTokenError]   = useState<string | null>(null)
+  const [copied, setCopied]           = useState(false)
+
+  const getToken = async () => {
+    setTokenLoading(true)
+    setTokenError(null)
+    try {
+      const res = await inventoriesApi.getApiToken(inventory.id)
+      setApiToken(res.data.token)
+    } catch {
+      setTokenError(t('settingsTab.apiTokenError'))
+    } finally {
+      setTokenLoading(false)
+    }
+  }
+
+  const copyToken = async () => {
+    if (!apiToken) return
+    try {
+      await navigator.clipboard.writeText(apiToken)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch { /* clipboard unavailable */ }
+  }
+
   const markDirty = () => setIsDirty(true)
 
   useEffect(() => {
@@ -255,6 +282,31 @@ export default function SettingsTab({ inventory, categories, onSaved, onReload }
           className="form-control"
         />
         <div className="form-text">{t('settingsTab.tagsHelp')}</div>
+      </div>
+
+      <hr className="my-4" />
+
+      <div className="mb-3">
+        <label className="form-label fw-semibold">{t('settingsTab.apiTokenLabel')}</label>
+        <p className="form-text mt-0 mb-2">{t('settingsTab.apiTokenHelp')}</p>
+        {apiToken ? (
+          <div className="input-group" style={{ maxWidth: 520 }}>
+            <input type="text" className="form-control font-monospace" value={apiToken} readOnly />
+            <button type="button" className="btn btn-outline-secondary" onClick={copyToken}>
+              {copied ? t('settingsTab.copied') : t('settingsTab.copy')}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-outline-primary btn-sm"
+            onClick={getToken}
+            disabled={tokenLoading}
+          >
+            {tokenLoading ? t('settingsTab.apiTokenLoading') : t('settingsTab.getApiToken')}
+          </button>
+        )}
+        {tokenError && <div className="text-danger small mt-1">{tokenError}</div>}
       </div>
     </div>
   )

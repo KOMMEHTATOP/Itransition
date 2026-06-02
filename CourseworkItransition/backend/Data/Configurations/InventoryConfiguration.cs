@@ -20,6 +20,8 @@ public class InventoryConfiguration : IEntityTypeConfiguration<Inventory>
 
         builder.Property(i => i.Version).IsConcurrencyToken();
 
+        builder.HasIndex(i => i.ApiToken).IsUnique();
+
         builder.HasGeneratedTsVectorColumn(
                 i => i.SearchVector!,
                 "english",

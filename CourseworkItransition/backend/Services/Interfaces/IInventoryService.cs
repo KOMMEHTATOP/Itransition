@@ -1,10 +1,12 @@
 ﻿using InventoryApi.Common;
 using InventoryApi.Models.Dto;
+using InventoryApi.Models.Dto.External;
 
 namespace InventoryApi.Services.Interfaces;
 
 public interface IInventoryService
 {
+    Task<Result<ApiTokenDto>> GetOrCreateApiTokenAsync(Guid id, string userId, bool isAdmin);
     Task<Result<PagedResult<InventoryListItemDto>>> GetAll(bool isAdmin, int page, int pageSize, string sort = "", string? tag = null);
     Task<Result<PagedResult<InventoryListItemDto>>> GetMy(string userId, int page, int pageSize, string sort = "");
     Task<Result<PagedResult<InventoryListItemDto>>> GetAccessible(string userId, bool isAdmin, int page, int pageSize, string sort);

@@ -2,6 +2,7 @@
 using InventoryApi.Data;
 using InventoryApi.Models;
 using InventoryApi.Models.Dto;
+using InventoryApi.Models.Dto.External;
 using InventoryApi.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,7 +16,26 @@ public class InventoryService :IInventoryService
     {
         _context = context;
     }
-    
+
+    public async Task<Result<ApiTokenDto>> GetOrCreateApiTokenAsync(Guid id, string userId, bool isAdmin)
+    {
+        var inventory = await _context.Inventories.FirstOrDefaultAsync(i => i.Id == id);
+
+        if (inventory is null)
+            return Result<ApiTokenDto>.Failure(ResultStatus.NotFound, "Inventory not found");
+
+        if (inventory.OwnerId != userId && !isAdmin)
+            return Result<ApiTokenDto>.Failure(ResultStatus.Forbidden, "Only the owner can manage the API token");
+
+        if (string.IsNullOrEmpty(inventory.ApiToken))
+        {
+            inventory.ApiToken = Guid.NewGuid().ToString("N");
+            await _context.SaveChangesAsync();
+        }
+
+        return Result<ApiTokenDto>.Success(new ApiTokenDto(inventory.ApiToken));
+    }
+
     public async Task<Result<PagedResult<InventoryListItemDto>>> GetAll(bool isAdmin, int page, int pageSize, string sort = "", string? tag = null)
     {
         var query = _context.Inventories

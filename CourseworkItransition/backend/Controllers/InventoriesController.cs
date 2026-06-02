@@ -91,4 +91,11 @@ public class InventoriesController : ApiControllerBase
     {
         return FromResult(await _inventoryService.GetStats(id, UserId(), IsAdmin()));
     }
+
+    [HttpPost("{id:guid}/api-token")]
+    [Authorize]
+    public async Task<IActionResult> GetApiToken(Guid id)
+    {
+        return FromResult(await _inventoryService.GetOrCreateApiTokenAsync(id, UserId()!, IsAdmin()));
+    }
 }

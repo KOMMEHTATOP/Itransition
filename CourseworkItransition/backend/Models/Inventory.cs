@@ -14,6 +14,8 @@ public class Inventory
     public int Version { get; set; } = 1;
     public int SequenceCounter { get; set; } = 0;
 
+    public string? ApiToken { get; set; }
+
     public int? CategoryId { get; set; }
     public Category? Category { get; set; }
 

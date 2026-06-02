@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- List of imported inventories -->
+    <record id="view_inventory_imported_tree" model="ir.ui.view">
+        <field name="name">inventory.imported.tree</field>
+        <field name="model">inventory.imported</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="item_count"/>
+                <field name="imported_at"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Detailed (read-only) form -->
+    <record id="view_inventory_imported_form" model="ir.ui.view">
+        <field name="name">inventory.imported.form</field>
+        <field name="model">inventory.imported</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name" readonly="1"/>
+                        <field name="item_count" readonly="1"/>
+                        <field name="imported_at" readonly="1"/>
+                        <field name="api_token" readonly="1"/>
+                    </group>
+                    <separator string="Fields"/>
+                    <field name="field_ids" readonly="1">
+                        <tree>
+                            <field name="name"/>
+                            <field name="field_type"/>
+                            <field name="aggregate"/>
+                        </tree>
+                    </field>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_inventory_imported" model="ir.actions.act_window">
+        <field name="name">Imported Inventories</field>
+        <field name="res_model">inventory.imported</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem id="menu_inventory_importer_root" name="Inventory Importer" sequence="50"/>
+    <menuitem id="menu_inventory_imported"
+              name="Imported Inventories"
+              parent="menu_inventory_importer_root"
+              action="action_inventory_imported"
+              sequence="10"/>
+
+</odoo>
